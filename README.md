@@ -21,7 +21,12 @@ ou
 yarn install
 ```
 
-### **Configurar Firebase**
+### **Configure o Firebase**
 - Crie um projeto no Firebase console.
 - Adicione um aplicativo para Web.
 - Copie as configurações do Firebase e substitua-as no arquivo src/services/firebaseConfig.ts.
+  
+### **Execute o projeto**
+```
+npm run dev
+```
