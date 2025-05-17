@@ -1,10 +1,8 @@
+
 import { useState } from "react";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/card";
 import { useToast } from "../components/hooks/use-toast";
 import Logo from "../components/Logo";
+//import "../styles.css";
 
 interface LoginCardProps {
   onForgotPassword: (email: string) => void;
@@ -31,25 +29,25 @@ const LoginCard = ({ onForgotPassword, onRequestAccess }: LoginCardProps) => {
       
       // Simula autenticação e redirecionamento
       localStorage.setItem("isLoggedIn", "true");
-      window.location.href = "/dashboard";
+      window.location.href = "/patients";
     }, 1500);
   };
 
   return (
-    <Card className="w-full max-w-md animate-fade-in">
-      <CardHeader className="space-y-2 text-center">
+    <div className="card login-card">
+      <div className="card-header" style={{ textAlign: 'center' }}>
         <Logo className="mx-auto mb-2" />
-        <CardTitle className="text-2xl font-bold">Bem-vindo ao SafeCare</CardTitle>
-        <CardDescription>
+        <h2 className="card-title">Bem-vindo ao SafeCare</h2>
+        <p className="card-description">
           Entre com suas credenciais para acessar o sistema
-        </CardDescription>
-      </CardHeader>
+        </p>
+      </div>
       
       <form onSubmit={handleUserLogin}>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
+        <div style={{ margin: '1.5rem 0' }}>
+          <div className="form-group">
+            <label htmlFor="email">Email</label>
+            <input
               id="email"
               type="email"
               placeholder="seu@email.com"
@@ -58,18 +56,18 @@ const LoginCard = ({ onForgotPassword, onRequestAccess }: LoginCardProps) => {
               required
             />
           </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Senha</Label>
+          <div className="form-group">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <label htmlFor="password">Senha</label>
               <button 
                 type="button"
                 onClick={() => onForgotPassword(email)} 
-                className="text-xs text-safecare-600 hover:underline"
+                style={{ fontSize: '0.75rem', color: 'var(--primary-color)', background: 'none', border: 'none', padding: 0 }}
               >
                 Esqueceu sua senha?
               </button>
             </div>
-            <Input
+            <input
               id="password"
               type="password"
               value={password}
@@ -77,24 +75,28 @@ const LoginCard = ({ onForgotPassword, onRequestAccess }: LoginCardProps) => {
               required
             />
           </div>
-        </CardContent>
-        <CardFooter className="flex flex-col">
-          <Button className="w-full bg-safecare-600 hover:bg-safecare-700" disabled={isLoading}>
+        </div>
+        <div className="card-footer" style={{ flexDirection: 'column' }}>
+          <button 
+            type="submit" 
+            className="btn btn-primary btn-block" 
+            disabled={isLoading}
+          >
             {isLoading ? "Entrando..." : "Entrar"}
-          </Button>
-          <div className="mt-4 text-center text-sm">
+          </button>
+          <div style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.875rem' }}>
             Não tem uma conta?{" "}
             <button
               type="button"
               onClick={onRequestAccess}
-              className="text-safecare-600 hover:underline"
+              style={{ color: 'var(--primary-color)', background: 'none', border: 'none', padding: 0 }}
             >
               Cadastre-se agora
             </button>
           </div>
-        </CardFooter>
+        </div>
       </form>
-    </Card>
+    </div>
   );
 };
 
