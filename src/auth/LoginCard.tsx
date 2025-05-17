@@ -1,8 +1,10 @@
 
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useToast } from "../components/hooks/use-toast";
 import Logo from "../components/Logo";
-//import "../styles.css";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { app } from "../services/firebaseConfig";
+
 
 interface LoginCardProps {
   onForgotPassword: (email: string) => void;
@@ -15,22 +17,35 @@ const LoginCard = ({ onForgotPassword, onRequestAccess }: LoginCardProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  useEffect(() => {
+    onRequestAccess();
+  }, []);
+
   const handleUserLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+
+    const auth = getAuth(app);
     
-    // Aqui seria a integração com Firebase
-    setTimeout(() => {
+    //Impletação do Firebase Auth
+    // Autenticação com email e senha
+    signInWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
       setIsLoading(false);
       toast({
         title: "Login realizado",
         description: "Você foi autenticado com sucesso!",
       });
-      
-      // Simula autenticação e redirecionamento
       localStorage.setItem("isLoggedIn", "true");
       window.location.href = "/patients";
-    }, 1500);
+    })
+    .catch((error) => {
+      setIsLoading(false);
+      toast({
+        title: "Erro ao fazer login",
+        description: error.message,
+      });
+    });
   };
 
   return (

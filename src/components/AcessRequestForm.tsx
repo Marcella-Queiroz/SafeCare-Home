@@ -14,6 +14,9 @@ import { useToast } from "./hooks/use-toast";
 import PasswordFields from "../auth/PasswordFields";
 import RoleSelector from "../auth/RoleSelector";
 import { validatePassword } from "../utils/passwordValidation";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { app } from "../services/firebaseConfig"; // já configurado
+import { getDatabase, ref, set } from "firebase/database";
 
 interface AccessRequestFormProps {
   isOpen: boolean;
@@ -45,19 +48,37 @@ const AccessRequestForm = ({ isOpen, onClose }: AccessRequestFormProps) => {
     
     setIsSubmitting(true);
     
-    // Simulação de envio para backend (será integrado com Firebase)
-    setTimeout(() => {
-      setIsSubmitting(false);
-      toast({
-        title: "Cadastro realizado",
-        description: "Sua conta foi criada com sucesso. Você já pode fazer login.",
-      });
+    //Impletação do Firebase Auth
+    const auth = getAuth(app);
+  
+    createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
       
-      // Simula criação de conta e direciona para login
-      localStorage.setItem("userRegistered", "true");
-      onClose();
-      resetForm();
-    }, 1500);
+        // Salvar dados extras no Realtime Database
+        const user = userCredential.user;
+        const db = getDatabase(app);
+        set(ref(db, 'users/' + user.uid), {
+          name,
+          email,
+          role
+        });
+
+        setIsSubmitting(false);
+        toast({
+          title: "Cadastro realizado",
+          description: "Sua conta foi criada com sucesso. Você já pode fazer login.",
+        });
+        localStorage.setItem("userRegistered", "true");
+        onClose();
+        resetForm();
+      })
+      .catch((error) => {
+        setIsSubmitting(false);
+        toast({
+          title: "Erro ao cadastrar",
+          description: error.message,
+        });
+      });
   };
 
   const resetForm = () => {

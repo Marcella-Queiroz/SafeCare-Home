@@ -12,7 +12,7 @@ const firebaseConfig = {
   authDomain: "safecare-home-1dce7.firebaseapp.com",
   databaseURL: "https://safecare-home-1dce7-default-rtdb.firebaseio.com",
   projectId: "safecare-home-1dce7",
-  storageBucket: "safecare-home-1dce7.firebasestorage.app",
+  storageBucket: "safecare-home-1dce7.appspot.com",
   messagingSenderId: "660801831627",
   appId: "1:660801831627:web:c9d482564008e9c957514e",
   measurementId: "G-S2S8V76NM3"

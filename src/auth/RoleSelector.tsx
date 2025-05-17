@@ -19,7 +19,7 @@ const RoleSelector = ({ role, onRoleChange }: RoleSelectorProps) => {
         Função
       </Label>
       <Select value={role} onValueChange={onRoleChange} required>
-        <SelectTrigger className="col-span-4">
+        <SelectTrigger id="role" className="col-span-4">
           <SelectValue placeholder="Selecione sua função" />
         </SelectTrigger>
         <SelectContent>

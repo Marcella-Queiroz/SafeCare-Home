@@ -1,10 +1,13 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/index"; // Supondo que a tela de login seja Index
+import Index from "./pages/index";
+
+const Patients = () => <div>Bem-vindo à área de pacientes!</div>;
 
 const App = () => (
   <BrowserRouter>
     <Routes>
-      <Route path="/" element={<Index />} /> {/* Apenas a tela de login */}
+      <Route path="/" element={<Index />} />
+      <Route path="/patients" element={<Patients />} />
     </Routes>
   </BrowserRouter>
 );
