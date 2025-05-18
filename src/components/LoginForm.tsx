@@ -1,8 +1,7 @@
-
-import { useState } from "react";
+import React, { useState } from "react";
+import LoginCard from "@/auth/LoginCard";
 import AccessRequestForm from "./AcessRequestForm";
-import LoginCard from "../auth/LoginCard";
-import PasswordResetDialog from "../auth/PasswordResetDialog";
+import PasswordResetDialog from "@/auth/PasswordResetDialog";
 
 const LoginForm = () => {
   const [isAccessRequestOpen, setIsAccessRequestOpen] = useState(false);
@@ -15,19 +14,21 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="login-container">
-      <LoginCard 
-        onForgotPassword={handleForgotPassword} 
-        onRequestAccess={() => setIsAccessRequestOpen(true)} 
-      />
-      
-      <AccessRequestForm 
-        isOpen={isAccessRequestOpen} 
-        onClose={() => setIsAccessRequestOpen(false)} 
+    <div style={{ padding: "2rem", display: "flex", justifyContent: "center" }}>
+      <LoginCard
+        onForgotPassword={handleForgotPassword}
+        onRequestAccess={() => {
+          setIsAccessRequestOpen(true);
+        }}
       />
 
-      <PasswordResetDialog 
-        isOpen={isResetPasswordOpen} 
+      <AccessRequestForm
+        isOpen={isAccessRequestOpen}
+        onClose={() => setIsAccessRequestOpen(false)}
+      />
+
+      <PasswordResetDialog
+        isOpen={isResetPasswordOpen}
         onOpenChange={setIsResetPasswordOpen}
         email={resetEmailInitial}
       />
