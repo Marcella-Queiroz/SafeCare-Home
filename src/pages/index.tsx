@@ -2,19 +2,23 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import LoginForm from "@/components/LoginForm";
 
-const Index = () => {
+interface IndexProps {
+  showToast: (message: string, severity?: "success" | "error" | "info" | "warning") => void;
+}
+
+const Index = ({ showToast }: IndexProps) => {
   const navigate = useNavigate();
-  
-  // Verificar se o usuário está logado (simulado)
+
+  // Verificar se o usuário está logado
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-  
+
   useEffect(() => {
-    if (isLoggedIn) {
-      navigate("/");
-    }
+    /*if (isLoggedIn) {
+      navigate("/patients");
+    }*/
   }, [isLoggedIn, navigate]);
 
-  return <LoginForm />;
+  return <LoginForm showToast={showToast} />;
 };
 
 export default Index;

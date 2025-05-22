@@ -1,4 +1,4 @@
-/* Estilizações gerais */
+/****************************************** Estilizações gerais ***********************************/
 :root {
   --primary-color: #1E88E5;
   --primary-hover: #1565C0;
@@ -31,7 +31,7 @@ body {
   line-height: 1.6;
 }
 
-/* Tema SafeCare */
+/*************************************************** Tema SafeCare ***********************************/
 .safecare-card {
   background-color: white;
   border-radius: var(--radius);
@@ -112,7 +112,7 @@ body {
   border-top: 1px solid;
 }
 
-/* Estilo para o logo do SafeCare */
+/*************************************** Estilo para o logo do SafeCare ***************************/
 .logo-container {
   display: flex;
   align-items: center;
@@ -136,7 +136,7 @@ body {
   color: #388e3c;
 }
 
-/*Est. links e botões (cor, trasição, borda, fonte...)*/
+/************************Est. links e botões (cor, trasição, borda, fonte...)**********************/
 a {
   color: var(--primary-color);
   text-decoration: none;
@@ -156,7 +156,7 @@ button {
   font-weight: 500;
 }
 
-/* Animações de transições*/
+/*******************************************Animações de transições********************************/
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out;
 }
@@ -172,7 +172,7 @@ button {
   }
 }
 
-/* Página de Login */
+/******************************************* Página de Login **************************************/
 .login-container {
   min-height: 100vh;
   display: flex;
@@ -189,7 +189,7 @@ button {
   animation: fadeIn 0.3s ease-out;
 }
 
-/* Estilização de componentes de cartões */
+/***************************** Estilização de componentes de cartões *****************************/
 .card {
   background-color: var(--card-bg);
   border-radius: var(--radius);
@@ -219,7 +219,7 @@ button {
   justify-content: flex-end;
 }
 
-/* Campos de formulários, labels, etc. */
+/**************************** Campos de formulários, labels, etc. *********************************/
 .form-group {
   margin-bottom: 1rem;
 }
@@ -247,7 +247,7 @@ select:focus {
   outline-offset: 1px;
 }
 
-/* Estilos padrões de botões */
+/************************************ Estilos padrões de botões ***********************************/
 .btn {
   display: inline-flex;
   align-items: center;
@@ -272,7 +272,7 @@ select:focus {
   width: 100%;
 }
 
-/* Utilitários de espaçamento */
+/***************************************** Utilitários de espaçamento ****************************/
 .mb-2 {
   margin-bottom: 0.5rem;
 }
@@ -281,7 +281,7 @@ select:focus {
   margin-top: 1rem;
 }
 
-/* Específicos para links e rodapé do login */
+/***************************** Específicos para links e rodapé do login ***************************/
 .login-card .forgot-link {
   float: right;
   font-size: 0.95rem;
@@ -316,4 +316,24 @@ select:focus {
     padding: 1.5rem 0.5rem;
     max-width: 98vw;
   }
+}
+
+
+.MuiFormHelperText-root.Mui-error {
+  color: #d32f2f !important;
+  font-weight: 500;
+}
+
+.form-error {
+  color: #d32f2f;
+  font-size: 0.95rem;
+  margin-top: 0.25rem;
+}
+
+.custom-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  font-weight: 500;
 }

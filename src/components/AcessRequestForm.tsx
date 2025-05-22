@@ -1,3 +1,4 @@
+// Modal de cadastro de usuário
 import React, { useState } from "react";
 import {
   Dialog,
@@ -11,23 +12,24 @@ import {
 } from "@mui/material";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { getDatabase, ref, set } from "firebase/database";
-import { useToast } from "./hooks/use-toast";
 import { validatePassword } from "@/utils/passwordValidation";
 import { app } from "@/services/firebaseConfig";
+import RoleSelector from "@/auth/RoleSelector";
 
 interface AccessRequestFormProps {
   isOpen: boolean;
   onClose: () => void;
+  showToast: (message: string, severity?: "success" | "error" | "info" | "warning") => void;
 }
 
-const AccessRequestForm = ({ isOpen, onClose }: AccessRequestFormProps) => {
+const AccessRequestForm = ({ isOpen, onClose, showToast }: AccessRequestFormProps) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [passwordError, setPasswordError] = useState("");
-  const { toast } = useToast();
+  const [role, setRole] = useState("");
 
   const checkPasswordValidity = () => {
     const result = validatePassword(password, confirmPassword);
@@ -49,19 +51,13 @@ const AccessRequestForm = ({ isOpen, onClose }: AccessRequestFormProps) => {
       );
       const user = userCredential.user;
       const db = getDatabase(app);
-      await set(ref(db, "users/" + user.uid), { name, email });
+      await set(ref(db, "users/" + user.uid), { name, email, role });
 
-      toast({
-        title: "Cadastro realizado",
-        description: "Sua conta foi criada com sucesso. Você já pode fazer login.",
-      });
+      showToast("Cadastro realizado com sucesso. Você já pode fazer login.", "success");
       onClose();
       resetForm();
-    } catch (error) {
-      toast({
-        title: "Erro ao cadastrar",
-        description: error.message,
-      });
+    } catch (error: any) {
+      showToast(error.message, "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -73,6 +69,7 @@ const AccessRequestForm = ({ isOpen, onClose }: AccessRequestFormProps) => {
     setPassword("");
     setConfirmPassword("");
     setPasswordError("");
+    setRole("");
   };
 
   return (
@@ -100,6 +97,7 @@ const AccessRequestForm = ({ isOpen, onClose }: AccessRequestFormProps) => {
             margin="normal"
             required
           />
+          <RoleSelector role={role} onRoleChange={setRole} />
           <TextField
             fullWidth
             label="Senha"
@@ -123,7 +121,7 @@ const AccessRequestForm = ({ isOpen, onClose }: AccessRequestFormProps) => {
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="secondary">
+        <Button onClick={onClose} color="inherit">
           Cancelar
         </Button>
         <Button
