@@ -1,5 +1,4 @@
-// Modal novo paciente
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -9,88 +8,84 @@ import {
   Button,
   Typography,
   IconButton,
+  Grid,
   CircularProgress,
   Box,
   Alert,
 } from '@mui/material';
-import Grid from '@mui/material/Grid';
 import CloseIcon from '@mui/icons-material/Close';
 
-// Importações do Firebase
-import { getDatabase, ref, push, set } from "firebase/database";
-import { app } from "@/services/firebaseConfig"; // ajuste o caminho se necessário
-
-interface AddPatientModalProps {
+interface EditAppointmentModalProps {
   open: boolean;
   onClose: () => void;
+  appointment: {
+    title: string;
+    date: string;
+    time: string;
+  } | null;
+  onSave: (appointment: any) => void;
 }
 
-const AddPatientModal = ({ open, onClose }: AddPatientModalProps) => {
-  const [name, setName] = useState('');
-  const [age, setAge] = useState('');
-  const [conditions, setConditions] = useState('');
+const EditAppointmentModal = ({ open, onClose, appointment, onSave }: EditAppointmentModalProps) => {
+  const [title, setTitle] = useState('');
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
+  useEffect(() => {
+    if (appointment) {
+      setTitle(appointment.title);
+      setDate(appointment.date);
+      setTime(appointment.time);
+    }
+  }, [appointment]);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validation
-    if (!name || !age) {
-      setError('Preencha os campos obrigatórios');
+    
+    if (!title || !date || !time) {
+      setError('Preencha todos os campos obrigatórios');
       return;
     }
-
+    
     try {
       setLoading(true);
       setError('');
-
-      // Salvar no Firebase Realtime Database
-      const db = getDatabase(app);
-      const patientsRef = ref(db, "patients");
-      const newPatientRef = push(patientsRef);
-
-      await set(newPatientRef, {
-        name,
-        age: Number(age),
-        conditions: conditions
-          ? conditions.split(",").map((c) => c.trim())
-          : [],
-        createdAt: new Date().toISOString(),
-        weight: [],
-        glucose: [],
-        temperature: [],
-        bloodPressure: [],
-        heartRate: [],
-      });
-
-      setSuccess(true);
+      
+      // Mock success
       setTimeout(() => {
-        handleClose();
-      }, 1500);
-      setLoading(false);
+        onSave({ title, date, time });
+        setSuccess(true);
+        setTimeout(() => {
+          handleClose();
+        }, 1500);
+        setLoading(false);
+      }, 1000);
+      
     } catch (err) {
-      setError('Erro ao adicionar paciente');
+      setError('Erro ao editar agendamento');
       console.error(err);
       setLoading(false);
     }
   };
-
+  
   const handleClose = () => {
-    setName('');
-    setAge('');
-    setConditions('');
+    setTitle('');
+    setDate('');
+    setTime('');
     setError('');
     setSuccess(false);
     onClose();
   };
-
+  
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      maxWidth="sm"
+    <Dialog 
+      open={open} 
+      onClose={handleClose} 
+      maxWidth="sm" 
       fullWidth
       PaperProps={{
         sx: { borderRadius: 2 }
@@ -98,7 +93,7 @@ const AddPatientModal = ({ open, onClose }: AddPatientModalProps) => {
     >
       <DialogTitle sx={{ m: 0, p: 2 }}>
         <Typography variant="h6" component="div">
-          Adicionar Novo Paciente
+          Editar Agendamento
         </Typography>
         <IconButton
           aria-label="close"
@@ -116,54 +111,60 @@ const AddPatientModal = ({ open, onClose }: AddPatientModalProps) => {
       <DialogContent dividers>
         {success && (
           <Alert severity="success" sx={{ mb: 2 }}>
-            Paciente adicionado com sucesso!
+            Agendamento atualizado com sucesso!
           </Alert>
         )}
-
+        
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
-
+        
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={2}>
-            <Grid>
+            <Grid item xs={12}>
               <TextField
                 required
                 fullWidth
-                id="name"
-                label="Nome do paciente"
-                name="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                id="title"
+                label="Título do agendamento"
+                name="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
                 disabled={loading}
               />
             </Grid>
-            <Grid>
+            <Grid item xs={12} sm={6}>
               <TextField
                 required
                 fullWidth
-                id="age"
-                label="Idade"
-                name="age"
-                type="number"
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
+                id="date"
+                label="Data"
+                name="date"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
                 disabled={loading}
+                InputLabelProps={{
+                  shrink: true,
+                }}
               />
             </Grid>
-            <Grid>
+            <Grid item xs={12} sm={6}>
               <TextField
+                required
                 fullWidth
-                id="conditions"
-                label="Condição"
-                name="conditions"
-                placeholder="Ex: Hipertensão, Diabetes"
-                value={conditions}
-                onChange={(e) => setConditions(e.target.value)}
+                id="time"
+                label="Horário"
+                name="time"
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
                 disabled={loading}
-                helperText="Separe as condições por vírgula"
+                InputLabelProps={{
+                  shrink: true,
+                }}
               />
             </Grid>
           </Grid>
@@ -173,17 +174,17 @@ const AddPatientModal = ({ open, onClose }: AddPatientModalProps) => {
         <Button onClick={handleClose} color="inherit" disabled={loading}>
           Cancelar
         </Button>
-        <Button
+        <Button 
           onClick={handleSubmit}
           variant="contained"
           color="primary"
           disabled={loading}
         >
-          {loading ? <CircularProgress size={24} /> : 'Adicionar'}
+          {loading ? <CircularProgress size={24} /> : 'Salvar'}
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-export default AddPatientModal;
+export default EditAppointmentModal;

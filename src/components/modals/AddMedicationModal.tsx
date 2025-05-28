@@ -1,4 +1,3 @@
-// Modal novo paciente
 import { useState } from 'react';
 import {
   Dialog,
@@ -9,88 +8,85 @@ import {
   Button,
   Typography,
   IconButton,
+  Grid,
   CircularProgress,
   Box,
   Alert,
+  MenuItem,
 } from '@mui/material';
-import Grid from '@mui/material/Grid';
 import CloseIcon from '@mui/icons-material/Close';
 
-// Importações do Firebase
-import { getDatabase, ref, push, set } from "firebase/database";
-import { app } from "@/services/firebaseConfig"; // ajuste o caminho se necessário
-
-interface AddPatientModalProps {
+interface AddMedicationModalProps {
   open: boolean;
   onClose: () => void;
+  patientId: string | undefined;
 }
 
-const AddPatientModal = ({ open, onClose }: AddPatientModalProps) => {
+const frequencies = [
+  { value: '1x ao dia', label: '1x ao dia' },
+  { value: '2x ao dia', label: '2x ao dia' },
+  { value: '3x ao dia', label: '3x ao dia' },
+  { value: '4x ao dia', label: '4x ao dia' },
+  { value: 'A cada 12h', label: 'A cada 12h' },
+  { value: 'A cada 8h', label: 'A cada 8h' },
+  { value: 'A cada 6h', label: 'A cada 6h' },
+  { value: 'Conforme necessário', label: 'Conforme necessário' },
+];
+
+const AddMedicationModal = ({ open, onClose, patientId }: AddMedicationModalProps) => {
   const [name, setName] = useState('');
-  const [age, setAge] = useState('');
-  const [conditions, setConditions] = useState('');
+  const [dosage, setDosage] = useState('');
+  const [frequency, setFrequency] = useState('');
+  const [time, setTime] = useState('');
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     // Validation
-    if (!name || !age) {
+    if (!name || !dosage || !frequency) {
       setError('Preencha os campos obrigatórios');
       return;
     }
-
+    
     try {
       setLoading(true);
       setError('');
-
-      // Salvar no Firebase Realtime Database
-      const db = getDatabase(app);
-      const patientsRef = ref(db, "patients");
-      const newPatientRef = push(patientsRef);
-
-      await set(newPatientRef, {
-        name,
-        age: Number(age),
-        conditions: conditions
-          ? conditions.split(",").map((c) => c.trim())
-          : [],
-        createdAt: new Date().toISOString(),
-        weight: [],
-        glucose: [],
-        temperature: [],
-        bloodPressure: [],
-        heartRate: [],
-      });
-
-      setSuccess(true);
+      
+      // Mock success
       setTimeout(() => {
-        handleClose();
-      }, 1500);
-      setLoading(false);
+        setSuccess(true);
+        setTimeout(() => {
+          handleClose();
+        }, 1500);
+        setLoading(false);
+      }, 1000);
+      
     } catch (err) {
-      setError('Erro ao adicionar paciente');
+      setError('Erro ao adicionar medicamento');
       console.error(err);
       setLoading(false);
     }
   };
-
+  
   const handleClose = () => {
     setName('');
-    setAge('');
-    setConditions('');
+    setDosage('');
+    setFrequency('');
+    setTime('');
     setError('');
     setSuccess(false);
     onClose();
   };
-
+  
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      maxWidth="sm"
+    <Dialog 
+      open={open} 
+      onClose={handleClose} 
+      maxWidth="sm" 
       fullWidth
       PaperProps={{
         sx: { borderRadius: 2 }
@@ -98,7 +94,7 @@ const AddPatientModal = ({ open, onClose }: AddPatientModalProps) => {
     >
       <DialogTitle sx={{ m: 0, p: 2 }}>
         <Typography variant="h6" component="div">
-          Adicionar Novo Paciente
+          Adicionar Medicamento
         </Typography>
         <IconButton
           aria-label="close"
@@ -116,54 +112,71 @@ const AddPatientModal = ({ open, onClose }: AddPatientModalProps) => {
       <DialogContent dividers>
         {success && (
           <Alert severity="success" sx={{ mb: 2 }}>
-            Paciente adicionado com sucesso!
+            Medicamento adicionado com sucesso!
           </Alert>
         )}
-
+        
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
-
+        
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={2}>
-            <Grid>
+            <Grid item xs={12}>
               <TextField
                 required
                 fullWidth
                 id="name"
-                label="Nome do paciente"
+                label="Nome do medicamento"
                 name="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={loading}
               />
             </Grid>
-            <Grid>
+            <Grid item xs={12}>
               <TextField
                 required
                 fullWidth
-                id="age"
-                label="Idade"
-                name="age"
-                type="number"
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
+                id="dosage"
+                label="Dosagem (ex: 500mg)"
+                name="dosage"
+                value={dosage}
+                onChange={(e) => setDosage(e.target.value)}
                 disabled={loading}
               />
             </Grid>
-            <Grid>
+            <Grid item xs={12}>
+              <TextField
+                select
+                required
+                fullWidth
+                id="frequency"
+                label="Frequência"
+                name="frequency"
+                value={frequency}
+                onChange={(e) => setFrequency(e.target.value)}
+                disabled={loading}
+              >
+                {frequencies.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12}>
               <TextField
                 fullWidth
-                id="conditions"
-                label="Condição"
-                name="conditions"
-                placeholder="Ex: Hipertensão, Diabetes"
-                value={conditions}
-                onChange={(e) => setConditions(e.target.value)}
+                id="time"
+                label="Horário (opcional)"
+                name="time"
+                placeholder="Ex: 08:00, 20:00"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
                 disabled={loading}
-                helperText="Separe as condições por vírgula"
               />
             </Grid>
           </Grid>
@@ -173,7 +186,7 @@ const AddPatientModal = ({ open, onClose }: AddPatientModalProps) => {
         <Button onClick={handleClose} color="inherit" disabled={loading}>
           Cancelar
         </Button>
-        <Button
+        <Button 
           onClick={handleSubmit}
           variant="contained"
           color="primary"
@@ -186,4 +199,4 @@ const AddPatientModal = ({ open, onClose }: AddPatientModalProps) => {
   );
 };
 
-export default AddPatientModal;
+export default AddMedicationModal;

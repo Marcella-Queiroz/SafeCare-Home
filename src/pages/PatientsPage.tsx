@@ -26,7 +26,27 @@ import AddPatientModal from '../components/modals/AddPatientModal';
 
 // Importações do Firebase
 import { getDatabase, ref, onValue } from "firebase/database";
-import { app } from "@/services/firebaseConfig"; // ajuste o caminho se necessário
+import { app } from "@/services/firebaseConfig";
+
+// Função auxiliar para gerar as iniciais do nome
+function getInitials(name: string) {
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toLowerCase();
+}
+
+// Função para automatizar o status baseado na pressão arterial
+function getStatusByBloodPressure(bloodPressure: string) {
+  if (!bloodPressure) return "Atenção";
+  const [systolic, diastolic] = bloodPressure.split('/').map(Number);
+  if (!systolic || !diastolic) return "Atenção";
+  if (systolic >= 90 && systolic <= 130 && diastolic >= 60 && diastolic <= 85) {
+    return "Estável";
+  }
+  return "Atenção";
+}
 
 const PatientsPage = () => {
   const navigate = useNavigate();
@@ -58,13 +78,26 @@ const PatientsPage = () => {
     return () => unsubscribe();
   }, []);
 
-  // Filtrar pacientes pelo termo de busca
-  const filteredPatients = patients.filter(patient => 
-    patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (patient.conditions || []).some((condition: string) => 
-      condition.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+  // Filtrar pacientes pelo termo de busca (nome, condição, iniciais ou primeira letra)
+  const filteredPatients = patients.filter(patient => {
+    const name = (patient.name || '').toLowerCase();
+    const initials = getInitials(patient.name || '');
+    const search = searchTerm.trim().toLowerCase();
+    const searchInitials = search
+      .split(' ')
+      .map((n) => n[0])
+      .join('');
+
+    // Verifica se o nome começa com a letra digitada
+    const nameStartsWith = name.startsWith(search);
+
+    return (
+      name.includes(search) ||
+      nameStartsWith ||
+      initials.includes(search.replace(/\s/g, '')) ||
+      initials.includes(searchInitials)
+    );
+  });
 
   const handlePatientClick = (patientId: string) => {
     navigate(`/patients/${patientId}`);
@@ -176,8 +209,8 @@ const PatientsPage = () => {
                           {patient.name}
                         </Typography>
                         <Chip 
-                          label={patient.status === 'Estável' ? 'Estável' : 'Atenção'} 
-                          color={patient.status === 'Estável' ? 'success' : 'warning'}
+                          label={getStatusByBloodPressure(patient.bloodPressure)}
+                          color={getStatusByBloodPressure(patient.bloodPressure) === 'Estável' ? 'success' : 'warning'}
                           size="small"
                           sx={{ ml: 1, height: 22 }}
                         />

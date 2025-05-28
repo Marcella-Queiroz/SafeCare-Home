@@ -1,5 +1,4 @@
-// Modal novo paciente
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -9,88 +8,90 @@ import {
   Button,
   Typography,
   IconButton,
+  Grid,
   CircularProgress,
   Box,
   Alert,
 } from '@mui/material';
-import Grid from '@mui/material/Grid';
 import CloseIcon from '@mui/icons-material/Close';
 
-// Importações do Firebase
-import { getDatabase, ref, push, set } from "firebase/database";
-import { app } from "@/services/firebaseConfig"; // ajuste o caminho se necessário
-
-interface AddPatientModalProps {
+interface EditPatientModalProps {
   open: boolean;
   onClose: () => void;
+  patient: {
+    id: string;
+    name: string;
+    age: number;
+    conditions: string[];
+  };
+  onSave: (updatedPatient: any) => void;
 }
 
-const AddPatientModal = ({ open, onClose }: AddPatientModalProps) => {
+const EditPatientModal = ({ open, onClose, patient, onSave }: EditPatientModalProps) => {
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [conditions, setConditions] = useState('');
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
+  useEffect(() => {
+    if (patient) {
+      setName(patient.name);
+      setAge(patient.age.toString());
+      setConditions(patient.conditions.join(', '));
+    }
+  }, [patient]);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     // Validation
     if (!name || !age) {
       setError('Preencha os campos obrigatórios');
       return;
     }
-
+    
     try {
       setLoading(true);
       setError('');
-
-      // Salvar no Firebase Realtime Database
-      const db = getDatabase(app);
-      const patientsRef = ref(db, "patients");
-      const newPatientRef = push(patientsRef);
-
-      await set(newPatientRef, {
+      
+      const updatedPatient = {
+        ...patient,
         name,
-        age: Number(age),
-        conditions: conditions
-          ? conditions.split(",").map((c) => c.trim())
-          : [],
-        createdAt: new Date().toISOString(),
-        weight: [],
-        glucose: [],
-        temperature: [],
-        bloodPressure: [],
-        heartRate: [],
-      });
-
-      setSuccess(true);
+        age: parseInt(age),
+        conditions: conditions.split(',').map(c => c.trim()).filter(c => c)
+      };
+      
+      // Mock success
       setTimeout(() => {
-        handleClose();
-      }, 1500);
-      setLoading(false);
+        setSuccess(true);
+        onSave(updatedPatient);
+        setTimeout(() => {
+          handleClose();
+        }, 1500);
+        setLoading(false);
+      }, 1000);
+      
     } catch (err) {
-      setError('Erro ao adicionar paciente');
+      setError('Erro ao atualizar paciente');
       console.error(err);
       setLoading(false);
     }
   };
-
+  
   const handleClose = () => {
-    setName('');
-    setAge('');
-    setConditions('');
     setError('');
     setSuccess(false);
     onClose();
   };
-
+  
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      maxWidth="sm"
+    <Dialog 
+      open={open} 
+      onClose={handleClose} 
+      maxWidth="sm" 
       fullWidth
       PaperProps={{
         sx: { borderRadius: 2 }
@@ -98,7 +99,7 @@ const AddPatientModal = ({ open, onClose }: AddPatientModalProps) => {
     >
       <DialogTitle sx={{ m: 0, p: 2 }}>
         <Typography variant="h6" component="div">
-          Adicionar Novo Paciente
+          Editar Dados do Paciente
         </Typography>
         <IconButton
           aria-label="close"
@@ -116,19 +117,19 @@ const AddPatientModal = ({ open, onClose }: AddPatientModalProps) => {
       <DialogContent dividers>
         {success && (
           <Alert severity="success" sx={{ mb: 2 }}>
-            Paciente adicionado com sucesso!
+            Dados atualizados com sucesso!
           </Alert>
         )}
-
+        
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
-
+        
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={2}>
-            <Grid>
+            <Grid item xs={12}>
               <TextField
                 required
                 fullWidth
@@ -140,7 +141,7 @@ const AddPatientModal = ({ open, onClose }: AddPatientModalProps) => {
                 disabled={loading}
               />
             </Grid>
-            <Grid>
+            <Grid item xs={12}>
               <TextField
                 required
                 fullWidth
@@ -153,11 +154,11 @@ const AddPatientModal = ({ open, onClose }: AddPatientModalProps) => {
                 disabled={loading}
               />
             </Grid>
-            <Grid>
+            <Grid item xs={12}>
               <TextField
                 fullWidth
                 id="conditions"
-                label="Condição"
+                label="Condições"
                 name="conditions"
                 placeholder="Ex: Hipertensão, Diabetes"
                 value={conditions}
@@ -173,17 +174,17 @@ const AddPatientModal = ({ open, onClose }: AddPatientModalProps) => {
         <Button onClick={handleClose} color="inherit" disabled={loading}>
           Cancelar
         </Button>
-        <Button
+        <Button 
           onClick={handleSubmit}
           variant="contained"
           color="primary"
           disabled={loading}
         >
-          {loading ? <CircularProgress size={24} /> : 'Adicionar'}
+          {loading ? <CircularProgress size={24} /> : 'Salvar'}
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-export default AddPatientModal;
+export default EditPatientModal;
