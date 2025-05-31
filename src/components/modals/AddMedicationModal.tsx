@@ -1,3 +1,6 @@
+//modal para cadastro de medicações
+//permite que o usuário adicione um medicamento com nome, dosagem, frequência e horário
+
 import { useState } from 'react';
 import {
   Dialog,

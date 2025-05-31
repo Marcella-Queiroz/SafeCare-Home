@@ -1,3 +1,4 @@
+//Layout para exibição de métricas de saúde
 
 import { Typography, Card, CardContent } from '@mui/material';
 import { ReactNode } from 'react';

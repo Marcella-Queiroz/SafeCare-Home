@@ -1,3 +1,5 @@
+//Modal para registrar peso e altura de um paciente
+
 import { useState } from 'react';
 import {
   Dialog,
@@ -31,11 +33,10 @@ const AddWeightModal = ({ open, onClose, patientId }: AddWeightModalProps) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   
-  // Calculate BMI when weight and height change
   const calculateBMI = () => {
     if (weight && height) {
       const weightNum = parseFloat(weight);
-      const heightNum = parseFloat(height) / 100; // convert cm to m
+      const heightNum = parseFloat(height) / 100;
       if (weightNum > 0 && heightNum > 0) {
         const bmiValue = (weightNum / (heightNum * heightNum)).toFixed(1);
         setBmi(bmiValue);
@@ -46,7 +47,6 @@ const AddWeightModal = ({ open, onClose, patientId }: AddWeightModalProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation
     if (!weight || !height) {
       setError('Preencha peso e altura');
       return;
@@ -55,11 +55,9 @@ const AddWeightModal = ({ open, onClose, patientId }: AddWeightModalProps) => {
     try {
       setLoading(true);
       setError('');
-      
-      // Calculate BMI before saving
+
       calculateBMI();
       
-      // Mock success
       setTimeout(() => {
         setSuccess(true);
         setTimeout(() => {
@@ -151,7 +149,6 @@ const AddWeightModal = ({ open, onClose, patientId }: AddWeightModalProps) => {
                 value={weight}
                 onChange={(e) => {
                   setWeight(e.target.value);
-                  // Recalculate BMI when weight changes
                   setTimeout(calculateBMI, 0);
                 }}
                 disabled={loading}
@@ -169,7 +166,6 @@ const AddWeightModal = ({ open, onClose, patientId }: AddWeightModalProps) => {
                 value={height}
                 onChange={(e) => {
                   setHeight(e.target.value);
-                  // Recalculate BMI when height changes
                   setTimeout(calculateBMI, 0);
                 }}
                 disabled={loading}

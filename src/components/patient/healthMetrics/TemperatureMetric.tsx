@@ -1,3 +1,5 @@
+// Exibe o histórico de Temperatura
+
 import ThermostatIcon from '@mui/icons-material/Thermostat';
 import HealthMetricDisplay from './HealthMetricDisplay';
 import BasicMetricRecord from './BasicMetricRecord';

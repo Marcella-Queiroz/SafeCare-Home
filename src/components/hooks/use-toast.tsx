@@ -1,3 +1,5 @@
+// Hook para exibir notificações
+
 import { useState } from "react";
 import { Snackbar, Alert } from "@mui/material";
 

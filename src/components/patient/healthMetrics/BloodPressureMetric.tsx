@@ -1,3 +1,5 @@
+//Exibe o histórico de pressão arterial
+
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import HealthMetricDisplay from './HealthMetricDisplay';
 import BasicMetricRecord from './BasicMetricRecord';

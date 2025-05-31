@@ -1,3 +1,4 @@
+//Exibe registros de peso, altura e IMC
 
 import { Typography, Card, CardContent, Box, Chip } from '@mui/material';
 

@@ -1,4 +1,5 @@
 //Card da ficha do paciente da tela de detalhes do paciente
+
 import { Box, Typography, Card, CardContent, Button, Divider, Chip, IconButton } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import CloseIcon from '@mui/icons-material/Close';
@@ -48,12 +49,6 @@ const PatientHeader = ({ patient, onClose, onEditPatient }: PatientHeaderProps) 
           <Box>
             <Typography variant="h5" component="h1" sx={{ fontWeight: 600 }}>
               {patient.name}
-              <Chip 
-                label={patient.status} 
-                color={patient.status === 'Estável' ? 'success' : 'warning'}
-                size="small"
-                sx={{ ml: 1, fontSize: '0.75rem' }}
-              />
             </Typography>
             
             <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>

@@ -1,3 +1,5 @@
+//Modal para edição de medicamentos
+
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -70,7 +72,6 @@ const EditMedicationModal = ({ open, onClose, medication, onSave }: EditMedicati
       setLoading(true);
       setError('');
       
-      // Mock success
       setTimeout(() => {
         onSave({ name, dosage, frequency, time });
         setSuccess(true);

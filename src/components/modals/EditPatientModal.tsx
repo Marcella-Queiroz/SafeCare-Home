@@ -1,3 +1,5 @@
+//Modal para edição dos dados de pacientes
+
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -64,7 +66,6 @@ const EditPatientModal = ({ open, onClose, patient, onSave }: EditPatientModalPr
         conditions: conditions.split(',').map(c => c.trim()).filter(c => c)
       };
       
-      // Mock success
       setTimeout(() => {
         setSuccess(true);
         onSave(updatedPatient);

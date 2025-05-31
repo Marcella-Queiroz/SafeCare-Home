@@ -1,3 +1,5 @@
+//Exibe o histórico de Saturação
+
 import OpacityIcon from '@mui/icons-material/Opacity';
 import HealthMetricDisplay from './HealthMetricDisplay';
 import BasicMetricRecord from './BasicMetricRecord';

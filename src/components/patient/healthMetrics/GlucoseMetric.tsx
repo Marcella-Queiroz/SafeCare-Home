@@ -1,3 +1,5 @@
+// Exibe o histórico de glicose
+
 import BloodtypeIcon from '@mui/icons-material/Bloodtype';
 import HealthMetricDisplay from './HealthMetricDisplay';
 import BasicMetricRecord from './BasicMetricRecord';

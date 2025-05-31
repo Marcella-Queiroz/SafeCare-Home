@@ -1,11 +1,13 @@
+//Modal que exibe informações sobre as métricas de saúde
+
 import { Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import BloodPressureMetric from './healthMetrics/BloodPressureMetric';
-import WeightMetric from './healthMetrics/WeightMetric';
-import OxygenMetric from './healthMetrics/OxygenMetric';
-import TemperatureMetric from './healthMetrics/TemperatureMetric';
-import GlucoseMetric from './healthMetrics/GlucoseMetric';
-import HeartRateMetric from './healthMetrics/HeartRateMetric';
+import BloodPressureMetric from '../patient/healthMetrics/BloodPressureMetric';
+import WeightMetric from '../patient/healthMetrics/WeightMetric';
+import OxygenMetric from '../patient/healthMetrics/OxygenMetric';
+import TemperatureMetric from '../patient/healthMetrics/TemperatureMetric';
+import GlucoseMetric from '../patient/healthMetrics/GlucoseMetric';
+import HeartRateMetric from '../patient/healthMetrics/HeartRateMetric';
 
 type HealthMetricType = 'bloodPressure' | 'weight' | 'oxygen' | 'temperature' | 'glucose' | 'heartRate';
 

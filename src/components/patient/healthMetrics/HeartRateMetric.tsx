@@ -1,3 +1,5 @@
+//Exibe o histórico de Frequência Cardíaca
+
 import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
 import HealthMetricDisplay from './HealthMetricDisplay';
 import BasicMetricRecord from './BasicMetricRecord';

@@ -1,3 +1,5 @@
+//Exibe a lista de registros métricos
+
 import { Typography, Card, CardContent } from '@mui/material';
 
 interface BasicMetricRecordProps {

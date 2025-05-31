@@ -1,3 +1,5 @@
+//Gerencia o login e o estado do usuário
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface User {

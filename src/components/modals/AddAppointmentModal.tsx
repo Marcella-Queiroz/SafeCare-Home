@@ -1,3 +1,6 @@
+//modal de agendamento de consultas
+//permite que o usuário cadastre um compromisso
+
 import { useState } from 'react';
 import {
   Dialog,
@@ -33,7 +36,6 @@ const AddAppointmentModal = ({ open, onClose, patientId }: AddAppointmentModalPr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation
     if (!title || !date || !time) {
       setError('Preencha todos os campos');
       return;
@@ -43,7 +45,6 @@ const AddAppointmentModal = ({ open, onClose, patientId }: AddAppointmentModalPr
       setLoading(true);
       setError('');
       
-      // Mock success
       setTimeout(() => {
         setSuccess(true);
         setTimeout(() => {

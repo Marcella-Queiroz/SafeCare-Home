@@ -1,3 +1,5 @@
+//Modal para edição de agendamento
+
 import { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -55,7 +57,6 @@ const EditAppointmentModal = ({ open, onClose, appointment, onSave }: EditAppoin
       setLoading(true);
       setError('');
       
-      // Mock success
       setTimeout(() => {
         onSave({ title, date, time });
         setSuccess(true);

@@ -1,3 +1,4 @@
+//Organiza a estrutura de páginas
 
 import { ReactNode } from 'react';
 import { Box, Container } from '@mui/material';

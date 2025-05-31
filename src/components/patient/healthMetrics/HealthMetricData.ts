@@ -1,3 +1,5 @@
+// Dados ficticios para os componentes de métricas de saúde do paciente
+
 export const healthMetricMockData = {
   bloodPressure: [
     { date: '20/05/2025', value: '120/80', time: '08:30' },

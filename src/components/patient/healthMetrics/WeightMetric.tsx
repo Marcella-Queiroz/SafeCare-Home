@@ -1,3 +1,4 @@
+//Exibe o histórico de peso e IMC do paciente
 
 import { Weight } from 'lucide-react';
 import HealthMetricDisplay from './HealthMetricDisplay';

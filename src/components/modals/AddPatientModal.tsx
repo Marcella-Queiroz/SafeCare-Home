@@ -1,4 +1,6 @@
-// Modal novo paciente
+//Modal novo paciente
+//Permite o cadastro de um novo paciente, e armazenamento dos dados no Firebase
+
 import { useState } from 'react';
 import {
   Dialog,
@@ -18,7 +20,7 @@ import CloseIcon from '@mui/icons-material/Close';
 
 // Importações do Firebase
 import { getDatabase, ref, push, set } from "firebase/database";
-import { app } from "@/services/firebaseConfig"; // ajuste o caminho se necessário
+import { app } from "@/services/firebaseConfig";
 
 interface AddPatientModalProps {
   open: boolean;
@@ -36,7 +38,6 @@ const AddPatientModal = ({ open, onClose }: AddPatientModalProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
     if (!name || !age) {
       setError('Preencha os campos obrigatórios');
       return;
@@ -46,7 +47,6 @@ const AddPatientModal = ({ open, onClose }: AddPatientModalProps) => {
       setLoading(true);
       setError('');
 
-      // Salvar no Firebase Realtime Database
       const db = getDatabase(app);
       const patientsRef = ref(db, "patients");
       const newPatientRef = push(patientsRef);

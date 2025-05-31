@@ -1,3 +1,5 @@
+//Exibe e organiza informações detalhadas sobre um paciente.
+
 import PatientHeader from './PatientHeader';
 import HealthMetricsGrid from './HealthMetricsGrid';
 import MedicationsSection from './MedicationsSection';
@@ -31,7 +33,6 @@ const PatientDetailContent = ({
   onEditAppointment,
   onDeleteAppointment
 }: PatientDetailContentProps) => {
-  // Função utilitária para pegar o último valor de uma métrica
   const getLastMetric = (metricArr: any[] | undefined, unit?: string) => {
     if (Array.isArray(metricArr) && metricArr.length > 0) {
       const last = metricArr[metricArr.length - 1];

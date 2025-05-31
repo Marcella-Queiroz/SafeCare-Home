@@ -1,3 +1,5 @@
+//Gerencia vários modais para manipulação de dados de pacientes
+
 import { Modal, Box, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import AddWeightModal from '../modals/AddWeightModal';
@@ -7,7 +9,7 @@ import EditAppointmentModal from '../modals/EditAppointmentModal';
 import DeleteConfirmationModal from '../modals/DeleteConfirmationModal';
 import AddAppointmentModal from '../modals/AddAppointmentModal';
 import EditPatientModal from '../modals/EditPatientModal';
-import HealthMetricModal from './HealthMetricModal';
+import HealthMetricModal from '../modals/HealthMetricModal';
 import { getDatabase, ref, get, update } from "firebase/database";
 
 type HealthMetricType = 'bloodPressure' | 'weight' | 'oxygen' | 'temperature' | 'glucose' | 'heartRate';

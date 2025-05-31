@@ -1,3 +1,4 @@
+//Validação de senha
 
 export const validatePassword = (password: string, confirmPassword: string): { valid: boolean; error: string } => {
     if (password.length < 6) {
