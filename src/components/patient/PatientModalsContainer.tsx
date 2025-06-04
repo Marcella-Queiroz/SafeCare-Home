@@ -10,7 +10,20 @@ import DeleteConfirmationModal from '../modals/DeleteConfirmationModal';
 import AddAppointmentModal from '../modals/AddAppointmentModal';
 import EditPatientModal from '../modals/EditPatientModal';
 import HealthMetricModal from '../modals/HealthMetricModal';
-import { getDatabase, ref, get, update } from "firebase/database";
+import EditWeightModal from '../modals/EditWeightModal';
+import EditGlucoseModal from '../modals/EditGlucoseModal';
+import EditBloodPressureModal from '../modals/EditBloodPressureModal';
+import EditTemperatureModal from '../modals/EditTemperatureModal';
+import EditOxygenModal from '../modals/EditOxygenModal';
+import EditHeartRateModal from '../modals/EditHeartRateModal';
+import AddBloodPressureModal from '../modals/AddBloodPressureModal';
+import AddGlucoseModal from '../modals/AddGlucoseModal';
+import AddTemperatureModal from '../modals/AddTemperatureModal';
+import AddOxygenModal from '../modals/AddOxygenModal';
+import AddHeartRateModal from '../modals/AddHeartRateModal';
+import { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { getDatabase, ref as dbRef, remove } from "firebase/database";
 
 type HealthMetricType = 'bloodPressure' | 'weight' | 'oxygen' | 'temperature' | 'glucose' | 'heartRate';
 
@@ -27,6 +40,7 @@ const modalStyle = {
 };
 
 interface PatientModalsContainerProps {
+  userId?: string;
   patientId?: string;
   weightModalOpen: boolean;
   setWeightModalOpen: (open: boolean) => void;
@@ -60,20 +74,46 @@ interface PatientModalsContainerProps {
   onSaveAppointment: (appointment: any) => void;
   onConfirmDelete: () => void;
   onSavePatient: (patient: any) => void;
+  editWeightModalOpen: boolean;
+  setEditWeightModalOpen: (open: boolean) => void;
+  editingWeight: any;
+  setEditingWeight: (weight: any) => void;
+  editGlucoseModalOpen: boolean;
+  setEditGlucoseModalOpen: (open: boolean) => void;
+  editingGlucose: any;
+  setEditingGlucose: (glucose: any) => void;
+  editBloodPressureModalOpen: boolean;
+  setEditBloodPressureModalOpen: (open: boolean) => void;
+  editingBloodPressure: any;
+  setEditingBloodPressure: (bloodPressure: any) => void;
+  editTemperatureModalOpen: boolean;
+  setEditTemperatureModalOpen: (open: boolean) => void;
+  editingTemperature: any;
+  setEditingTemperature: (temperature: any) => void;
+  editOxygenModalOpen: boolean;
+  setEditOxygenModalOpen: (open: boolean) => void;
+  editingOxygen: any;
+  setEditingOxygen: (oxygen: any) => void;
+  editHeartRateModalOpen: boolean;
+  setEditHeartRateModalOpen: (open: boolean) => void;
+  editingHeartRate: any;
+  setEditingHeartRate: (heartRate: any) => void;
+  onSaveWeight: (data: any) => Promise<void> | void;
+  onSaveGlucose: (data: any) => Promise<void> | void;
+  onSaveBloodPressure: (data: any) => Promise<void> | void;
+  onSaveTemperature: (data: any) => Promise<void> | void;
+  onSaveOxygen: (data: any) => Promise<void> | void;
+  onSaveHeartRate: (data: any) => Promise<void> | void;
+  onEditWeight: (data: any) => Promise<void> | void;
+  onEditGlucose: (data: any) => Promise<void> | void;
+  onEditBloodPressure: (data: any) => Promise<void> | void;
+  onEditTemperature: (data: any) => Promise<void> | void;
+  onEditOxygen: (data: any) => Promise<void> | void;
+  onEditHeartRate: (data: any) => Promise<void> | void;
 }
 
-//Função para salvar o novo peso
-const handleAddWeight = async (patientId: string, newWeight: number) => {
-  const db = getDatabase();
-  const patientRef = ref(db, `patients/${patientId}`);
-  const snapshot = await get(patientRef);
-  const patientData = snapshot.val() || {};
-  const weightArray = patientData.weight || [];
-  weightArray.push({ value: newWeight, date: new Date().toISOString() });
-  await update(patientRef, { weight: weightArray });
-};
-
 const PatientModalsContainer = ({
+  userId,
   patientId,
   weightModalOpen,
   setWeightModalOpen,
@@ -103,19 +143,104 @@ const PatientModalsContainer = ({
   onSaveMedication,
   onSaveAppointment,
   onConfirmDelete,
-  onSavePatient
+  onSavePatient,
+  editWeightModalOpen,
+  setEditWeightModalOpen,
+  editingWeight,
+  setEditingWeight,
+  editGlucoseModalOpen,
+  setEditGlucoseModalOpen,
+  editingGlucose,
+  setEditingGlucose,
+  editBloodPressureModalOpen,
+  setEditBloodPressureModalOpen,
+  editingBloodPressure,
+  setEditingBloodPressure,
+  editTemperatureModalOpen,
+  setEditTemperatureModalOpen,
+  editingTemperature,
+  setEditingTemperature,
+  editOxygenModalOpen,
+  setEditOxygenModalOpen,
+  editingOxygen,
+  setEditingOxygen,
+  editHeartRateModalOpen,
+  setEditHeartRateModalOpen,
+  editingHeartRate,
+  setEditingHeartRate,
+  onSaveWeight,
+  onSaveGlucose,
+  onSaveBloodPressure,
+  onSaveTemperature,
+  onSaveOxygen,
+  onSaveHeartRate,
+  onEditWeight,
+  onEditGlucose,
+  onEditBloodPressure,
+  onEditTemperature,
+  onEditOxygen,
+  onEditHeartRate,
 }: PatientModalsContainerProps) => {
+  const [addBloodPressureModalOpen, setAddBloodPressureModalOpen] = useState(false);
+  const [addGlucoseModalOpen, setAddGlucoseModalOpen] = useState(false);
+  const [addTemperatureModalOpen, setAddTemperatureModalOpen] = useState(false);
+  const [addOxygenModalOpen, setAddOxygenModalOpen] = useState(false);
+  const [addHeartRateModalOpen, setAddHeartRateModalOpen] = useState(false);
+  const [deleteMetricModalOpen, setDeleteMetricModalOpen] = useState(false);
+  const [metricToDelete, setMetricToDelete] = useState<{record: any, type: string} | null>(null);
+
+  // Funções para abrir cada modal
+  const handleAddBloodPressure = () => setAddBloodPressureModalOpen(true);
+  const handleAddGlucose = () => setAddGlucoseModalOpen(true);
+  const handleAddTemperature = () => setAddTemperatureModalOpen(true);
+  const handleAddOxygen = () => setAddOxygenModalOpen(true);
+  const handleAddHeartRate = () => setAddHeartRateModalOpen(true);
+
+  // Funções de exclusão para cada métrica
+  const handleDeleteWeight = async (record, index) => {
+    if (!userId || !patientId || !record.id) return;
+    await remove(dbRef(getDatabase(), `patients/${userId}/${patientId}/weight/${record.id}`));
+  };
+
+  const handleDeleteGlucose = async (record, index) => {
+    if (!userId || !patientId || !record.id) return;
+    await remove(dbRef(getDatabase(), `patients/${userId}/${patientId}/glucose/${record.id}`));
+  };
+
+  const handleDeleteBloodPressure = async (record, index) => {
+    if (!userId || !patientId || !record.id) return;
+    await remove(dbRef(getDatabase(), `patients/${userId}/${patientId}/bloodPressure/${record.id}`));
+  };
+
+  const handleDeleteTemperature = async (record, index) => {
+    if (!userId || !patientId || !record.id) return;
+    await remove(dbRef(getDatabase(), `patients/${userId}/${patientId}/temperature/${record.id}`));
+  };
+
+  const handleDeleteOxygen = async (record, index) => {
+    if (!userId || !patientId || !record.id) return;
+    await remove(dbRef(getDatabase(), `patients/${userId}/${patientId}/oxygen/${record.id}`));
+  };
+
+  const handleDeleteHeartRate = async (record, index) => {
+    if (!userId || !patientId || !record.id) return;
+    await remove(dbRef(getDatabase(), `patients/${userId}/${patientId}/heartRate/${record.id}`));
+  };
+
   return (
     <>
       <AddWeightModal 
         open={weightModalOpen}
         onClose={() => setWeightModalOpen(false)}
+        userId={userId}
         patientId={patientId}
+        onSave={onSaveWeight}
       />
       
       <AddMedicationModal
         open={medicationModalOpen}
         onClose={() => setMedicationModalOpen(false)}
+        userId={userId}
         patientId={patientId}
       />
       
@@ -151,6 +276,7 @@ const PatientModalsContainer = ({
       <AddAppointmentModal
         open={appointmentModalOpen}
         onClose={() => setAppointmentModalOpen(false)}
+        userId={userId}
         patientId={patientId}
       />
       
@@ -179,13 +305,156 @@ const PatientModalsContainer = ({
           </IconButton>
           {healthMetricModal.type && (
             <HealthMetricModal
+              open={healthMetricModal.open}
               type={healthMetricModal.type}
-              onAddRecord={() => setWeightModalOpen(true)}
+              patient={currentPatient}
+              onAddRecord={
+                healthMetricModal.type === 'weight'
+                  ? () => setWeightModalOpen(true)
+                  : healthMetricModal.type === 'bloodPressure'
+                  ? () => setAddBloodPressureModalOpen(true)
+                  : healthMetricModal.type === 'glucose'
+                  ? () => setAddGlucoseModalOpen(true)
+                  : healthMetricModal.type === 'temperature'
+                  ? () => setAddTemperatureModalOpen(true)
+                  : healthMetricModal.type === 'oxygen'
+                  ? () => setAddOxygenModalOpen(true)
+                  : healthMetricModal.type === 'heartRate'
+                  ? () => setAddHeartRateModalOpen(true)
+                  : undefined
+              }
+              onDeleteRecord={(record, index) => {
+                setMetricToDelete({ record, type: healthMetricModal.type });
+                setDeleteMetricModalOpen(true);
+              }}
               onClose={onCloseHealthMetricModal}
+              setEditingWeight={setEditingWeight}
+              setEditWeightModalOpen={setEditWeightModalOpen}
+              setEditingGlucose={setEditingGlucose}
+              setEditGlucoseModalOpen={setEditGlucoseModalOpen}
+              setEditingBloodPressure={setEditingBloodPressure}
+              setEditBloodPressureModalOpen={setEditBloodPressureModalOpen}
+              setEditingTemperature={setEditingTemperature}
+              setEditTemperatureModalOpen={setEditTemperatureModalOpen}
+              setEditingOxygen={setEditingOxygen}
+              setEditOxygenModalOpen={setEditOxygenModalOpen}
+              setEditingHeartRate={setEditingHeartRate}
+              setEditHeartRateModalOpen={setEditHeartRateModalOpen}
             />
           )}
         </Box>
       </Modal>
+
+      <EditWeightModal
+        open={editWeightModalOpen}
+        onClose={() => setEditWeightModalOpen(false)}
+        record={editingWeight}
+        onSave={() => onEditWeight(editingWeight)} userId={''} patientId={''}      />
+      <EditGlucoseModal
+        open={editGlucoseModalOpen}
+        onClose={() => setEditGlucoseModalOpen(false)}
+        record={editingGlucose}
+        onSave={() => onEditGlucose(editingGlucose)}
+      />
+      <EditBloodPressureModal
+        open={editBloodPressureModalOpen}
+        onClose={() => setEditBloodPressureModalOpen(false)}
+        record={editingBloodPressure}
+        onSave={() => onEditBloodPressure(editingBloodPressure)}
+      />
+      <EditTemperatureModal
+        open={editTemperatureModalOpen}
+        onClose={() => setEditTemperatureModalOpen(false)}
+        record={editingTemperature}
+        onSave={() => onEditTemperature(editingTemperature)}
+      />
+      <EditOxygenModal
+        open={editOxygenModalOpen}
+        onClose={() => setEditOxygenModalOpen(false)}
+        record={editingOxygen}
+        onSave={() => onEditOxygen(editingOxygen)}
+      />
+      <EditHeartRateModal
+        open={editHeartRateModalOpen}
+        onClose={() => setEditHeartRateModalOpen(false)}
+        record={editingHeartRate}
+        onSave={() => onEditHeartRate(editingHeartRate)}
+      />
+
+      {/* Inclua os modais de adicionar registro: */}
+      <AddGlucoseModal
+        open={addGlucoseModalOpen}
+        onClose={() => setAddGlucoseModalOpen(false)}
+        userId={userId}
+        patientId={patientId}
+        onSave={onSaveGlucose}
+      />
+      <AddBloodPressureModal
+        open={addBloodPressureModalOpen}
+        onClose={() => setAddBloodPressureModalOpen(false)}
+        userId={userId}
+        patientId={patientId}
+        onSave={onSaveBloodPressure}
+      />
+      <AddTemperatureModal
+        open={addTemperatureModalOpen}
+        onClose={() => setAddTemperatureModalOpen(false)}
+        userId={userId}
+        patientId={patientId}
+        onSave={onSaveTemperature}
+      />
+      <AddOxygenModal
+        open={addOxygenModalOpen}
+        onClose={() => setAddOxygenModalOpen(false)}
+        userId={userId}
+        patientId={patientId}
+        onSave={onSaveOxygen}
+      />
+      <AddHeartRateModal
+        open={addHeartRateModalOpen}
+        onClose={() => setAddHeartRateModalOpen(false)}
+        userId={userId}
+        patientId={patientId}
+        onSave={onSaveHeartRate}
+      />
+
+      <DeleteConfirmationModal
+        open={deleteMetricModalOpen}
+        onClose={() => {
+          setDeleteMetricModalOpen(false);
+          setMetricToDelete(null);
+        }}
+        onConfirm={async () => {
+          if (!metricToDelete) return;
+          const { record, type } = metricToDelete;
+          setDeleteMetricModalOpen(false);
+          setMetricToDelete(null);
+          switch (type) {
+            case 'weight':
+              await handleDeleteWeight(record, 0);
+              break;
+            case 'glucose':
+              await handleDeleteGlucose(record, 0);
+              break;
+            case 'bloodPressure':
+              await handleDeleteBloodPressure(record, 0);
+              break;
+            case 'temperature':
+              await handleDeleteTemperature(record, 0);
+              break;
+            case 'oxygen':
+              await handleDeleteOxygen(record, 0);
+              break;
+            case 'heartRate':
+              await handleDeleteHeartRate(record, 0);
+              break;
+            default:
+              break;
+          }
+        }}
+        title="Excluir Registro"
+        message="Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita."
+      />
     </>
   );
 };

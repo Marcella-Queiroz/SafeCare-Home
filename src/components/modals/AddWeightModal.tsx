@@ -2,37 +2,29 @@
 
 import { useState } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Button,
-  Typography,
-  IconButton,
-  Grid,
-  CircularProgress,
-  Box,
-  Alert,
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  TextField, Button, Typography, IconButton, CircularProgress, Box, Alert
 } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import CloseIcon from '@mui/icons-material/Close';
 
 interface AddWeightModalProps {
   open: boolean;
   onClose: () => void;
-  patientId: string | undefined;
+  userId: string;
+  patientId: string;
+  onSave: (data: any) => void | Promise<void>;
 }
 
-const AddWeightModal = ({ open, onClose, patientId }: AddWeightModalProps) => {
+const AddWeightModal = ({ open, onClose, userId, patientId, onSave }: AddWeightModalProps) => {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
   const [bmi, setBmi] = useState('');
-  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  
+
   const calculateBMI = () => {
     if (weight && height) {
       const weightNum = parseFloat(weight);
@@ -43,36 +35,34 @@ const AddWeightModal = ({ open, onClose, patientId }: AddWeightModalProps) => {
       }
     }
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setError('');
     if (!weight || !height) {
-      setError('Preencha peso e altura');
+      setError('Preencha todos os campos obrigatórios');
       return;
     }
-    
+    setLoading(true);
     try {
-      setLoading(true);
-      setError('');
-
-      calculateBMI();
-      
+      await onSave({
+        date,
+        weight: parseFloat(weight),
+        height: parseFloat(height),
+        bmi: bmi ? parseFloat(bmi) : undefined,
+      });
+      setSuccess(true);
       setTimeout(() => {
-        setSuccess(true);
-        setTimeout(() => {
-          handleClose();
-        }, 1500);
+        setSuccess(false);
         setLoading(false);
-      }, 1000);
-      
-    } catch (err) {
-      setError('Erro ao salvar dados');
-      console.error(err);
+        handleClose();
+      }, 1200);
+    } catch {
+      setError('Erro ao salvar registro');
       setLoading(false);
     }
   };
-  
+
   const handleClose = () => {
     setWeight('');
     setHeight('');
@@ -81,60 +71,32 @@ const AddWeightModal = ({ open, onClose, patientId }: AddWeightModalProps) => {
     setSuccess(false);
     onClose();
   };
-  
+
   return (
-    <Dialog 
-      open={open} 
-      onClose={handleClose} 
-      maxWidth="sm" 
-      fullWidth
-      PaperProps={{
-        sx: { borderRadius: 2 }
-      }}
-    >
-      <DialogTitle sx={{ m: 0, p: 2 }}>
-        <Typography variant="h6" component="div">
-          Adicionar novo registro
-        </Typography>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+      <DialogTitle>
+        Adicionar Peso
         <IconButton
           aria-label="close"
           onClick={handleClose}
-          sx={{
-            position: 'absolute',
-            right: 8,
-            top: 8,
-            color: (theme) => theme.palette.grey[500],
-          }}
+          sx={{ position: 'absolute', right: 8, top: 8 }}
         >
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent dividers>
-        {success && (
-          <Alert severity="success" sx={{ mb: 2 }}>
-            Registro adicionado com sucesso!
-          </Alert>
-        )}
-        
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-        
+      <DialogContent>
+        {success && <Alert severity="success" sx={{ mb: 2 }}>Registro adicionado com sucesso!</Alert>}
+        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                id="date"
                 label="Data"
                 type="date"
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
-                InputLabelProps={{
-                  shrink: true,
-                }}
+                onChange={e => setDate(e.target.value)}
+                InputLabelProps={{ shrink: true }}
                 disabled={loading}
               />
             </Grid>
@@ -142,12 +104,10 @@ const AddWeightModal = ({ open, onClose, patientId }: AddWeightModalProps) => {
               <TextField
                 required
                 fullWidth
-                id="weight"
                 label="Peso (kg)"
-                name="weight"
                 type="number"
                 value={weight}
-                onChange={(e) => {
+                onChange={e => {
                   setWeight(e.target.value);
                   setTimeout(calculateBMI, 0);
                 }}
@@ -159,12 +119,10 @@ const AddWeightModal = ({ open, onClose, patientId }: AddWeightModalProps) => {
               <TextField
                 required
                 fullWidth
-                id="height"
                 label="Altura (cm)"
-                name="height"
                 type="number"
                 value={height}
-                onChange={(e) => {
+                onChange={e => {
                   setHeight(e.target.value);
                   setTimeout(calculateBMI, 0);
                 }}
@@ -175,27 +133,18 @@ const AddWeightModal = ({ open, onClose, patientId }: AddWeightModalProps) => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                id="bmi"
                 label="IMC (kg/m²)"
-                name="bmi"
                 value={bmi}
-                disabled={true}
+                disabled
                 helperText="Calculado automaticamente"
               />
             </Grid>
           </Grid>
         </Box>
       </DialogContent>
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={handleClose} color="inherit" disabled={loading}>
-          Cancelar
-        </Button>
-        <Button 
-          onClick={handleSubmit}
-          variant="contained"
-          color="primary"
-          disabled={loading}
-        >
+      <DialogActions>
+        <Button onClick={handleClose} disabled={loading}>Cancelar</Button>
+        <Button onClick={handleSubmit} variant="contained" disabled={loading}>
           {loading ? <CircularProgress size={24} /> : 'Salvar'}
         </Button>
       </DialogActions>

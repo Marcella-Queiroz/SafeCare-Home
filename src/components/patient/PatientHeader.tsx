@@ -22,10 +22,17 @@ interface PatientHeaderProps {
   onEditPatient: () => void;
 }
 
-const getLastMetric = (metricArr: any[] | undefined, unit?: string) => {
+const getLastMetric = (
+  metricArr: any[] | undefined,
+  field: string,
+  unit?: string
+) => {
   if (Array.isArray(metricArr) && metricArr.length > 0) {
     const last = metricArr[metricArr.length - 1];
-    return `${last.value}${unit ? ` ${unit}` : ''}`;
+    const value = last[field];
+    return value !== undefined && value !== null
+      ? `${value}${unit ? ` ${unit}` : ''}`
+      : 'Não cadastrado';
   }
   return 'Não cadastrado';
 };
@@ -73,31 +80,31 @@ const PatientHeader = ({ patient, onClose, onEditPatient }: PatientHeaderProps) 
           <Grid item xs={6}>
             <Typography variant="body2" color="textSecondary">Peso:</Typography>
             <Typography variant="body1" sx={{ fontWeight: 500 }}>
-              {getLastMetric(patient.weight, 'kg')}
+              {getLastMetric(patient.weight, 'weight', 'kg')}
             </Typography>
           </Grid>
           <Grid item xs={6}>
             <Typography variant="body2" color="textSecondary">Glicose:</Typography>
             <Typography variant="body1" sx={{ fontWeight: 500 }}>
-              {getLastMetric(patient.glucose, 'mg/dL')}
+              {getLastMetric(patient.glucose, 'value', 'mg/dL')}
             </Typography>
           </Grid>
           <Grid item xs={6}>
             <Typography variant="body2" color="textSecondary">Temperatura:</Typography>
             <Typography variant="body1" sx={{ fontWeight: 500 }}>
-              {getLastMetric(patient.temperature, '°C')}
+              {getLastMetric(patient.temperature, 'value', '°C')}
             </Typography>
           </Grid>
           <Grid item xs={6}>
-            <Typography variant="body2" color="textSecondary">Pressão:</Typography>
+            <Typography variant="body2" color="textSecondary">Saturação:</Typography>
             <Typography variant="body1" sx={{ fontWeight: 500 }}>
-              {getLastMetric(patient.bloodPressure)}
+              {getLastMetric(patient.oxygen, 'value', '%')}
             </Typography>
           </Grid>
           <Grid item xs={6}>
             <Typography variant="body2" color="textSecondary">Frequência Cardíaca:</Typography>
             <Typography variant="body1" sx={{ fontWeight: 500 }}>
-              {getLastMetric(patient.heartRate, 'bpm')}
+              {getLastMetric(patient.heartRate, 'value', 'bpm')}
             </Typography>
           </Grid>
           {patient.lastCheck && (

@@ -1,7 +1,6 @@
-//modal para cadastro de medicações
-//permite que o usuário adicione um medicamento com nome, dosagem, frequência e horário
+//modal para cadastro e edição de medicações
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -18,11 +17,14 @@ import {
   MenuItem,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { getDatabase, ref, get, update } from "firebase/database";
 
 interface AddMedicationModalProps {
   open: boolean;
   onClose: () => void;
-  patientId: string | undefined;
+  userId: string;
+  patientId: string;
+  medication?: any;
 }
 
 const frequencies = [
@@ -36,45 +38,69 @@ const frequencies = [
   { value: 'Conforme necessário', label: 'Conforme necessário' },
 ];
 
-const AddMedicationModal = ({ open, onClose, patientId }: AddMedicationModalProps) => {
+const AddMedicationModal = ({ open, onClose, userId, patientId, medication }: AddMedicationModalProps) => {
   const [name, setName] = useState('');
   const [dosage, setDosage] = useState('');
   const [frequency, setFrequency] = useState('');
   const [time, setTime] = useState('');
-  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  
+
+  useEffect(() => {
+    if (medication) {
+      setName(medication.name || '');
+      setDosage(medication.dosage || '');
+      setFrequency(medication.frequency || '');
+      setTime(medication.time || '');
+    } else {
+      setName('');
+      setDosage('');
+      setFrequency('');
+      setTime('');
+    }
+    setError('');
+    setSuccess(false);
+  }, [medication, open]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validation
     if (!name || !dosage || !frequency) {
       setError('Preencha os campos obrigatórios');
       return;
     }
-    
     try {
       setLoading(true);
       setError('');
-      
-      // Mock success
-      setTimeout(() => {
+      const db = getDatabase();
+      const patientRef = ref(db, `patients/${userId}/${patientId}`);
+      const snapshot = await get(patientRef);
+      const patientData = snapshot.val() || {};
+      const medications = patientData.medications || [];
+      if (medication && typeof medication.index === 'number') {
+        // Edição
+        medications[medication.index] = { name, dosage, frequency, time };
+        await update(patientRef, { medications });
         setSuccess(true);
         setTimeout(() => {
           handleClose();
-        }, 1500);
-        setLoading(false);
-      }, 1000);
-      
+        }, 1200);
+      } else {
+        // Cadastro
+        medications.push({ name, dosage, frequency, time });
+        await update(patientRef, { medications });
+        setSuccess(true);
+        setTimeout(() => {
+          handleClose();
+        }, 1200);
+      }
+      setLoading(false);
     } catch (err) {
-      setError('Erro ao adicionar medicamento');
-      console.error(err);
+      setError('Erro ao salvar medicamento');
       setLoading(false);
     }
   };
-  
+
   const handleClose = () => {
     setName('');
     setDosage('');
@@ -84,7 +110,7 @@ const AddMedicationModal = ({ open, onClose, patientId }: AddMedicationModalProp
     setSuccess(false);
     onClose();
   };
-  
+
   return (
     <Dialog 
       open={open} 
@@ -97,7 +123,7 @@ const AddMedicationModal = ({ open, onClose, patientId }: AddMedicationModalProp
     >
       <DialogTitle sx={{ m: 0, p: 2 }}>
         <Typography variant="h6" component="div">
-          Adicionar Medicamento
+          {medication ? 'Editar Medicamento' : 'Adicionar Medicamento'}
         </Typography>
         <IconButton
           aria-label="close"
@@ -115,16 +141,14 @@ const AddMedicationModal = ({ open, onClose, patientId }: AddMedicationModalProp
       <DialogContent dividers>
         {success && (
           <Alert severity="success" sx={{ mb: 2 }}>
-            Medicamento adicionado com sucesso!
+            {medication ? 'Medicamento editado com sucesso!' : 'Medicamento adicionado com sucesso!'}
           </Alert>
         )}
-        
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
-        
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={2}>
             <Grid item xs={12}>
@@ -195,7 +219,7 @@ const AddMedicationModal = ({ open, onClose, patientId }: AddMedicationModalProp
           color="primary"
           disabled={loading}
         >
-          {loading ? <CircularProgress size={24} /> : 'Adicionar'}
+          {loading ? <CircularProgress size={24} /> : medication ? 'Salvar' : 'Adicionar'}
         </Button>
       </DialogActions>
     </Dialog>

@@ -3,17 +3,18 @@
 import { Weight } from 'lucide-react';
 import HealthMetricDisplay from './HealthMetricDisplay';
 import WeightRecord from './WeightRecord';
-import { healthMetricMockData } from './HealthMetricData';
 
-const WeightMetric = () => {
-  return (
-    <HealthMetricDisplay
-      title="Histórico de Peso e IMC"
-      icon={<Weight size={20} style={{ color: '#3949ab', marginRight: '8px', verticalAlign: 'text-bottom' }} />}
-    >
-      <WeightRecord records={healthMetricMockData.weight} />
-    </HealthMetricDisplay>
-  );
+type WeightRecordProps = {
+  records: any[];
+  onEdit: (record: any, index: number) => void;
+  // Adicione onDelete nas props
+  onDelete: (record: any, index: number) => void;
 };
+
+const WeightMetric = ({ records, onEdit, onDelete }) => (
+  <HealthMetricDisplay title="Histórico de Peso e IMC" icon={''}>
+    <WeightRecord records={records} onEdit={onEdit} onDelete={onDelete} />
+  </HealthMetricDisplay>
+);
 
 export default WeightMetric;

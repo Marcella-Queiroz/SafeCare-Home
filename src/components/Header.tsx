@@ -51,7 +51,7 @@ const Header = () => {
   const handleLogout = () => {
     handleClose();
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   const handleProfile = () => {

@@ -1,20 +1,35 @@
 // Exibe o grupo de cards das métricas de saúde
 
-import { Typography, Grid, Card, CardContent, Box } from '@mui/material';
+import { Typography, Card, CardContent, Box } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { Weight } from 'lucide-react';
 import OpacityIcon from '@mui/icons-material/Opacity';
 import ThermostatIcon from '@mui/icons-material/Thermostat';
 import BloodtypeIcon from '@mui/icons-material/Bloodtype';
 import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
+import Grid from '@mui/material/Grid';
 
 type HealthMetricType = 'bloodPressure' | 'weight' | 'oxygen' | 'temperature' | 'glucose' | 'heartRate';
 
 interface HealthMetricsGridProps {
   onMetricClick: (type: HealthMetricType) => void;
+  weight?: any[];
+  bloodPressure?: any[];
+  glucose?: any[];
+  temperature?: any[];
+  oxygen?: any[];
+  heartRate?: any[];
 }
 
-const HealthMetricsGrid = ({ onMetricClick }: HealthMetricsGridProps) => {
+const HealthMetricsGrid = ({
+  onMetricClick,
+  weight,
+  bloodPressure,
+  glucose,
+  temperature,
+  oxygen,
+  heartRate,
+}: HealthMetricsGridProps) => {
   const metrics = [
     {
       type: 'weight' as HealthMetricType,
@@ -49,7 +64,7 @@ const HealthMetricsGrid = ({ onMetricClick }: HealthMetricsGridProps) => {
   ];
 
   const renderCard = (metric: (typeof metrics)[number]) => (
-    <Grid item xs={4} key={metric.type}>
+    <Grid item xs={12} sm={4} key={metric.type}>
       <Card
         sx={{
           height: { xs: 100, md: 170 },
@@ -109,11 +124,8 @@ const HealthMetricsGrid = ({ onMetricClick }: HealthMetricsGridProps) => {
         justifyContent="center"
         sx={{ maxWidth: 600, margin: '0 auto', mb: 4 }}
       >
-        <Grid container item spacing={2} justifyContent="center">
-          {metrics.slice(0, 3).map(renderCard)}
-        </Grid>
-        <Grid container item spacing={2} justifyContent="center" sx={{ mt: 1 }}>
-          {metrics.slice(3, 6).map(renderCard)}
+        <Grid container spacing={2}>
+          {metrics.map(renderCard)}
         </Grid>
       </Grid>
     </>

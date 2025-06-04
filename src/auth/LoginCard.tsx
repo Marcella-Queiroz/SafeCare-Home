@@ -1,7 +1,8 @@
 // Card de Login
 import React, { useState } from "react";
 import { Button, TextField, Typography, Box } from "@mui/material";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword, updateEmail } from "firebase/auth";
+import { getDatabase, ref, get } from "firebase/database";
 import { app } from "@/services/firebaseConfig";
 import Logo from "@/components/Logo";
 
@@ -26,7 +27,17 @@ const LoginCard = ({ onForgotPassword, onRequestAccess, showToast }: LoginCardPr
 
     const auth = getAuth(app);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      // Busque os dados do usuário no banco
+      const db = getDatabase(app);
+      const userRef = ref(db, "users/" + user.uid);
+      const snapshot = await get(userRef);
+      if (snapshot.exists()) {
+        const userData = snapshot.val();
+        // Salve no localStorage/contexto para uso no ProfilePage
+        localStorage.setItem("safecare-user", JSON.stringify({ ...userData, uid: user.uid }));
+      }
       showToast("Login realizado", "success");
       localStorage.setItem("isLoggedIn", "true");
       window.location.href = "/patients";
@@ -45,6 +56,20 @@ const LoginCard = ({ onForgotPassword, onRequestAccess, showToast }: LoginCardPr
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleEmailUpdate = async (novoEmail: string) => {
+    const auth = getAuth(app);
+    const user = auth.currentUser;
+
+    if (user) {
+      try {
+        await updateEmail(user, novoEmail);
+        showToast("Email atualizado com sucesso", "success");
+      } catch (error: any) {
+        showToast(error.message, "error");
+      }
     }
   };
 

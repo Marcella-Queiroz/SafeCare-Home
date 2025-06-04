@@ -8,8 +8,25 @@ import { Typography, Box } from '@mui/material';
 
 type HealthMetricType = 'bloodPressure' | 'weight' | 'oxygen' | 'temperature' | 'glucose' | 'heartRate';
 
+interface Patient {
+  name: string;
+  status: string;
+  age: number;
+  conditions: string[];
+  weight?: any[];
+  glucose?: any[];
+  temperature?: any[];
+  bloodPressure?: any[];
+  heartRate?: any[];
+  oxygen?: any[];
+  lastCheck?: string;
+  medications?: any[];
+  appointments?: any[];
+  // ...outros campos
+}
+
 interface PatientDetailContentProps {
-  patient: any;
+  patient: Patient;
   onClose: () => void;
   onEditPatient: () => void;
   onMetricClick: (type: HealthMetricType) => void;
@@ -51,6 +68,12 @@ const PatientDetailContent = ({
 
       <HealthMetricsGrid 
         onMetricClick={onMetricClick} 
+        weight={patient.weight}
+        bloodPressure={patient.bloodPressure}
+        glucose={patient.glucose}
+        temperature={patient.temperature}
+        oxygen={patient.oxygen}
+        heartRate={patient.heartRate}
       />
       
       <MedicationsSection

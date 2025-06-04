@@ -53,24 +53,14 @@ const EditAppointmentModal = ({ open, onClose, appointment, onSave }: EditAppoin
       return;
     }
     
-    try {
-      setLoading(true);
-      setError('');
-      
-      setTimeout(() => {
-        onSave({ title, date, time });
-        setSuccess(true);
-        setTimeout(() => {
-          handleClose();
-        }, 1500);
-        setLoading(false);
-      }, 1000);
-      
-    } catch (err) {
-      setError('Erro ao editar agendamento');
-      console.error(err);
+    setLoading(true);
+    setError('');
+    onSave({ title, date, time }); // Isso chama handleSaveAppointment do PatientDetailPage
+    setSuccess(true);
+    setTimeout(() => {
+      handleClose();
       setLoading(false);
-    }
+    }, 1200);
   };
   
   const handleClose = () => {

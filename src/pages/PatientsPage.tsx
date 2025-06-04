@@ -23,12 +23,14 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import DescriptionIcon from '@mui/icons-material/Description';
 import DeleteIcon from '@mui/icons-material/Delete';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import PageContainer from '../components/PageContainer';
 import AddPatientModal from '../components/modals/AddPatientModal';
 
 // Importações do Firebase
-import { getDatabase, ref, onValue } from "firebase/database";
+import { getDatabase, ref, onValue, set, push } from "firebase/database";
 import { app } from "@/services/firebaseConfig";
+import { useAuth } from '../contexts/AuthContext';
 
 // Função auxiliar para gerar as iniciais do nome
 function getInitials(name: string) {
@@ -40,18 +42,73 @@ function getInitials(name: string) {
 }
 
 // Função para automatizar o status baseado na pressão arterial
-function getStatusByBloodPressure(bloodPressure: string) {
-  if (!bloodPressure) return "Atenção";
-  const [systolic, diastolic] = bloodPressure.split('/').map(Number);
-  if (!systolic || !diastolic) return "Atenção";
-  if (systolic >= 90 && systolic <= 130 && diastolic >= 60 && diastolic <= 85) {
-    return "Estável";
+function getStatusByBloodPressure(bloodPressure: any) {
+  // Se for array, pega o último registro
+  if (Array.isArray(bloodPressure) && bloodPressure.length > 0) {
+    const last = bloodPressure[bloodPressure.length - 1];
+    // last pode ser { systolic, diastolic } ou { value: "120/80" }
+    let systolic, diastolic;
+    if (typeof last === 'object') {
+      if ('systolic' in last && 'diastolic' in last) {
+        systolic = Number(last.systolic);
+        diastolic = Number(last.diastolic);
+      } else if ('value' in last && typeof last.value === 'string') {
+        [systolic, diastolic] = last.value.split('/').map(Number);
+      }
+    }
+    if (!systolic || !diastolic) return "Atenção";
+    if (systolic >= 90 && systolic <= 130 && diastolic >= 60 && diastolic <= 85) {
+      return "Estável";
+    }
+    return "Atenção";
+  }
+  // Se for string, tenta dividir normalmente
+  if (typeof bloodPressure === 'string') {
+    const [systolic, diastolic] = bloodPressure.split('/').map(Number);
+    if (!systolic || !diastolic) return "Atenção";
+    if (systolic >= 90 && systolic <= 130 && diastolic >= 60 && diastolic <= 85) {
+      return "Estável";
+    }
+    return "Atenção";
   }
   return "Atenção";
 }
 
+function getLastBloodPressureString(bloodPressure: any) {
+  if (Array.isArray(bloodPressure) && bloodPressure.length > 0) {
+    const last = bloodPressure[bloodPressure.length - 1];
+    if (typeof last === 'object') {
+      if ('systolic' in last && 'diastolic' in last) {
+        return `${last.systolic}/${last.diastolic}`;
+      }
+      if ('value' in last && typeof last.value === 'string') {
+        return last.value;
+      }
+    }
+  }
+  if (typeof bloodPressure === 'string') {
+    return bloodPressure;
+  }
+  return '-';
+}
+
+// Função genérica para pegar o último valor de um array de métricas
+function getLastMetricValue(metric: any, field: string = 'value', suffix: string = '') {
+  if (Array.isArray(metric) && metric.length > 0) {
+    const last = metric[metric.length - 1];
+    if (last && typeof last === 'object' && field in last) {
+      return `${last[field]}${suffix}`;
+    }
+  }
+  if (typeof metric === 'string' || typeof metric === 'number') {
+    return `${metric}${suffix}`;
+  }
+  return '-';
+}
+
 const PatientsPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [tabValue, setTabValue] = useState(0);
   const [addPatientModalOpen, setAddPatientModalOpen] = useState(false);
@@ -59,11 +116,13 @@ const PatientsPage = () => {
   // Estado para pacientes e carregamento
   const [patients, setPatients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reports, setReports] = useState<any[]>([]);
 
-  // Buscar pacientes do Firebase
+  // Buscar pacientes do usuário logado
   useEffect(() => {
+    if (!user?.uid) return;
     const db = getDatabase(app);
-    const patientsRef = ref(db, "patients");
+    const patientsRef = ref(db, `patients/${user.uid}`);
     const unsubscribe = onValue(patientsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -78,7 +137,27 @@ const PatientsPage = () => {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [user?.uid]);
+
+  // Buscar relatórios do usuário logado
+  useEffect(() => {
+    if (!user?.uid) return;
+    const db = getDatabase(app);
+    const reportsRef = ref(db, `reports/${user.uid}`);
+    const unsubscribe = onValue(reportsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const arr = Object.entries(data).map(([id, value]: any) => ({
+          id,
+          ...value,
+        }));
+        setReports(arr.reverse());
+      } else {
+        setReports([]);
+      }
+    });
+    return () => unsubscribe();
+  }, [user?.uid]);
 
   // Filtrar pacientes pelo termo de busca (nome, condição, iniciais ou primeira letra)
   const filteredPatients = patients.filter(patient => {
@@ -102,7 +181,7 @@ const PatientsPage = () => {
   });
 
   const handlePatientClick = (patientId: string) => {
-    navigate(`/patients/${patientId}`);
+    navigate(`/patients/${user?.uid}/${patientId}`);
   };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -110,7 +189,36 @@ const PatientsPage = () => {
   };
   
   const handleNewReportClick = () => {
-    navigate('/reports/new');
+    navigate('/reports');
+  };
+
+  const handleExportReport = (report: any) => {
+    // Exemplo: exporta como JSON (você pode adaptar para PDF, CSV, etc)
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(report, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `relatorio_${report.patientName}_${report.id}.json`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  };
+
+  // Função para adicionar paciente
+  const handleAddPatient = async (dadosPaciente: any) => {
+    const db = getDatabase(app);
+    const userId = user?.uid; // Pegue do contexto de autenticação
+    const patientsRef = ref(db, `patients/${userId}`);
+    const newPatientRef = push(patientsRef);
+    await set(newPatientRef, { ...dadosPaciente });
+  };
+
+  // Função para adicionar relatório
+  const handleAddReport = async (dadosRelatorio: any) => {
+    const db = getDatabase(app);
+    const userId = user?.uid; // Pegue do contexto de autenticação
+    const reportsRef = ref(db, `reports/${userId}`);
+    const newReportRef = push(reportsRef);
+    await set(newReportRef, { ...dadosRelatorio });
   };
 
   return (
@@ -162,22 +270,41 @@ const PatientsPage = () => {
           />
         </Tabs>
         
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<AddIcon />}
-          onClick={() => setAddPatientModalOpen(true)}
-          size="small"
-          sx={{
-            minWidth: 100,
-            fontWeight: 400,
-            fontSize: { xs: '0.6rem', sm: '0.95rem' },
-            py: 0.5,
-            px: 1
-          }}
-        >
-          Novo Paciente
-        </Button>
+        {tabValue === 0 ? (
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={() => setAddPatientModalOpen(true)}
+            size="small"
+            sx={{
+              minWidth: 100,
+              fontWeight: 400,
+              fontSize: { xs: '0.6rem', sm: '0.95rem' },
+              py: 0.5,
+              px: 1
+            }}
+          >
+            Novo Paciente
+          </Button>
+        ) : (
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<DescriptionIcon />}
+            onClick={handleNewReportClick}
+            size="small"
+            sx={{
+              minWidth: 100,
+              fontWeight: 400,
+              fontSize: { xs: '0.6rem', sm: '0.95rem' },
+              py: 0.5,
+              px: 1
+            }}
+          >
+            Novo Relatório
+          </Button>
+        )}
       </Box>
       
       {tabValue === 0 ? (
@@ -232,13 +359,28 @@ const PatientsPage = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <FavoriteIcon color="error" fontSize="small" sx={{ mr: 0.5 }} />
                       <Typography variant="body2" sx={{ mr: 0.5 }}>
-                        {patient.bloodPressure}
+                        {getLastBloodPressureString(patient.bloodPressure)}
                       </Typography>
                     </Box>
                     
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
-                        {patient.heartRate} bpm
+                        {getLastMetricValue(patient.heartRate, 'value', ' bpm')}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
+                        {getLastMetricValue(patient.glucose, 'value', ' mg/dL')}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
+                        {getLastMetricValue(patient.temperature, 'value', '°C')}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
+                        {getLastMetricValue(patient.oxygen, 'value', '%')}
                       </Typography>
                     </Box>
                     
@@ -262,26 +404,56 @@ const PatientsPage = () => {
         </Box>
       ) : (
         <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography variant="h6" gutterBottom>
+          <Typography variant="h6" gutterBottom fontWeight={600}>
             Relatórios Salvos
           </Typography>
-          <Typography variant="body2" color="textSecondary">
-            Crie um novo relatório para visualizar aqui.
-          </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            sx={{ mt: 2 }}
-            onClick={handleNewReportClick}
-          >
-            Criar Relatório
-          </Button>
+          {reports.length === 0 ? (
+            <>
+              <Typography variant="body2" color="textSecondary">
+                Crie um novo relatório para visualizar aqui.
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                sx={{ mt: 2 }}
+                onClick={handleNewReportClick}
+              >
+                Criar Relatório
+              </Button>
+            </>
+          ) : (
+            reports.map((report) => (
+              <Card key={report.id} sx={{ mb: 2, maxWidth: 500, mx: 'auto' }}>
+                <CardContent>
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    Paciente: {report.patientName}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    Período: {report.period}
+                  </Typography>
+                  <Typography variant="caption" color="textSecondary" display="block" sx={{ mb: 2 }}>
+                    Criado em: {new Date(report.createdAt).toLocaleString()}
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    startIcon={<FileDownloadIcon />}
+                    fullWidth
+                    onClick={() => handleExportReport(report)}
+                  >
+                    Exportar Relatório
+                  </Button>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </Box>
       )}
       
       <AddPatientModal 
         open={addPatientModalOpen} 
         onClose={() => setAddPatientModalOpen(false)} 
+        userId={user?.uid}
       />
     </PageContainer>
   );

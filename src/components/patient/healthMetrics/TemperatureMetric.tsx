@@ -1,19 +1,17 @@
 // Exibe o histórico de Temperatura
 
-import ThermostatIcon from '@mui/icons-material/Thermostat';
+import DeviceThermostatIcon from '@mui/icons-material/DeviceThermostat';
 import HealthMetricDisplay from './HealthMetricDisplay';
 import BasicMetricRecord from './BasicMetricRecord';
-import { healthMetricMockData } from './HealthMetricData';
 
-const TemperatureMetric = () => {
-  return (
-    <HealthMetricDisplay
-      title="Histórico de Temperatura"
-      icon={<ThermostatIcon sx={{ color: '#e53935', mr: 1, verticalAlign: 'text-bottom' }} />}
-    >
-      <BasicMetricRecord records={healthMetricMockData.temperature} />
-    </HealthMetricDisplay>
-  );
-};
+const TemperatureMetric = ({ records, onEdit, onDelete }) => (
+  <HealthMetricDisplay
+    title="Histórico de Temperatura"
+    icon={<DeviceThermostatIcon sx={{ color: '#1976d2', mr: 1, verticalAlign: 'text-bottom' }} />}
+  >
+    <BasicMetricRecord records={Array.isArray(records) ? records : []} onEdit={onEdit} onDelete={onDelete} />
+  </HealthMetricDisplay>
+);
 
 export default TemperatureMetric;
+

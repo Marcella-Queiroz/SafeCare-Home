@@ -17,14 +17,16 @@ import {
   Alert,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { getDatabase, ref, get, update } from "firebase/database";
 
 interface AddAppointmentModalProps {
   open: boolean;
   onClose: () => void;
-  patientId: string | undefined;
+  userId: string;
+  patientId: string;
 }
 
-const AddAppointmentModal = ({ open, onClose, patientId }: AddAppointmentModalProps) => {
+const AddAppointmentModal = ({ open, onClose, userId, patientId }: AddAppointmentModalProps) => {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -35,27 +37,27 @@ const AddAppointmentModal = ({ open, onClose, patientId }: AddAppointmentModalPr
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!title || !date || !time) {
       setError('Preencha todos os campos');
       return;
     }
-    
     try {
       setLoading(true);
       setError('');
-      
+      const db = getDatabase();
+      const patientRef = ref(db, `patients/${userId}/${patientId}`);
+      const snapshot = await get(patientRef);
+      const patientData = snapshot.val() || {};
+      const appointments = patientData.appointments || [];
+      appointments.push({ title, date, time });
+      await update(patientRef, { appointments });
+      setSuccess(true);
       setTimeout(() => {
-        setSuccess(true);
-        setTimeout(() => {
-          handleClose();
-        }, 1500);
-        setLoading(false);
-      }, 1000);
-      
+        handleClose();
+      }, 1200);
+      setLoading(false);
     } catch (err) {
       setError('Erro ao agendar');
-      console.error(err);
       setLoading(false);
     }
   };

@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface User {
+  uid: any;
   id: string;
   name: string;
   email: string;
@@ -30,7 +31,10 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState(() => {
+    const stored = localStorage.getItem('safecare-user');
+    return stored ? JSON.parse(stored) : null;
+  });
 
   // Check localStorage on initial load
   useEffect(() => {

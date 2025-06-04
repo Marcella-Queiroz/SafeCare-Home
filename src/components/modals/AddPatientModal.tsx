@@ -25,9 +25,10 @@ import { app } from "@/services/firebaseConfig";
 interface AddPatientModalProps {
   open: boolean;
   onClose: () => void;
+  userId: string | undefined;
 }
 
-const AddPatientModal = ({ open, onClose }: AddPatientModalProps) => {
+const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [conditions, setConditions] = useState('');
@@ -48,9 +49,14 @@ const AddPatientModal = ({ open, onClose }: AddPatientModalProps) => {
       setError('');
 
       const db = getDatabase(app);
-      const patientsRef = ref(db, "patients");
+      if (!userId) {
+        setError('Usuário não autenticado');
+        setLoading(false);
+        return;
+      }
+      console.log('userId para salvar paciente:', userId); // <-- Adicione isso
+      const patientsRef = ref(db, `patients/${userId}`);
       const newPatientRef = push(patientsRef);
-
       await set(newPatientRef, {
         name,
         age: Number(age),
@@ -63,6 +69,7 @@ const AddPatientModal = ({ open, onClose }: AddPatientModalProps) => {
         temperature: [],
         bloodPressure: [],
         heartRate: [],
+        oxygen: [],
       });
 
       setSuccess(true);

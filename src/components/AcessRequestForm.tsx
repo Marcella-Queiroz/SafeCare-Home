@@ -26,6 +26,7 @@ interface AccessRequestFormProps {
 const AccessRequestForm = ({ isOpen, onClose, showToast }: AccessRequestFormProps) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,7 +53,8 @@ const AccessRequestForm = ({ isOpen, onClose, showToast }: AccessRequestFormProp
       );
       const user = userCredential.user;
       const db = getDatabase(app);
-      await set(ref(db, "users/" + user.uid), { name, email, role });
+      // Salve todos os campos, inclusive telefone e função
+      await set(ref(db, "users/" + user.uid), { name, email, phone, role });
 
       showToast("Cadastro realizado com sucesso. Você já pode fazer login.", "success");
       onClose();
@@ -67,11 +69,27 @@ const AccessRequestForm = ({ isOpen, onClose, showToast }: AccessRequestFormProp
   const resetForm = () => {
     setName("");
     setEmail("");
+    setPhone(""); // Resetar campo de telefone
     setPassword("");
     setConfirmPassword("");
     setPasswordError("");
     setRole("");
   };
+
+  function getRoleLabel(role: string) {
+    switch (role) {
+      case "doctor":
+        return "Médico";
+      case "nurse":
+        return "Enfermeiro";
+      case "caregiver":
+        return "Cuidador";
+      case "other":
+        return "Outro";
+      default:
+        return role;
+    }
+  }
 
   return (
     <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="sm">
@@ -98,6 +116,14 @@ const AccessRequestForm = ({ isOpen, onClose, showToast }: AccessRequestFormProp
             margin="normal"
             required
           />
+          <TextField
+            fullWidth
+            label="Telefone"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            margin="normal"
+            required
+          />
           <RoleSelector role={role} onRoleChange={setRole} />
           <TextField
             fullWidth
@@ -120,6 +146,9 @@ const AccessRequestForm = ({ isOpen, onClose, showToast }: AccessRequestFormProp
             required
           />
         </Box>
+        <Typography variant="body2" color="textSecondary">
+          {getRoleLabel(role)}
+        </Typography>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="inherit">
