@@ -5,36 +5,41 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Typography, Button } from '@mui/material';
 import PageContainer from '../components/PageContainer';
 import { getDatabase, ref, onValue, get, update, push } from "firebase/database";
-import { app } from '@/services/firebaseConfig';
+import { app } from '../services/firebaseConfig';
 import PatientDetailContent from '../components/patient/PatientDetailContent';
 import PatientModalsContainer from '../components/patient/PatientModalsContainer';
 import { useAuth } from '../contexts/AuthContext';
 
 type HealthMetricType = 'bloodPressure' | 'weight' | 'oxygen' | 'temperature' | 'glucose' | 'heartRate';
 
-const metricKeys: HealthMetricType[] = [
+// Função para converter objeto de métricas em array, tratando null, array e objeto
+function convertMetricsToArray(metricsObj: any) {
+  if (!metricsObj) return [];
+  if (Array.isArray(metricsObj)) {
+    return metricsObj.filter(Boolean);
+  }
+  if (typeof metricsObj === 'object') {
+    return Object.entries(metricsObj).map(([id, data]) =>
+      typeof data === 'object' && data !== null ? { id, ...data } : { id, value: data }
+    );
+  }
+  return [];
+}
+
+const metricKeys = [
+  'weight',
   'glucose',
-  'temperature',
   'bloodPressure',
+  'temperature',
   'oxygen',
   'heartRate'
 ];
-
-// Função para converter objeto de métricas em array
-function convertMetricsToArray(metricsObj: any) {
-  if (!metricsObj || typeof metricsObj !== 'object') return [];
-  return Object.entries(metricsObj).map(([id, data]) =>
-    typeof data === 'object' && data !== null
-      ? { id, ...data }
-      : { id, value: data }
-  );
-}
 
 function convertPatientMetrics(patient: any) {
   if (!patient) return patient;
   const converted = { ...patient };
   metricKeys.forEach((key) => {
-    if (patient[key] && typeof patient[key] === 'object' && !Array.isArray(patient[key])) {
+    if (patient[key] && (typeof patient[key] === 'object' || Array.isArray(patient[key]))) {
       converted[key] = convertMetricsToArray(patient[key]);
     }
   });
@@ -209,12 +214,11 @@ const PatientDetailPage = () => {
   };
 
   const handleSavePatient = (updatedPatient: any) => {
-    // Implemente a lógica de salvar no Firebase se desejar
     setCurrentPatient(updatedPatient);
     setEditPatientModalOpen(false);
   };
 
-  // --- NOVO: Funções para salvar métricas de saúde no caminho correto ---
+  // --- Funções para salvar métricas de saúde no caminho correto ---
   // Funções de cadastro (push)
   const handleSaveGlucose = async (data: any) => {
     if (!userId || !patientId) return;
@@ -255,39 +259,34 @@ const PatientDetailPage = () => {
 
   // Funções de edição (update por id)
   const handleEditGlucose = async (updated: any) => {
-    if (!userId || !patientId || !updated.id) return;
+    if (!userId || !patientId || !updated || !updated.id) return;
     const db = getDatabase();
-    const refGlucose = ref(db, `patients/${userId}/${patientId}/glucose/${updated.id}`);
-    const { id, ...dataToSave } = updated;
-    await update(refGlucose, dataToSave);
+    const glucoseRef = ref(db, `patients/${userId}/${patientId}/glucose/${updated.id}`);
+    await update(glucoseRef, updated);
   };
   const handleEditBloodPressure = async (updated: any) => {
-    if (!userId || !patientId || !updated.id) return;
+    if (!userId || !patientId || !updated || !updated.id) return;
     const db = getDatabase();
-    const refBP = ref(db, `patients/${userId}/${patientId}/bloodPressure/${updated.id}`);
-    const { id, ...dataToSave } = updated;
-    await update(refBP, dataToSave);
+    const bpRef = ref(db, `patients/${userId}/${patientId}/bloodPressure/${updated.id}`);
+    await update(bpRef, updated);
   };
   const handleEditTemperature = async (updated: any) => {
-    if (!userId || !patientId || !updated.id) return;
+    if (!userId || !patientId || !updated || !updated.id) return;
     const db = getDatabase();
-    const refTemp = ref(db, `patients/${userId}/${patientId}/temperature/${updated.id}`);
-    const { id, ...dataToSave } = updated;
-    await update(refTemp, dataToSave);
+    const tempRef = ref(db, `patients/${userId}/${patientId}/temperature/${updated.id}`);
+    await update(tempRef, updated);
   };
   const handleEditOxygen = async (updated: any) => {
-    if (!userId || !patientId || !updated.id) return;
+    if (!userId || !patientId || !updated || !updated.id) return;
     const db = getDatabase();
-    const refOxy = ref(db, `patients/${userId}/${patientId}/oxygen/${updated.id}`);
-    const { id, ...dataToSave } = updated;
-    await update(refOxy, dataToSave);
+    const oxyRef = ref(db, `patients/${userId}/${patientId}/oxygen/${updated.id}`);
+    await update(oxyRef, updated);
   };
   const handleEditHeartRate = async (updated: any) => {
-    if (!userId || !patientId || !updated.id) return;
+    if (!userId || !patientId || !updated || !updated.id) return;
     const db = getDatabase();
-    const refHR = ref(db, `patients/${userId}/${patientId}/heartRate/${updated.id}`);
-    const { id, ...dataToSave } = updated;
-    await update(refHR, dataToSave);
+    const hrRef = ref(db, `patients/${userId}/${patientId}/heartRate/${updated.id}`);
+    await update(hrRef, updated);
   };
   const handleEditWeight = async (updated: any) => {
     if (!userId || !patientId || !updated || !updated.id) return;
@@ -340,7 +339,7 @@ const PatientDetailPage = () => {
         setMedicationToDelete={setMedicationToDelete}
         appointmentToDelete={appointmentToDelete}
         setAppointmentToDelete={setAppointmentToDelete}
-        currentPatient={currentPatient}
+        currentPatient={patientWithMetricsArray}
         editingWeight={editingWeight}
         setEditingWeight={setEditingWeight}
         editGlucoseModalOpen={editGlucoseModalOpen}
@@ -368,7 +367,6 @@ const PatientDetailPage = () => {
         onSaveAppointment={handleSaveAppointment}
         onConfirmDelete={confirmDelete}
         onSavePatient={handleSavePatient}
-        // Passe as funções de salvar métricas AQUI:
         onSaveGlucose={handleSaveGlucose}
         onEditGlucose={handleEditGlucose}
         onSaveBloodPressure={handleSaveBloodPressure}
@@ -381,14 +379,9 @@ const PatientDetailPage = () => {
         onEditHeartRate={handleEditHeartRate}
         onSaveWeight={handleSaveWeight}
         onEditWeight={handleEditWeight}
-        // NÃO passe onEditGlucose, onEditBloodPressure, etc!
       />
     </PageContainer>
   );
 };
 
 export default PatientDetailPage;
-
-function setSuccess(arg0: boolean) {
-  throw new Error('Function not implemented.');
-}

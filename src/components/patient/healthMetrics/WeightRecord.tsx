@@ -6,6 +6,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 
 interface WeightRecordProps {
   records: Array<{
+    bmi: string;
     date: string;
     weight: string;
     height: string;
@@ -26,7 +27,7 @@ const WeightRecord = ({ records, onEdit, onDelete }: WeightRecordProps) => (
               <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
                 {item.weight}
               </Typography>
-              <Chip label={`IMC: ${item.imc}`} size="small" color="primary" variant="outlined" />
+              <Chip label={`IMC: ${item.bmi ?? item.imc ?? '-'}`} size="small" color="primary" variant="outlined" />
             </Box>
             <Box>
               {onEdit && (

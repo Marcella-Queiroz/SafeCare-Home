@@ -12,7 +12,8 @@ interface EditBloodPressureModalProps {
 }
 
 const EditBloodPressureModal = ({ open, onClose, record, onSave }: EditBloodPressureModalProps) => {
-  const [value, setValue] = useState('');
+  const [systolic, setSystolic] = useState('');
+  const [diastolic, setDiastolic] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [error, setError] = useState('');
@@ -21,7 +22,8 @@ const EditBloodPressureModal = ({ open, onClose, record, onSave }: EditBloodPres
 
   useEffect(() => {
     if (record) {
-      setValue(record.value || '');
+      setSystolic(record.systolic || '');
+      setDiastolic(record.diastolic || '');
       setDate(record.date || '');
       setTime(record.time || '');
     }
@@ -30,13 +32,14 @@ const EditBloodPressureModal = ({ open, onClose, record, onSave }: EditBloodPres
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!value || !date) {
+    console.log('Registro enviado para edição:', { ...record, systolic, diastolic, date, time }); // log atualizado
+    if (!systolic || !diastolic || !date) {
       setError('Preencha todos os campos obrigatórios');
       return;
     }
     setLoading(true);
     try {
-      await onSave({ ...record, value, date, time });
+      await onSave({ ...record, systolic, diastolic, date, time });
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
@@ -57,9 +60,19 @@ const EditBloodPressureModal = ({ open, onClose, record, onSave }: EditBloodPres
         {success && <Alert severity="success" sx={{ mb: 2 }}>Registro atualizado!</Alert>}
         <form onSubmit={handleSubmit}>
           <TextField
-            label="Pressão (ex: 120/80)"
-            value={value}
-            onChange={e => setValue(e.target.value)}
+            label="Sistólica (mmHg)"
+            type="number"
+            value={systolic}
+            onChange={e => setSystolic(e.target.value)}
+            fullWidth
+            required
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            label="Diastólica (mmHg)"
+            type="number"
+            value={diastolic}
+            onChange={e => setDiastolic(e.target.value)}
             fullWidth
             required
             sx={{ mb: 2 }}

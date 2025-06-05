@@ -9,7 +9,6 @@ import EditAppointmentModal from '../modals/EditAppointmentModal';
 import DeleteConfirmationModal from '../modals/DeleteConfirmationModal';
 import AddAppointmentModal from '../modals/AddAppointmentModal';
 import EditPatientModal from '../modals/EditPatientModal';
-import HealthMetricModal from '../modals/HealthMetricModal';
 import EditWeightModal from '../modals/EditWeightModal';
 import EditGlucoseModal from '../modals/EditGlucoseModal';
 import EditBloodPressureModal from '../modals/EditBloodPressureModal';
@@ -22,8 +21,19 @@ import AddTemperatureModal from '../modals/AddTemperatureModal';
 import AddOxygenModal from '../modals/AddOxygenModal';
 import AddHeartRateModal from '../modals/AddHeartRateModal';
 import { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
 import { getDatabase, ref as dbRef, remove } from "firebase/database";
+import HealthMetricModal from '../modals/HealthMetricModal';
+
+// Função utilitária para garantir array de métricas
+function toArray(records: any) {
+  if (Array.isArray(records)) return records;
+  if (records && typeof records === 'object') {
+    return Object.entries(records).map(([id, data]) =>
+      typeof data === 'object' && data !== null ? { id, ...data } : { id, value: data }
+    );
+  }
+  return [];
+}
 
 type HealthMetricType = 'bloodPressure' | 'weight' | 'oxygen' | 'temperature' | 'glucose' | 'heartRate';
 
@@ -226,6 +236,7 @@ const PatientModalsContainer = ({
     if (!userId || !patientId || !record.id) return;
     await remove(dbRef(getDatabase(), `patients/${userId}/${patientId}/heartRate/${record.id}`));
   };
+  
 
   return (
     <>
@@ -323,9 +334,13 @@ const PatientModalsContainer = ({
                   ? () => setAddHeartRateModalOpen(true)
                   : undefined
               }
-              onDeleteRecord={(record, index) => {
-                setMetricToDelete({ record, type: healthMetricModal.type });
-                setDeleteMetricModalOpen(true);
+              onDeleteRecord={(id) => {
+                const records = toArray(currentPatient?.[healthMetricModal.type]);
+                const record = records.find((r: any) => r.id === id);
+                if (record) {
+                  setMetricToDelete({ record, type: healthMetricModal.type });
+                  setDeleteMetricModalOpen(true);
+                }
               }}
               onClose={onCloseHealthMetricModal}
               setEditingWeight={setEditingWeight}
@@ -349,36 +364,39 @@ const PatientModalsContainer = ({
         open={editWeightModalOpen}
         onClose={() => setEditWeightModalOpen(false)}
         record={editingWeight}
-        onSave={() => onEditWeight(editingWeight)} userId={''} patientId={''}      />
+        onSave={onEditWeight}
+        userId={userId || ''}
+        patientId={patientId || ''}
+      />
       <EditGlucoseModal
         open={editGlucoseModalOpen}
         onClose={() => setEditGlucoseModalOpen(false)}
         record={editingGlucose}
-        onSave={() => onEditGlucose(editingGlucose)}
+        onSave={onEditGlucose} // Corrigido
       />
       <EditBloodPressureModal
         open={editBloodPressureModalOpen}
         onClose={() => setEditBloodPressureModalOpen(false)}
         record={editingBloodPressure}
-        onSave={() => onEditBloodPressure(editingBloodPressure)}
+        onSave={onEditBloodPressure} // Corrigido
       />
       <EditTemperatureModal
         open={editTemperatureModalOpen}
         onClose={() => setEditTemperatureModalOpen(false)}
         record={editingTemperature}
-        onSave={() => onEditTemperature(editingTemperature)}
+        onSave={onEditTemperature} // Corrigido
       />
       <EditOxygenModal
         open={editOxygenModalOpen}
         onClose={() => setEditOxygenModalOpen(false)}
         record={editingOxygen}
-        onSave={() => onEditOxygen(editingOxygen)}
+        onSave={onEditOxygen} // Corrigido
       />
       <EditHeartRateModal
         open={editHeartRateModalOpen}
         onClose={() => setEditHeartRateModalOpen(false)}
         record={editingHeartRate}
-        onSave={() => onEditHeartRate(editingHeartRate)}
+        onSave={onEditHeartRate} // Corrigido
       />
 
       {/* Inclua os modais de adicionar registro: */}
@@ -420,37 +438,31 @@ const PatientModalsContainer = ({
 
       <DeleteConfirmationModal
         open={deleteMetricModalOpen}
-        onClose={() => {
-          setDeleteMetricModalOpen(false);
-          setMetricToDelete(null);
-        }}
+        onClose={() => setDeleteMetricModalOpen(false)}
         onConfirm={async () => {
-          if (!metricToDelete) return;
-          const { record, type } = metricToDelete;
-          setDeleteMetricModalOpen(false);
-          setMetricToDelete(null);
-          switch (type) {
+          switch (metricToDelete?.type) {
             case 'weight':
-              await handleDeleteWeight(record, 0);
+              await handleDeleteWeight(metricToDelete.record, 0);
               break;
             case 'glucose':
-              await handleDeleteGlucose(record, 0);
+              await handleDeleteGlucose(metricToDelete.record, 0);
               break;
             case 'bloodPressure':
-              await handleDeleteBloodPressure(record, 0);
+              await handleDeleteBloodPressure(metricToDelete.record, 0);
               break;
             case 'temperature':
-              await handleDeleteTemperature(record, 0);
+              await handleDeleteTemperature(metricToDelete.record, 0);
               break;
             case 'oxygen':
-              await handleDeleteOxygen(record, 0);
+              await handleDeleteOxygen(metricToDelete.record, 0);
               break;
             case 'heartRate':
-              await handleDeleteHeartRate(record, 0);
+              await handleDeleteHeartRate(metricToDelete.record, 0);
               break;
             default:
               break;
           }
+          setDeleteMetricModalOpen(false);
         }}
         title="Excluir Registro"
         message="Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita."

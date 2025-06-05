@@ -61,7 +61,7 @@ const HealthMetricModal = ({
   setEditingHeartRate,
   setEditHeartRateModalOpen,
   onDeleteRecord,
-}: any) => {
+}: HealthMetricModalProps) => {
   const getModalContent = () => {
     switch (type) {
       case 'weight':
@@ -135,7 +135,6 @@ const HealthMetricModal = ({
     }
   };
 
-  // Chama o modal de cadastro correto conforme a métrica
   const handleAddRecord = () => {
     if (onAddRecord) {
       onClose();

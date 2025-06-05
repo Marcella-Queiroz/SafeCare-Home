@@ -8,7 +8,8 @@ import {
   DialogActions,
   TextField,
   Button,
-  Grid
+  Grid,
+  Chip
 } from '@mui/material';
 import { getDatabase, ref, update } from 'firebase/database';
 
@@ -16,7 +17,7 @@ interface EditWeightModalProps {
   open: boolean;
   onClose: () => void;
   record: any;
-  onSave: () => void;
+  onSave: (data: any) => void | Promise<void>;
   userId: string;
   patientId: string;
 }
@@ -36,7 +37,7 @@ const EditWeightModal = ({ open, onClose, record, onSave, userId, patientId }: E
       setWeight(record.weight || '');
       setHeight(record.height || '');
       setDate(record.date || '');
-      setBmi(record.imc || '');
+      setBmi(record.bmi || record.imc || ''); // <-- aqui!
     }
   }, [record, open]);
 
@@ -76,7 +77,7 @@ const EditWeightModal = ({ open, onClose, record, onSave, userId, patientId }: E
         date,
         weight,
         height,
-        imc: bmi,
+        bmi,
       });
       setSuccess(true);
       setTimeout(() => {
@@ -130,12 +131,7 @@ const EditWeightModal = ({ open, onClose, record, onSave, userId, patientId }: E
               />
             </Grid>
             <Grid item xs={12}>
-              <TextField
-                label="IMC"
-                value={bmi}
-                fullWidth
-                disabled
-              />
+              <Chip label={`IMC: ${bmi}`} />
             </Grid>
           </Grid>
         </form>
