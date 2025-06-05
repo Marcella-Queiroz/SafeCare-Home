@@ -4,11 +4,10 @@ import { Weight } from 'lucide-react';
 import HealthMetricDisplay from './HealthMetricDisplay';
 import WeightRecord from './WeightRecord';
 
-type WeightRecordProps = {
+type WeightMetricProps = {
   records: any[];
   onEdit: (record: any, index: number) => void;
-  // Adicione onDelete nas props
-  onDelete: (record: any, index: number) => void;
+  onDelete: (id: string) => void;
 };
 
 const WeightMetric = ({ records, onEdit, onDelete }) => (
