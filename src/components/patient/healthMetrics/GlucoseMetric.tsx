@@ -9,7 +9,13 @@ const GlucoseMetric = ({ records, onEdit, onDelete }) => (
     title="Histórico de Glicose"
     icon={<BloodtypeIcon sx={{ color: '#ff9800', mr: 1, verticalAlign: 'text-bottom' }} />}
   >
-    <BasicMetricRecord records={Array.isArray(records) ? records : []} onEdit={onEdit} onDelete={onDelete} />
+    <BasicMetricRecord
+      records={records}
+      onEdit={onEdit}
+      onDelete={onDelete}
+      mainField="glucose"
+      unit="mg/dL"
+    />
   </HealthMetricDisplay>
 );
 

@@ -9,7 +9,13 @@ const TemperatureMetric = ({ records, onEdit, onDelete }) => (
     title="Histórico de Temperatura"
     icon={<DeviceThermostatIcon sx={{ color: '#1976d2', mr: 1, verticalAlign: 'text-bottom' }} />}
   >
-    <BasicMetricRecord records={Array.isArray(records) ? records : []} onEdit={onEdit} onDelete={onDelete} />
+    <BasicMetricRecord
+      records={Array.isArray(records) ? records : []}
+      onEdit={onEdit}
+      onDelete={onDelete}
+      mainField="value"
+      unit="°C"
+    />
   </HealthMetricDisplay>
 );
 

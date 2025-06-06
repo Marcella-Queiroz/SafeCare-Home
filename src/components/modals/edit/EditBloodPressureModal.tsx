@@ -83,7 +83,6 @@ const EditBloodPressureModal = ({ open, onClose, record, onSave }: EditBloodPres
             value={date}
             onChange={e => setDate(e.target.value)}
             fullWidth
-            InputLabelProps={{ shrink: true }}
             required
             sx={{ mb: 2 }}
           />
@@ -93,7 +92,6 @@ const EditBloodPressureModal = ({ open, onClose, record, onSave }: EditBloodPres
             value={time}
             onChange={e => setTime(e.target.value)}
             fullWidth
-            InputLabelProps={{ shrink: true }}
             sx={{ mb: 2 }}
           />
           <DialogActions>

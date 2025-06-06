@@ -4,6 +4,7 @@ import { Box, Typography, Card, CardContent, Button, Divider, Chip, IconButton }
 import Grid from '@mui/material/Grid';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
+import { getDatabase, ref, update } from "firebase/database";
 
 interface PatientHeaderProps {
   patient: {
@@ -38,6 +39,15 @@ const getLastMetric = (
 };
 
 const PatientHeader = ({ patient, onClose, onEditPatient }: PatientHeaderProps) => {
+  const db = getDatabase();
+  const patientId = "ID_DO_PACIENTE"; // Substitua pelo id real do paciente
+  const now = new Date();
+  const lastCheck = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  const handleSaveLastCheck = async () => {
+    await update(ref(db, `patients/${patientId}`), { lastCheck });
+  };
+
   return (
     <Card sx={{ mb: 3, position: 'relative', borderRadius: 3 }}>
       <IconButton

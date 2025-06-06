@@ -9,7 +9,13 @@ const OxygenMetric = ({ records, onEdit, onDelete }) => (
     title="Histórico de Saturação"
     icon={<OpacityIcon sx={{ color: '#00bcd4', mr: 1, verticalAlign: 'text-bottom' }} />}
   >
-    <BasicMetricRecord records={Array.isArray(records) ? records : []} onEdit={onEdit} onDelete={onDelete} />
+    <BasicMetricRecord
+      records={Array.isArray(records) ? records : []}
+      onEdit={onEdit}
+      onDelete={onDelete}
+      mainField="value"
+      unit="%"
+    />
   </HealthMetricDisplay>
 );
 

@@ -25,7 +25,7 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import PageContainer from '../components/PageContainer';
-import AddPatientModal from '../components/modals/AddPatientModal';
+import AddPatientModal from '../components/modals/add/AddPatientModal';
 
 // Importações do Firebase
 import { getDatabase, ref, onValue, set, push } from "firebase/database";
@@ -106,6 +106,34 @@ function getLastMetricValue(metric: any, field: string = 'value', suffix: string
   return '-';
 }
 
+function convertMetricsToArray(metricsObj: any) {
+  if (!metricsObj) return [];
+  if (Array.isArray(metricsObj)) return metricsObj.filter(Boolean);
+  if (typeof metricsObj === 'object') {
+    return Object.entries(metricsObj).map(([id, data]) =>
+      typeof data === 'object' && data !== null ? { id, ...data } : { id, value: data }
+    );
+  }
+  return [];
+}
+
+function convertPatientMetrics(patient: any) {
+  if (!patient) return patient;
+  const metricKeys = [
+    'weight',
+    'glucose',
+    'bloodPressure',
+    'temperature',
+    'oxygen',
+    'heartRate'
+  ];
+  const converted = { ...patient };
+  metricKeys.forEach((key) => {
+    converted[key] = convertMetricsToArray(patient[key]);
+  });
+  return converted;
+}
+
 const PatientsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -126,10 +154,10 @@ const PatientsPage = () => {
     const unsubscribe = onValue(patientsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        const array = Object.entries(data).map(([id, value]: any) => ({
-          id,
-          ...value,
-        }));
+        const array = Object.entries(data).map(([id, value]: any) => {
+          const patient = { id, ...value };
+          return convertPatientMetrics(patient);
+        });
         setPatients(array);
       } else {
         setPatients([]);
