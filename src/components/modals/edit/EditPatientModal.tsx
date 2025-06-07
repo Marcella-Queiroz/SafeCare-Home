@@ -16,6 +16,8 @@ import {
   Alert,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { getDatabase, ref, update } from "firebase/database";
+import { INPUT_LIMITS } from '@/constants/inputLimits';
 
 interface EditPatientModalProps {
   open: boolean;
@@ -26,10 +28,11 @@ interface EditPatientModalProps {
     age: number;
     conditions: string[];
   };
+  userId: string | undefined;
   onSave: (updatedPatient: any) => void;
 }
 
-const EditPatientModal = ({ open, onClose, patient, onSave }: EditPatientModalProps) => {
+const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatientModalProps) => {
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [conditions, setConditions] = useState('');
@@ -48,36 +51,34 @@ const EditPatientModal = ({ open, onClose, patient, onSave }: EditPatientModalPr
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validation
+    setError('');
+    setSuccess(false);
+
     if (!name || !age) {
       setError('Preencha os campos obrigatórios');
       return;
     }
-    
+
     try {
       setLoading(true);
-      setError('');
-      
-      const updatedPatient = {
-        ...patient,
+
+      // Caminho correto
+      const db = getDatabase();
+      const patientRef = ref(db, `patients/${userId}/${patient.id}`);
+      await update(patientRef, {
         name,
         age: parseInt(age),
         conditions: conditions.split(',').map(c => c.trim()).filter(c => c)
-      };
-      
+      });
+
+      setSuccess(true);
       setTimeout(() => {
-        setSuccess(true);
-        onSave(updatedPatient);
-        setTimeout(() => {
-          handleClose();
-        }, 1500);
-        setLoading(false);
-      }, 1000);
-      
+        setSuccess(false);
+        handleClose(); // Feche o modal após mostrar sucesso
+      }, 1200);
     } catch (err) {
       setError('Erro ao atualizar paciente');
-      console.error(err);
+    } finally {
       setLoading(false);
     }
   };
@@ -116,17 +117,8 @@ const EditPatientModal = ({ open, onClose, patient, onSave }: EditPatientModalPr
         </IconButton>
       </DialogTitle>
       <DialogContent dividers>
-        {success && (
-          <Alert severity="success" sx={{ mb: 2 }}>
-            Dados atualizados com sucesso!
-          </Alert>
-        )}
-        
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
+        {success && <Alert severity="success" sx={{ mb: 2 }}>Dados atualizados com sucesso!</Alert>}
+        {!success && error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={2}>
@@ -140,6 +132,7 @@ const EditPatientModal = ({ open, onClose, patient, onSave }: EditPatientModalPr
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={loading}
+                inputProps={{ maxLength: INPUT_LIMITS.NAME }}
               />
             </Grid>
             <Grid item xs={12}>
@@ -153,6 +146,7 @@ const EditPatientModal = ({ open, onClose, patient, onSave }: EditPatientModalPr
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
                 disabled={loading}
+                inputProps={{ maxLength: INPUT_LIMITS.AGE }}
               />
             </Grid>
             <Grid item xs={12}>
@@ -166,6 +160,7 @@ const EditPatientModal = ({ open, onClose, patient, onSave }: EditPatientModalPr
                 onChange={(e) => setConditions(e.target.value)}
                 disabled={loading}
                 helperText="Separe as condições por vírgula"
+                inputProps={{ maxLength: INPUT_LIMITS.CONDITIONS }}
               />
             </Grid>
           </Grid>

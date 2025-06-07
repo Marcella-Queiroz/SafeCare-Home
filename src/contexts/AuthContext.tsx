@@ -1,9 +1,23 @@
 //Gerencia o login e o estado do usuário
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+} from 'firebase/auth';
 
 interface User {
-  uid: any;
+  uid: string;
   id: string;
   name: string;
   email: string;
@@ -15,7 +29,12 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  register: (name: string, email: string, password: string, role: string) => Promise<boolean>;
+  register: (
+    name: string,
+    email: string,
+    password: string,
+    role: string
+  ) => Promise<boolean>;
   resetPassword: (email: string) => Promise<boolean>;
 }
 
@@ -31,81 +50,72 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem('safecare-user');
-    return stored ? JSON.parse(stored) : null;
-  });
+  const [user, setUser] = useState<User | null>(null);
 
-  // Check localStorage on initial load
+  // Sincroniza com Firebase Auth
   useEffect(() => {
-    const storedUser = localStorage.getItem('safecare-user');
-    const storedAuth = localStorage.getItem('safecare-auth');
-    
-    if (storedUser && storedAuth === 'true') {
-      setUser(JSON.parse(storedUser));
-      setIsAuthenticated(true);
-    }
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        const userData: User = {
+          uid: firebaseUser.uid,
+          id: firebaseUser.uid,
+          name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || '',
+          email: firebaseUser.email || '',
+          role: 'Usuário', // Pode ser ajustado conforme necessário
+        };
+        setUser(userData);
+        setIsAuthenticated(true);
+        localStorage.setItem('safecare-user', JSON.stringify(userData));
+        localStorage.setItem('safecare-auth', 'true');
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+        localStorage.removeItem('safecare-user');
+        localStorage.removeItem('safecare-auth');
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  // Mock users for demo purposes
-  const mockUsers = [
-    {
-      id: '1',
-      name: 'Dr. João Silva',
-      email: 'joao@safecare.com',
-      password: '123456',
-      role: 'Médico',
-    },
-    {
-      id: '2',
-      name: 'Enfermeira Ana',
-      email: 'ana@safecare.com',
-      password: '123456',
-      role: 'Enfermeira',
-    },
-  ];
-
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Modificado para permitir qualquer credencial
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Primeiro tenta encontrar um usuário existente
-        const foundUser = mockUsers.find(
-          (user) => user.email === email && user.password === password
-        );
+    try {
+      const auth = getAuth();
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      const firebaseUser = result.user;
 
-        if (foundUser) {
-          // Se encontrar um usuário existente, usa ele
-          const { password, ...userWithoutPassword } = foundUser;
-          setUser(userWithoutPassword);
-          setIsAuthenticated(true);
-          localStorage.setItem('safecare-user', JSON.stringify(userWithoutPassword));
-          localStorage.setItem('safecare-auth', 'true');
-          resolve(true);
-        } else {
-          // Se não encontrar, cria um usuário fictício com os dados informados
-          const newUser = {
-            id: Math.random().toString(36).substr(2, 9),
-            name: email.split('@')[0],  // Usa parte do email como nome
-            email: email,
-            role: 'Usuário'
-          };
-          
-          setUser(newUser);
-          setIsAuthenticated(true);
-          localStorage.setItem('safecare-user', JSON.stringify(newUser));
-          localStorage.setItem('safecare-auth', 'true');
-          resolve(true);
-        }
-      }, 500);
-    });
+      const userData: User = {
+        uid: firebaseUser.uid,
+        id: firebaseUser.uid,
+        name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || '',
+        email: firebaseUser.email || '',
+        role: 'Usuário',
+      };
+
+      setUser(userData);
+      setIsAuthenticated(true);
+      localStorage.setItem('safecare-user', JSON.stringify(userData));
+      localStorage.setItem('safecare-auth', 'true');
+      return true;
+    } catch (error) {
+      console.error('Erro ao logar no Firebase:', error);
+      return false;
+    }
   };
 
   const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('safecare-user');
-    localStorage.removeItem('safecare-auth');
+    const auth = getAuth();
+    signOut(auth)
+      .then(() => {
+        setUser(null);
+        setIsAuthenticated(false);
+        localStorage.removeItem('safecare-user');
+        localStorage.removeItem('safecare-auth');
+      })
+      .catch((error) => {
+        console.error('Erro ao fazer logout:', error);
+      });
   };
 
   const register = async (
@@ -114,34 +124,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     password: string,
     role: string
   ): Promise<boolean> => {
-    // In a real app, this would be an API call to register the user
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const userExists = mockUsers.some((user) => user.email === email);
-        if (userExists) {
-          resolve(false);
-        } else {
-          resolve(true);
-        }
-      }, 1000);
-    });
+    try {
+      const auth = getAuth();
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      const firebaseUser = result.user;
+
+      const userData: User = {
+        uid: firebaseUser.uid,
+        id: firebaseUser.uid,
+        name: name,
+        email: firebaseUser.email || '',
+        role: role,
+      };
+
+      setUser(userData);
+      setIsAuthenticated(true);
+      localStorage.setItem('safecare-user', JSON.stringify(userData));
+      localStorage.setItem('safecare-auth', 'true');
+
+      // Opcional: você pode salvar o userData em um banco de dados como Firestore
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao registrar no Firebase:', error);
+      return false;
+    }
   };
 
   const resetPassword = async (email: string): Promise<boolean> => {
-    // In a real app, this would be an API call to send reset password email
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const userExists = mockUsers.some((user) => user.email === email);
-        if (userExists) {
-          resolve(true);
-        } else {
-          resolve(false);
-        }
-      }, 1000);
-    });
+    try {
+      const auth = getAuth();
+      await sendPasswordResetEmail(auth, email);
+      return true;
+    } catch (error) {
+      console.error('Erro ao resetar senha:', error);
+      return false;
+    }
   };
 
-  const value = {
+  const value: AuthContextType = {
     isAuthenticated,
     user,
     login,

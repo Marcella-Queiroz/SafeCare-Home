@@ -4,22 +4,26 @@ import {
   TextField, Button, Alert
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
+import { getDatabase, ref, update } from "firebase/database";
+import { INPUT_LIMITS } from '@/constants/inputLimits';
 
 interface AddGlucoseModalProps {
   open: boolean;
   onClose: () => void;
   userId: string;
   patientId: string;
+  patientCreatedAt: string;
   onSave: (data: any) => void | Promise<void>;
 }
 
-const AddGlucoseModal = ({ open, onClose, userId, patientId, onSave }: AddGlucoseModalProps) => {
+const AddGlucoseModal = ({ open, onClose, userId, patientId, patientCreatedAt, onSave }: AddGlucoseModalProps) => {
   const [value, setValue] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const today = new Date().toISOString().split('T')[0];
 
   const handleSave = async () => {
     setLoading(true);
@@ -31,10 +35,15 @@ const AddGlucoseModal = ({ open, onClose, userId, patientId, onSave }: AddGlucos
     }
     try {
       await onSave({ value, date, time });
-      setSuccess(true);
-      setTimeout(() => {
-        handleClose();
-      }, 1200);
+
+      // Atualiza o campo lastCheck do paciente
+      const db = getDatabase();
+      const patientRef = ref(db, `patients/${userId}/${patientId}`);
+      const now = new Date();
+      const lastCheck = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      await update(patientRef, { lastCheck });
+
+      onClose();
     } catch {
       setError('Erro ao salvar dados');
     }
@@ -46,7 +55,6 @@ const AddGlucoseModal = ({ open, onClose, userId, patientId, onSave }: AddGlucos
     setDate('');
     setTime('');
     setError('');
-    setSuccess(false);
     setLoading(false);
     onClose();
   };
@@ -56,16 +64,16 @@ const AddGlucoseModal = ({ open, onClose, userId, patientId, onSave }: AddGlucos
       <DialogTitle>Adicionar Glicemia</DialogTitle>
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {success && <Alert severity="success" sx={{ mb: 2 }}>Registro adicionado!</Alert>}
         <Grid container spacing={2} sx={{ mt: 1 }}>
           <Grid item xs={12}>
             <TextField
-              label="Glicemia (mg/dL)"
+              label="Glicose (mg/dL)"
               type="number"
               value={value}
               onChange={e => setValue(e.target.value)}
               fullWidth
               required
+              inputProps={{ maxLength: INPUT_LIMITS.GLUCOSE }}
             />
           </Grid>
           <Grid item xs={12}>
@@ -77,6 +85,10 @@ const AddGlucoseModal = ({ open, onClose, userId, patientId, onSave }: AddGlucos
               fullWidth
               InputLabelProps={{ shrink: true }}
               required
+              inputProps={{
+                min: patientCreatedAt || '1900-01-01',
+                max: today,
+              }}
             />
           </Grid>
           <Grid item xs={12}>

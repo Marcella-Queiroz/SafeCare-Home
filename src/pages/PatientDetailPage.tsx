@@ -214,7 +214,8 @@ const PatientDetailPage = () => {
   };
 
   const handleSavePatient = (updatedPatient: any) => {
-    setCurrentPatient(updatedPatient);
+    // Após salvar, recarregue do banco:
+    fetchPatientFromFirebase();
     setEditPatientModalOpen(false);
   };
 
@@ -385,3 +386,7 @@ const PatientDetailPage = () => {
 };
 
 export default PatientDetailPage;
+
+function fetchPatientFromFirebase() {
+  throw new Error('Function not implemented.');
+}

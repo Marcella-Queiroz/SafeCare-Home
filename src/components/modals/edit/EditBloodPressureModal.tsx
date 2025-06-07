@@ -3,15 +3,17 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Button, Alert
 } from '@mui/material';
+import { INPUT_LIMITS } from '@/constants/inputLimits';
 
 interface EditBloodPressureModalProps {
   open: boolean;
   onClose: () => void;
   record: any;
   onSave: (data: any) => void | Promise<void>;
+  patientCreatedAt: string;
 }
 
-const EditBloodPressureModal = ({ open, onClose, record, onSave }: EditBloodPressureModalProps) => {
+const EditBloodPressureModal = ({ open, onClose, record, onSave, patientCreatedAt }: EditBloodPressureModalProps) => {
   const [systolic, setSystolic] = useState('');
   const [diastolic, setDiastolic] = useState('');
   const [date, setDate] = useState('');
@@ -19,6 +21,8 @@ const EditBloodPressureModal = ({ open, onClose, record, onSave }: EditBloodPres
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
     if (record) {
@@ -32,9 +36,16 @@ const EditBloodPressureModal = ({ open, onClose, record, onSave }: EditBloodPres
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    console.log('Registro enviado para edição:', { ...record, systolic, diastolic, date, time }); // log atualizado
     if (!systolic || !diastolic || !date) {
       setError('Preencha todos os campos obrigatórios');
+      return;
+    }
+    if (date < patientCreatedAt) {
+      setError(`A data não pode ser anterior a ${patientCreatedAt}`);
+      return;
+    }
+    if (date > today) {
+      setError('A data não pode ser maior que hoje');
       return;
     }
     setLoading(true);
@@ -66,6 +77,7 @@ const EditBloodPressureModal = ({ open, onClose, record, onSave }: EditBloodPres
             onChange={e => setSystolic(e.target.value)}
             fullWidth
             required
+            inputProps={{ maxLength: INPUT_LIMITS.SYSTOLIC }}
             sx={{ mb: 2 }}
           />
           <TextField
@@ -75,6 +87,7 @@ const EditBloodPressureModal = ({ open, onClose, record, onSave }: EditBloodPres
             onChange={e => setDiastolic(e.target.value)}
             fullWidth
             required
+            inputProps={{ maxLength: INPUT_LIMITS.DIASTOLIC }}
             sx={{ mb: 2 }}
           />
           <TextField
@@ -85,6 +98,10 @@ const EditBloodPressureModal = ({ open, onClose, record, onSave }: EditBloodPres
             fullWidth
             required
             sx={{ mb: 2 }}
+            inputProps={{
+              min: patientCreatedAt || '1900-01-01',
+              max: today,
+            }}
           />
           <TextField
             label="Hora"

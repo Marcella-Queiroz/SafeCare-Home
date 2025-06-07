@@ -21,6 +21,7 @@ import CloseIcon from '@mui/icons-material/Close';
 // Importações do Firebase
 import { getDatabase, ref, push, set } from "firebase/database";
 import { app } from "@/services/firebaseConfig";
+import { INPUT_LIMITS } from '@/constants/inputLimits';
 
 interface AddPatientModalProps {
   open: boolean;
@@ -137,38 +138,34 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
           <Grid container spacing={2}>
             <Grid>
               <TextField
-                required
-                fullWidth
-                id="name"
-                label="Nome do paciente"
-                name="name"
+                label="Nome"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={loading}
-              />
-            </Grid>
-            <Grid>
-              <TextField
+                onChange={e => setName(e.target.value)}
                 required
                 fullWidth
-                id="age"
-                label="Idade"
-                name="age"
-                type="number"
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
+                inputProps={{ maxLength: INPUT_LIMITS.NAME }}
                 disabled={loading}
               />
             </Grid>
             <Grid>
               <TextField
+                label="Idade"
+                value={age}
+                onChange={e => setAge(e.target.value)}
+                required
                 fullWidth
-                id="conditions"
-                label="Condição"
-                name="conditions"
-                placeholder="Ex: Hipertensão, Diabetes"
+                type="number"
+                inputProps={{ maxLength: INPUT_LIMITS.AGE }}
+                disabled={loading}
+              />
+            </Grid>
+            <Grid>
+              <TextField
+                label="Condições"
                 value={conditions}
-                onChange={(e) => setConditions(e.target.value)}
+                onChange={e => setConditions(e.target.value)}
+                fullWidth
+                inputProps={{ maxLength: INPUT_LIMITS.CONDITIONS }}
                 disabled={loading}
                 helperText="Separe as condições por vírgula"
               />

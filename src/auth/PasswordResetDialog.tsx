@@ -72,6 +72,7 @@ const PasswordResetDialog = ({ isOpen, onOpenChange, email, showToast }: Passwor
                 <Mail style={{ height: 16, width: 16, opacity: 0.5, marginRight: 8 }} />
               ),
             }}
+            inputProps={{ maxLength: 50 }}
             sx={{ mb: 2 }}
           />
           <DialogActions sx={{ p: 0 }}>

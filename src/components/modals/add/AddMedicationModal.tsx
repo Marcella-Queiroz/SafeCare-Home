@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { getDatabase, ref, get, update } from "firebase/database";
+import { INPUT_LIMITS } from '@/constants/inputLimits';
 
 interface AddMedicationModalProps {
   open: boolean;
@@ -153,38 +154,35 @@ const AddMedicationModal = ({ open, onClose, userId, patientId, medication }: Ad
           <Grid container spacing={2}>
             <Grid item xs={12}>
               <TextField
+                label="Nome do medicamento"
+                value={name}
+                onChange={e => setName(e.target.value)}
                 required
                 fullWidth
-                id="name"
-                label="Nome do medicamento"
-                name="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                inputProps={{ maxLength: INPUT_LIMITS.NAME }}
                 disabled={loading}
               />
             </Grid>
             <Grid item xs={12}>
               <TextField
+                label="Dosagem"
+                value={dosage}
+                onChange={e => setDosage(e.target.value)}
                 required
                 fullWidth
-                id="dosage"
-                label="Dosagem (ex: 500mg)"
-                name="dosage"
-                value={dosage}
-                onChange={(e) => setDosage(e.target.value)}
+                inputProps={{ maxLength: INPUT_LIMITS.DOSAGE }}
                 disabled={loading}
               />
             </Grid>
             <Grid item xs={12}>
               <TextField
                 select
+                label="Frequência"
+                value={frequency}
+                onChange={e => setFrequency(e.target.value)}
                 required
                 fullWidth
-                id="frequency"
-                label="Frequência"
-                name="frequency"
-                value={frequency}
-                onChange={(e) => setFrequency(e.target.value)}
+                inputProps={{ maxLength: INPUT_LIMITS.FREQUENCY }}
                 disabled={loading}
               >
                 {frequencies.map((option) => (
@@ -196,13 +194,11 @@ const AddMedicationModal = ({ open, onClose, userId, patientId, medication }: Ad
             </Grid>
             <Grid item xs={12}>
               <TextField
-                fullWidth
-                id="time"
-                label="Horário (opcional)"
-                name="time"
-                placeholder="Ex: 08:00, 20:00"
+                label="Horário"
                 value={time}
-                onChange={(e) => setTime(e.target.value)}
+                onChange={e => setTime(e.target.value)}
+                fullWidth
+                inputProps={{ maxLength: INPUT_LIMITS.TIME }}
                 disabled={loading}
               />
             </Grid>

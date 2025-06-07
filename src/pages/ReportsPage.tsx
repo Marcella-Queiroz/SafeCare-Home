@@ -1,3 +1,5 @@
+//Pagina de criação de relatórios
+
 import { useState, useEffect } from 'react';
 import {
   Box,
@@ -18,9 +20,11 @@ import PageContainer from '../components/PageContainer';
 import { useNavigate } from 'react-router-dom';
 import { getDatabase, ref, onValue, push, set } from "firebase/database";
 import { app } from "@/services/firebaseConfig";
+import { useAuth } from '../contexts/AuthContext';
 
 const ReportsPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [patients, setPatients] = useState<{ id: string, name: string, createdAt?: string }[]>([]);
   const [selectedPatient, setSelectedPatient] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -32,7 +36,7 @@ const ReportsPage = () => {
   // Buscar pacientes do Firebase (incluindo createdAt)
   useEffect(() => {
     const db = getDatabase(app);
-    const patientsRef = ref(db, "patients");
+    const patientsRef = ref(db, `patients/${user?.uid}`);
     onValue(patientsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -88,7 +92,7 @@ const ReportsPage = () => {
     setSubmitLoading(true);
     try {
       const db = getDatabase(app);
-      const reportsRef = ref(db, "reports");
+      const reportsRef = ref(db, `reports/${user.uid}`);
       const newReportRef = push(reportsRef);
       const patient = patients.find(p => p.id === selectedPatient);
       await set(newReportRef, {

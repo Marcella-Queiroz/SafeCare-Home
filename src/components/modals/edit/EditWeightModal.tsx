@@ -2,16 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Button,
-  Grid,
-  Chip
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  TextField, Button, Grid, Chip
 } from '@mui/material';
-import { getDatabase, ref, update } from 'firebase/database';
 
 interface EditWeightModalProps {
   open: boolean;
@@ -20,9 +13,10 @@ interface EditWeightModalProps {
   onSave: (data: any) => void | Promise<void>;
   userId: string;
   patientId: string;
+  patientCreatedAt: string;
 }
 
-const EditWeightModal = ({ open, onClose, record, onSave, userId, patientId }: EditWeightModalProps) => {
+const EditWeightModal = ({ open, onClose, record, onSave, userId, patientId, patientCreatedAt }: EditWeightModalProps) => {
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
   const [date, setDate] = useState('');
@@ -31,17 +25,16 @@ const EditWeightModal = ({ open, onClose, record, onSave, userId, patientId }: E
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  // Sempre que o registro mudar, atualize os campos
   useEffect(() => {
     if (record) {
       setWeight(record.weight || '');
       setHeight(record.height || '');
       setDate(record.date || '');
-      setBmi(record.bmi || record.imc || ''); // <-- aqui!
+      setBmi(record.bmi || record.imc || '');
     }
   }, [record, open]);
 
-  // Recalcula o IMC ao alterar peso ou altura
+
   useEffect(() => {
     if (weight && height) {
       const weightNum = parseFloat(weight);
@@ -52,38 +45,37 @@ const EditWeightModal = ({ open, onClose, record, onSave, userId, patientId }: E
     }
   }, [weight, height]);
 
-  const handleClose = () => {
-    onClose();
-    setWeight('');
-    setHeight('');
-    setDate('');
-    setBmi('');
-    setError('');
-    setSuccess(false);
-  };
+  const today = new Date().toISOString().split('T')[0];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!weight || !height || !record?.id) {
-      setError('Preencha peso, altura e selecione um registro válido');
+    if (!weight || !height || !date) {
+      setError('Preencha todos os campos obrigatórios');
+      return;
+    }
+    if (date < patientCreatedAt) {
+      setError(`A data não pode ser anterior a ${patientCreatedAt}`);
+      return;
+    }
+    if (date > today) {
+      setError('A data não pode ser maior que hoje');
       return;
     }
     try {
       setLoading(true);
       setError('');
-      const db = getDatabase();
-      const weightRef = ref(db, `patients/${userId}/${patientId}/weight/${record.id}`);
-      await update(weightRef, {
-        date,
-        weight,
-        height,
-        bmi,
-      });
+      await onSave({ ...record, weight, height, date, bmi });
       setSuccess(true);
       setTimeout(() => {
-        handleClose();
+        onClose();
+        setWeight('');
+        setHeight('');
+        setDate('');
+        setBmi('');
+        setError('');
+        setSuccess(false);
+        setLoading(false);
       }, 1500);
-      setLoading(false);
     } catch (err) {
       setError('Erro ao atualizar dados');
       setLoading(false);
@@ -128,18 +120,22 @@ const EditWeightModal = ({ open, onClose, record, onSave, userId, patientId }: E
                 InputLabelProps={{ shrink: true }}
                 error={!!error}
                 helperText={error}
+                inputProps={{
+                  min: patientCreatedAt || '1900-01-01',
+                  max: today,
+                }}
               />
             </Grid>
             <Grid item xs={12}>
               <Chip label={`IMC: ${bmi}`} />
             </Grid>
           </Grid>
+          <DialogActions>
+            <Button onClick={onClose} disabled={loading}>Cancelar</Button>
+            <Button type="submit" variant="contained" disabled={loading}>Salvar</Button>
+          </DialogActions>
         </form>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} disabled={loading}>Cancelar</Button>
-        <Button onClick={handleSubmit} variant="contained" disabled={loading}>Salvar</Button>
-      </DialogActions>
     </Dialog>
   );
 };

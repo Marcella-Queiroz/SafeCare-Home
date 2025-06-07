@@ -1,25 +1,31 @@
+// Cadastrar saturação
+
 import { useState } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Button, Alert
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
+import { getDatabase, ref, update } from "firebase/database";
+import { INPUT_LIMITS } from '@/constants/inputLimits';
 
 interface AddOxygenModalProps {
   open: boolean;
   onClose: () => void;
   userId: string;
   patientId: string;
+  patientCreatedAt: string;
   onSave: (data: any) => void | Promise<void>;
 }
 
-const AddOxygenModal = ({ open, onClose, userId, patientId, onSave }: AddOxygenModalProps) => {
+const AddOxygenModal = ({ open, onClose, userId, patientId, patientCreatedAt, onSave }: AddOxygenModalProps) => {
   const [value, setValue] = useState('');
-  const [date, setDate] = useState('');
+  const [date, setDate] = useState(patientCreatedAt);
   const [time, setTime] = useState('');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const today = new Date().toISOString().split('T')[0];
 
   const handleSave = async () => {
     setLoading(true);
@@ -31,10 +37,15 @@ const AddOxygenModal = ({ open, onClose, userId, patientId, onSave }: AddOxygenM
     }
     try {
       await onSave({ value, date, time });
-      setSuccess(true);
-      setTimeout(() => {
-        handleClose();
-      }, 1200);
+
+      // Atualiza o campo lastCheck do paciente
+      const db = getDatabase();
+      const patientRef = ref(db, `patients/${userId}/${patientId}`);
+      const now = new Date();
+      const lastCheck = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      await update(patientRef, { lastCheck });
+
+      onClose();
     } catch {
       setError('Erro ao salvar dados');
     }
@@ -43,10 +54,9 @@ const AddOxygenModal = ({ open, onClose, userId, patientId, onSave }: AddOxygenM
 
   const handleClose = () => {
     setValue('');
-    setDate('');
+    setDate(patientCreatedAt);
     setTime('');
     setError('');
-    setSuccess(false);
     setLoading(false);
     onClose();
   };
@@ -56,7 +66,6 @@ const AddOxygenModal = ({ open, onClose, userId, patientId, onSave }: AddOxygenM
       <DialogTitle>Adicionar Saturação de Oxigênio</DialogTitle>
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {success && <Alert severity="success" sx={{ mb: 2 }}>Registro adicionado!</Alert>}
         <Grid container spacing={2} sx={{ mt: 1 }}>
           <Grid item xs={12}>
             <TextField
@@ -66,17 +75,26 @@ const AddOxygenModal = ({ open, onClose, userId, patientId, onSave }: AddOxygenM
               onChange={e => setValue(e.target.value)}
               fullWidth
               required
+              inputProps={{ maxLength: INPUT_LIMITS.OXYGEN || 3 }}
             />
           </Grid>
           <Grid item xs={12}>
             <TextField
+              required
+              fullWidth
+              id="date"
               label="Data"
               type="date"
               value={date}
-              onChange={e => setDate(e.target.value)}
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-              required
+              onChange={(e) => setDate(e.target.value)}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              disabled={loading}
+              inputProps={{
+                min: patientCreatedAt || '1900-01-01',
+                max: today,
+              }}
             />
           </Grid>
           <Grid item xs={12}>

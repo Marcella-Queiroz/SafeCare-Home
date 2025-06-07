@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getDatabase, ref, get, update } from "firebase/database";
-import { getAuth, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
+import { getAuth, updatePassword, EmailAuthProvider, reauthenticateWithCredential, updateEmail } from "firebase/auth";
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -27,6 +27,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import PageContainer from '../components/PageContainer';
+import { INPUT_LIMITS } from '@/constants/inputLimits';
 
 function getRoleLabel(role: string) {
   switch (role) {
@@ -86,18 +87,69 @@ const ProfilePage = () => {
     setEditing((prev) => !prev);
     setError('');
     setSuccess(false);
+
+    // Se for cancelar a edição, aqui recarrega os dados do banco
+    if (editing) {
+      const db = getDatabase();
+      const userRef = ref(db, `users/${user.uid}`);
+      get(userRef).then(snapshot => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          setName(data.name || '');
+          setEmail(data.email || '');
+          setPhone(data.phone || '');
+          setRole(data.role || '');
+        }
+      });
+    }
   };
 
   const handleSave = async () => {
     try {
       setLoading(true);
       setError('');
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      if (currentUser && currentUser.email !== email) {
+        try {
+          await updateEmail(currentUser, email);
+        } catch (err: any) {
+          if (err.code === 'auth/requires-recent-login') {
+            const currentPassword = window.prompt('Por segurança, digite sua senha atual:');
+            if (!currentPassword) {
+              setError('Senha atual não informada.');
+              setLoading(false);
+              return;
+            }
+            const credential = EmailAuthProvider.credential(currentUser.email!, currentPassword);
+            try {
+              await reauthenticateWithCredential(currentUser, credential);
+              await updateEmail(currentUser, email);
+            } catch (reauthErr: any) {
+              setError('Falha na reautenticação: ' + (reauthErr.message || ''));
+              setLoading(false);
+              return;
+            }
+          } else if (
+            err.code === 'auth/operation-not-allowed' ||
+            (err.message && err.message.includes('Please verify the new email'))
+          ) {
+            setError('Para alterar o email, verifique o novo endereço de email. Acesse sua caixa de entrada e clique no link de verificação enviado pelo sistema.');
+            setLoading(false);
+            return;
+          } else {
+            setError('Erro ao atualizar email: ' + (err.message || ''));
+            setLoading(false);
+            return;
+          }
+        }
+      }
       const db = getDatabase();
       const userRef = ref(db, `users/${user.uid}`);
       await update(userRef, { name, email, phone, role });
       setSuccess(true);
       setEditing(false);
-      setReload(r => !r); // Força recarregar os dados do Firebase
+      setReload(r => !r);
     } catch (err) {
       setError('Erro ao salvar alterações');
       console.error(err);
@@ -211,9 +263,11 @@ const ProfilePage = () => {
               </Typography>
               {editing ? (
                 <TextField
-                  fullWidth
+                  label="Nome"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={e => setName(e.target.value)}
+                  fullWidth
+                  inputProps={{ maxLength: INPUT_LIMITS.NAME }}
                   size="small"
                   disabled={loading}
                 />
@@ -228,9 +282,11 @@ const ProfilePage = () => {
               </Typography>
               {editing ? (
                 <TextField
-                  fullWidth
+                  label="Email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
+                  fullWidth
+                  inputProps={{ maxLength: INPUT_LIMITS.EMAIL }}
                   size="small"
                   disabled={loading}
                 />
@@ -245,9 +301,11 @@ const ProfilePage = () => {
               </Typography>
               {editing ? (
                 <TextField
-                  fullWidth
+                  label="Telefone"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={e => setPhone(e.target.value)}
+                  fullWidth
+                  inputProps={{ maxLength: INPUT_LIMITS.PHONE }}
                   size="small"
                   disabled={loading}
                 />

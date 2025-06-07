@@ -9,15 +9,18 @@ interface EditOxygenModalProps {
   onClose: () => void;
   record: any;
   onSave: (data: any) => void | Promise<void>;
+  patientCreatedAt: string;
 }
 
-const EditOxygenModal = ({ open, onClose, record, onSave }: EditOxygenModalProps) => {
+const EditOxygenModal = ({ open, onClose, record, onSave, patientCreatedAt }: EditOxygenModalProps) => {
   const [value, setValue] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
     if (record) {
@@ -32,6 +35,14 @@ const EditOxygenModal = ({ open, onClose, record, onSave }: EditOxygenModalProps
     setError('');
     if (!value || !date) {
       setError('Preencha todos os campos obrigatórios');
+      return;
+    }
+    if (date < patientCreatedAt) {
+      setError(`A data não pode ser anterior a ${patientCreatedAt}`);
+      return;
+    }
+    if (date > today) {
+      setError('A data não pode ser maior que hoje');
       return;
     }
     setLoading(true);
@@ -71,9 +82,12 @@ const EditOxygenModal = ({ open, onClose, record, onSave }: EditOxygenModalProps
             value={date}
             onChange={e => setDate(e.target.value)}
             fullWidth
-            InputLabelProps={{ shrink: true }}
             required
             sx={{ mb: 2 }}
+            inputProps={{
+              min: patientCreatedAt || '1900-01-01',
+              max: today,
+            }}
           />
           <TextField
             label="Hora"
@@ -81,7 +95,6 @@ const EditOxygenModal = ({ open, onClose, record, onSave }: EditOxygenModalProps
             value={time}
             onChange={e => setTime(e.target.value)}
             fullWidth
-            InputLabelProps={{ shrink: true }}
             sx={{ mb: 2 }}
           />
           <DialogActions>

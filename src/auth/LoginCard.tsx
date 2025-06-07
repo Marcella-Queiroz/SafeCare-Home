@@ -19,11 +19,24 @@ const LoginCard = ({ onForgotPassword, onRequestAccess, showToast }: LoginCardPr
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  const handleUserLogin = async (e: React.FormEvent) => {
+  function validateEmail(email: string): boolean {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+}
+
+const handleUserLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setEmailError("");
     setPasswordError("");
+
+
+
+    if (!validateEmail(email)) {
+      setEmailError("Formato de email inválido.");
+      setIsLoading(false);
+      return;
+    }
 
     const auth = getAuth(app);
     try {
@@ -58,6 +71,8 @@ const LoginCard = ({ onForgotPassword, onRequestAccess, showToast }: LoginCardPr
       setIsLoading(false);
     }
   };
+
+ 
 
   const handleEmailUpdate = async (novoEmail: string) => {
     const auth = getAuth(app);

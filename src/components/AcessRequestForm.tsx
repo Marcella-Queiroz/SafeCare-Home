@@ -133,6 +133,7 @@ const AccessRequestForm = ({ isOpen, onClose, showToast }: AccessRequestFormProp
             onChange={(e) => setPassword(e.target.value)}
             margin="normal"
             required
+            inputProps={{ maxLength: 20 }} // Limite de 20 caracteres
           />
           <TextField
             fullWidth
@@ -144,6 +145,7 @@ const AccessRequestForm = ({ isOpen, onClose, showToast }: AccessRequestFormProp
             error={!!passwordError}
             helperText={passwordError}
             required
+            inputProps={{ maxLength: 20 }} // Limite de 20 caracteres
           />
         </Box>
         <Typography variant="body2" color="textSecondary">

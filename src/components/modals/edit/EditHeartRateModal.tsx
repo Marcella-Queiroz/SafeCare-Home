@@ -9,15 +9,18 @@ interface EditHeartRateModalProps {
   onClose: () => void;
   record: any;
   onSave: (data: any) => void | Promise<void>;
+  patientCreatedAt: string;
 }
 
-const EditHeartRateModal = ({ open, onClose, record, onSave }: EditHeartRateModalProps) => {
+const EditHeartRateModal = ({ open, onClose, record, onSave, patientCreatedAt }: EditHeartRateModalProps) => {
   const [value, setValue] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
     if (record) {
@@ -32,6 +35,14 @@ const EditHeartRateModal = ({ open, onClose, record, onSave }: EditHeartRateModa
     setError('');
     if (!value || !date) {
       setError('Preencha todos os campos obrigatórios');
+      return;
+    }
+    if (date < patientCreatedAt) {
+      setError(`A data não pode ser anterior a ${patientCreatedAt}`);
+      return;
+    }
+    if (date > today) {
+      setError('A data não pode ser maior que hoje');
       return;
     }
     setLoading(true);
@@ -71,9 +82,12 @@ const EditHeartRateModal = ({ open, onClose, record, onSave }: EditHeartRateModa
             value={date}
             onChange={e => setDate(e.target.value)}
             fullWidth
-            InputLabelProps={{ shrink: true }}
             required
             sx={{ mb: 2 }}
+            inputProps={{
+              min: patientCreatedAt || '1900-01-01',
+              max: today,
+            }}
           />
           <TextField
             label="Hora"
@@ -81,7 +95,6 @@ const EditHeartRateModal = ({ open, onClose, record, onSave }: EditHeartRateModa
             value={time}
             onChange={e => setTime(e.target.value)}
             fullWidth
-            InputLabelProps={{ shrink: true }}
             sx={{ mb: 2 }}
           />
           <DialogActions>

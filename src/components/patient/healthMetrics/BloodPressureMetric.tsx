@@ -20,6 +20,7 @@ const BloodPressureMetric = ({ records, onEdit, onDelete }) => (
   <HealthMetricDisplay
     title="Histórico de Pressão Arterial"
     icon={<FavoriteIcon sx={{ color: '#e53935', mr: 1, verticalAlign: 'text-bottom' }} />}
+    tooltipText="Valores de glicose registrados para o paciente."
   >
     <BasicMetricRecord
       records={formatRecords(Array.isArray(records) ? records : [])}

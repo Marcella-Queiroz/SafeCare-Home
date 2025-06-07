@@ -26,6 +26,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import PageContainer from '../components/PageContainer';
 import AddPatientModal from '../components/modals/add/AddPatientModal';
+import { INPUT_LIMITS } from '@/constants/inputLimits';
 
 // Importações do Firebase
 import { getDatabase, ref, onValue, set, push } from "firebase/database";
@@ -264,6 +265,7 @@ const PatientsPage = () => {
           variant="outlined"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          inputProps={{ maxLength: INPUT_LIMITS.NAME }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -376,49 +378,30 @@ const PatientsPage = () => {
                         {patient.age} anos - {(patient.conditions || []).join(', ')}
                       </Typography>
                     </Box>
-                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); }}>
+                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleAddPatient(patient.id); }}>
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Box>
-                  
-                  <Divider sx={{ my: 1.5 }} />
-                  
-                  <Stack direction="row" spacing={3} alignItems="center">
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <FavoriteIcon color="error" fontSize="small" sx={{ mr: 0.5 }} />
-                      <Typography variant="body2" sx={{ mr: 0.5 }}>
+                  <Divider sx={{ my: 1 }} />
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <FavoriteIcon sx={{ color: '#e53935' }} fontSize="small" />
+                      <Typography variant="body1" sx={{ fontWeight: 600 }}>
                         {getLastBloodPressureString(patient.bloodPressure)}
                       </Typography>
                     </Box>
-                    
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
-                        {getLastMetricValue(patient.heartRate, 'value', ' bpm')}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Typography variant="body1" sx={{ fontWeight: 600, color: 'success.main' }}>
+                        {getLastMetricValue(patient.heartRate, 'value', 'bpm')}
                       </Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
-                        {getLastMetricValue(patient.glucose, 'value', ' mg/dL')}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
-                        {getLastMetricValue(patient.temperature, 'value', '°C')}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
-                        {getLastMetricValue(patient.oxygen, 'value', '%')}
-                      </Typography>
-                    </Box>
-                    
-                    <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}>
-                      <AccessTimeIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 'auto' }}>
+                      <AccessTimeIcon fontSize="small" sx={{ color: 'text.secondary' }} />
                       <Typography variant="caption" color="text.secondary">
-                        Última verificação: {patient.lastCheck}
+                        Última verificação: {patient.lastCheck || '--'}
                       </Typography>
                     </Box>
-                  </Stack>
+                  </Box>
                 </CardContent>
               </Card>
             ))
