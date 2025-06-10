@@ -8,7 +8,7 @@ export const INPUT_LIMITS = {
   TITLE: 100,
   DOSAGE: 50,
   FREQUENCY: 30,
-  TIME: 5,
+  TIME: 25,
   AGE: 3,
   WEIGHT: 5,
   HEIGHT: 5,

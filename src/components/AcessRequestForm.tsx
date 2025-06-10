@@ -1,5 +1,3 @@
-// Modal de cadastro de usuário
-
 import React, { useState } from "react";
 import {
   Dialog,
@@ -10,6 +8,8 @@ import {
   Button,
   Typography,
   Box,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { getDatabase, ref, set } from "firebase/database";
@@ -30,6 +30,7 @@ const AccessRequestForm = ({ isOpen, onClose, showToast }: AccessRequestFormProp
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [role, setRole] = useState("");
 
@@ -53,14 +54,15 @@ const AccessRequestForm = ({ isOpen, onClose, showToast }: AccessRequestFormProp
       );
       const user = userCredential.user;
       const db = getDatabase(app);
-      // Salve todos os campos, inclusive telefone e função
       await set(ref(db, "users/" + user.uid), { name, email, phone, role });
 
       showToast("Cadastro realizado com sucesso. Você já pode fazer login.", "success");
       onClose();
       resetForm();
-    } catch (error: any) {
-      showToast(error.message, "error");
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Ocorreu um erro desconhecido.";
+      showToast(errorMessage, "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -69,7 +71,7 @@ const AccessRequestForm = ({ isOpen, onClose, showToast }: AccessRequestFormProp
   const resetForm = () => {
     setName("");
     setEmail("");
-    setPhone(""); // Resetar campo de telefone
+    setPhone(""); 
     setPassword("");
     setConfirmPassword("");
     setPasswordError("");
@@ -133,7 +135,7 @@ const AccessRequestForm = ({ isOpen, onClose, showToast }: AccessRequestFormProp
             onChange={(e) => setPassword(e.target.value)}
             margin="normal"
             required
-            inputProps={{ maxLength: 20 }} // Limite de 20 caracteres
+            inputProps={{ maxLength: 20 }} 
           />
           <TextField
             fullWidth
@@ -145,13 +147,26 @@ const AccessRequestForm = ({ isOpen, onClose, showToast }: AccessRequestFormProp
             error={!!passwordError}
             helperText={passwordError}
             required
-            inputProps={{ maxLength: 20 }} // Limite de 20 caracteres
+            inputProps={{ maxLength: 20 }} 
           />
         </Box>
         <Typography variant="body2" color="textSecondary">
           {getRoleLabel(role)}
         </Typography>
       </DialogContent>
+
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={acceptedTerms}
+            onChange={(e) => setAcceptedTerms(e.target.checked)}
+            color="primary"
+          />
+        }
+        label="Ao criar uma conta, você concorda que seus dados serão armazenados e utilizados para gerenciar seus dados e interações com o sistema SafeCare."
+        sx={{ mx: 2, mb: 2, alignItems: "flex-start" }}
+      />
+
       <DialogActions>
         <Button onClick={onClose} color="inherit">
           Cancelar
@@ -160,7 +175,10 @@ const AccessRequestForm = ({ isOpen, onClose, showToast }: AccessRequestFormProp
           onClick={handleSubmit}
           variant="contained"
           color="primary"
-          disabled={isSubmitting}
+          style={{ 
+            opacity: isSubmitting || !acceptedTerms ? 0.8 : 1
+          }}
+          disabled={isSubmitting || !acceptedTerms}
         >
           {isSubmitting ? "Cadastrando..." : "Criar conta"}
         </Button>
