@@ -1,7 +1,7 @@
 //Modal novo paciente
 //Permite o cadastro de um novo paciente, e armazenamento dos dados no Firebase
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -22,11 +22,34 @@ import CloseIcon from '@mui/icons-material/Close';
 import { getDatabase, ref, push, set } from "firebase/database";
 import { app } from "@/services/firebaseConfig";
 import { INPUT_LIMITS } from '@/constants/inputLimits';
+import type { Metric, BloodPressure } from '../../../pages/PatientsPage';
+import { calcularIdade } from '@/utils/dateUtils';
 
-interface AddPatientModalProps {
+export interface Patient {
+  id: string;
+  name: string;
+  age: number;
+  birthDate?: string;
+  gender?: string;
+  phone?: string;
+  address?: string;
+  conditions: string[];
+  lastCheck?: string;
+  weight: Metric[];
+  glucose: Metric[];
+  bloodPressure: BloodPressure[];
+  temperature: Metric[];
+  oxygen: Metric[];
+  heartRate: Metric[];
+  medications?: any[];
+  appointments?: any[];
+}
+
+export interface AddPatientModalProps {
   open: boolean;
   onClose: () => void;
-  userId: string | undefined;
+  onAdd: (dadosPaciente: Omit<Patient, "id">) => Promise<void>;
+  userId: string;
 }
 
 const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
@@ -36,6 +59,15 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [birthDate, setBirthDate] = useState('');
+  const [gender, setGender] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+
+  // Sempre que a data de nascimento mudar, atualize a idade
+  useEffect(() => {
+    setAge(birthDate ? calcularIdade(birthDate).toString() : '');
+  }, [birthDate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +93,10 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
       await set(newPatientRef, {
         name,
         age: Number(age),
+        birthDate,
+        gender,
+        phone,
+        address,
         conditions: conditions
           ? conditions.split(",").map((c) => c.trim())
           : [],
@@ -69,8 +105,10 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
         glucose: [],
         temperature: [],
         bloodPressure: [],
-        heartRate: [],
         oxygen: [],
+        heartRate: [],
+        medications: [],
+        appointments: [],
       });
 
       setSuccess(true);
@@ -136,7 +174,7 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
 
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={2}>
-            <Grid>
+            <Grid item xs={12}>
               <TextField
                 label="Nome"
                 value={name}
@@ -147,19 +185,58 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
                 disabled={loading}
               />
             </Grid>
-            <Grid>
+            <Grid item xs={12}>
               <TextField
                 label="Idade"
                 value={age}
-                onChange={e => setAge(e.target.value)}
-                required
                 fullWidth
-                type="number"
-                inputProps={{ maxLength: INPUT_LIMITS.AGE }}
-                disabled={loading}
+                InputProps={{ readOnly: true }}
+                disabled
               />
             </Grid>
-            <Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Data de Nascimento"
+                type="date"
+                value={birthDate}
+                onChange={e => setBirthDate(e.target.value)}
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                disabled={loading}
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Sexo"
+                value={gender}
+                onChange={e => setGender(e.target.value)}
+                fullWidth
+                disabled={loading}
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Contato"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                fullWidth
+                disabled={loading}
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Endereço"
+                value={address}
+                onChange={e => setAddress(e.target.value)}
+                fullWidth
+                disabled={loading}
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
               <TextField
                 label="Condições"
                 value={conditions}

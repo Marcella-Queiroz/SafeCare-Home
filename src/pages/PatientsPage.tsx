@@ -27,7 +27,7 @@ import DeleteConfirmationModal from '../components/modals/DeleteConfirmationModa
 import { INPUT_LIMITS } from '@/constants/inputLimits';
 import { getDatabase, ref, onValue, set, push, remove } from "firebase/database";
 import { app } from "@/services/firebaseConfig";
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -58,24 +58,31 @@ interface Patient {
 }
 
 interface Report {
+  heartRate: any[];
   id: string;
   patientName: string;
+  birthDate?: string;
+  age?: number;
+  gender?: string;
+  phone?: string;
+  address?: string;
+  conditions?: string[];
+  weightHistory?: any[];
+  bloodPressureHistory?: any[];
+  glucoseHistory?: any[];
+  height?: string;
+  temperature?: string;
+  oxygen?: string;
+  medications?: any[];
+  appointments?: any[];
   period: string;
-  createdAt: number;
-  metrics: {
+  createdAt: number | string;
+  metrics?: {
     [key: string]: string | number;
   };
 }
 
-function getInitials(name: string): string {
-  if (!name) return '';
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toLowerCase();
-}
-
+// Função para obter o status baseado na pressão arterial
 function getStatusByBloodPressure(bloodPressure: BloodPressure[]): 'Estável' | 'Atenção' {
   if (Array.isArray(bloodPressure) && bloodPressure.length > 0) {
     const last = bloodPressure[bloodPressure.length - 1];
@@ -89,6 +96,7 @@ function getStatusByBloodPressure(bloodPressure: BloodPressure[]): 'Estável' | 
   return "Atenção";
 }
 
+// Função para obter o último valor de pressão arterial como string
 function getLastBloodPressureString(bloodPressure: BloodPressure[]): string {
   if (Array.isArray(bloodPressure) && bloodPressure.length > 0) {
     const last = bloodPressure[bloodPressure.length - 1];
@@ -102,6 +110,7 @@ function getLastBloodPressureString(bloodPressure: BloodPressure[]): string {
   return '-';
 }
 
+// Função para obter o último valor de uma métrica
 function getLastMetricValue(metric: Metric[], suffix: string = ''): string {
   if (Array.isArray(metric) && metric.length > 0) {
     const last = metric[metric.length - 1];
@@ -112,6 +121,7 @@ function getLastMetricValue(metric: Metric[], suffix: string = ''): string {
   return '-';
 }
 
+// Função para converter métricas em array
 function convertMetricsToArray<T extends Metric>(metricsObj: any): T[] {
   if (!metricsObj) return [];
   if (Array.isArray(metricsObj)) return metricsObj.filter(Boolean);
@@ -123,6 +133,7 @@ function convertMetricsToArray<T extends Metric>(metricsObj: any): T[] {
   return [];
 }
 
+// Função para converter os dados do paciente
 function convertPatientMetrics(patient: any): Patient {
   if (!patient) return patient;
   const converted = { ...patient };
@@ -135,6 +146,7 @@ function convertPatientMetrics(patient: any): Patient {
   return converted;
 }
 
+// Função que gerencia lista de pacientes e relatórios
 const PatientsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -147,11 +159,13 @@ const PatientsPage = () => {
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState<string | null>(null);
 
+  // Carrega pacientes do Firebase
   useEffect(() => {
     if (!user?.uid) return;
     const db = getDatabase(app);
     const patientsRef = ref(db, `patients/${user.uid}`);
     
+    //
     const unsubscribe = onValue(patientsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -190,24 +204,29 @@ const PatientsPage = () => {
     return () => unsubscribe();
   }, [user?.uid]);
 
+  // Filtra pacientes com base no termo de busca
   const filteredPatients = patients.filter(patient => {
     const name = (patient.name || '').toLowerCase();
     const search = searchTerm.trim().toLowerCase();
     return name.includes(search);
   });
 
+  // Função para lidar com o clique no paciente
   const handlePatientClick = (patientId: string) => {
     navigate(`/patients/${user?.uid}/${patientId}`);
   };
 
+  // Função para lidar com a mudança de aba
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
   
+  // Função para abrir o modal de novo relatório
   const handleNewReportClick = () => {
     navigate('/reports');
   };
 
+  // Função para excluir paciente
   const handleDeletePatient = async (patientId: string) => {
     if (!user?.uid || !patientId) return;
     const db = getDatabase(app);
@@ -220,54 +239,198 @@ const PatientsPage = () => {
     }
   };
 
+  //Função para exportar relatório
   const handleExportReport = (report: Report) => {
     const doc = new jsPDF();
-    
-    const metricTranslations: { [key: string]: string } = {
-        weight: "Peso (kg)",
-        glucose: "Glicose (mg/dL)",
-        bloodPressure: "Pressão Arterial (mmHg)",
-        temperature: "Temperatura (°C)",
-        oxygen: "Saturação de O₂ (%)",
-        heartRate: "Frequência Cardíaca (bpm)",
-    };
 
-    doc.setFontSize(16);
-    doc.text("Relatório do Paciente", 14, 18);
+    // Converte objetos em arrays, se necessário
+    const weightHistory = Array.isArray(report.weightHistory)
+      ? report.weightHistory
+      : report.weightHistory
+        ? Object.values(report.weightHistory)
+        : [];
+    const bloodPressureHistory = Array.isArray(report.bloodPressureHistory)
+      ? report.bloodPressureHistory
+      : report.bloodPressureHistory
+        ? Object.values(report.bloodPressureHistory)
+        : [];
+    const glucoseHistory = Array.isArray(report.glucoseHistory)
+      ? report.glucoseHistory
+      : report.glucoseHistory
+        ? Object.values(report.glucoseHistory)
+        : [];
+    const medications = Array.isArray(report.medications)
+      ? report.medications
+      : report.medications
+        ? Object.values(report.medications)
+        : [];
+    const appointments = Array.isArray(report.appointments)
+      ? report.appointments
+      : report.appointments
+        ? Object.values(report.appointments)
+        : [];
 
-    const data = [
-      ["Paciente", report.patientName],
-      ["Período", report.period],
-      ["Criado em", new Date(report.createdAt).toLocaleString()],
-    ];
+    // Título
+    doc.setFontSize(14);
+    doc.text('Prontuário Eletrônico do Paciente', 105, 15, { align: 'center' });
 
+    // Dados do relatório
+    doc.setFontSize(10);
+    doc.text(`Data de Emissão: ${new Date().toLocaleDateString()}`, 14, 25);
+    doc.text(`Relatório dos Últimos ${report.period || '--'}`, 14, 31);
+
+    // Dados do paciente
     autoTable(doc, {
-      startY: 28,
-      head: [["Campo", "Valor"]],
-      body: data,
-      theme: "grid",
-      styles: { fontSize: 12 },
-      headStyles: { fillColor: [41, 128, 185] },
+      startY: 36,
+      head: [['DADOS DO PACIENTE', '']],
+      body: [
+        ['Nome Completo:', report.patientName || '-'],
+        ['Data de Nascimento:', report.birthDate || '-'],
+        ['Idade:', report.age || '-'],
+        ['Sexo:', report.gender || '-'],
+        ['Contato:', report.phone || '-'],
+        ['Endereço:', report.address || '-'],
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [220, 220, 220], halign: 'center' },
+      bodyStyles: { halign: 'left' },
+      styles: { fontSize: 10 },
+      columnStyles: {
+        0: { cellWidth: 60 },
+        1: { cellWidth: 120 }
+      }
     });
 
-    if (report.metrics && Object.keys(report.metrics).length > 0) {
-      const metricsBody = Object.entries(report.metrics).map(([key, value]) => {
-          const translatedKey = metricTranslations[key] || key;
-          return [translatedKey, String(value)];
-      });
-      
-      autoTable(doc, {
-        startY: (doc as any).lastAutoTable.finalY + 10,
-        head: [["Métrica", "Valor Médio"]],
-        body: metricsBody,
-        theme: "striped",
-        styles: { fontSize: 11 },
-      });
-    }
+    let y = (doc as any).lastAutoTable.finalY + 4;
 
-    doc.save(`relatorio_${report.patientName}_${report.id}.pdf`);
+    // Condições clínicas
+    autoTable(doc, {
+      startY: y,
+      head: [['CONDIÇÕES CLÍNICAS']],
+      body: (report.conditions || []).map((cond: string) => [cond]),
+      theme: 'grid',
+      headStyles: { fillColor: [220, 220, 220], halign: 'center' },
+      bodyStyles: { halign: 'left' },
+      styles: { fontSize: 10 },
+    });
+
+    y = (doc as any).lastAutoTable.finalY + 4;
+
+    // Histórico de indicadores de saúde
+    autoTable(doc, {
+      startY: y,
+      head: [['HISTÓRICO DE INDICADORES DE SAÚDE']],
+      body: [],
+      theme: 'grid',
+      headStyles: { fillColor: [220, 220, 220], halign: 'center' },
+      styles: { fontSize: 10 },
+    });
+
+    y = (doc as any).lastAutoTable.finalY + 2;
+
+    // Peso corporal
+    autoTable(doc, {
+      startY: y,
+      head: [['Data da Aferição', 'Peso', 'IMC (kg/m²)']],
+      body: (weightHistory).map((item: any) => [
+        item.date || '-', item.weight || '-', item.bmi || '-'
+      ]),
+      theme: 'grid',
+      styles: { fontSize: 10 },
+    });
+
+    y = (doc as any).lastAutoTable.finalY + 2;
+
+    // Pressão arterial
+    autoTable(doc, {
+      startY: y,
+      head: [['Data da Aferição', 'Pressão Arterial (Sist/Diast)', 'Freq. Cardíaca (bpm)']],
+      body: (bloodPressureHistory).map((item: any) => [
+        item.date || '-', item.value || '-', item.heartRate || '-'
+      ]),
+      theme: 'grid',
+      styles: { fontSize: 10 },
+    });
+
+    y = (doc as any).lastAutoTable.finalY + 2;
+
+    // Glicose
+    autoTable(doc, {
+      startY: y,
+      head: [['Data da Aferição', 'Glicose (Jejum)']],
+      body: (glucoseHistory).map((item: any) => [
+        item.date || '-', item.value || '-'
+      ]),
+      theme: 'grid',
+      styles: { fontSize: 10 },
+    });
+
+    y = (doc as any).lastAutoTable.finalY + 2;
+
+    // Medicamentos
+    autoTable(doc, {
+      startY: y,
+      head: [['MEDICAMENTOS (Prescrições Ativas)']],
+      body: [],
+      theme: 'grid',
+      headStyles: { fillColor: [220, 220, 220], halign: 'center' },
+      styles: { fontSize: 10 },
+    });
+
+    y = (doc as any).lastAutoTable.finalY + 2;
+
+    autoTable(doc, {
+      startY: y,
+      head: [['Medicamento', 'Posologia']],
+      body: (medications).map((item: any) => [
+        item.name || '-', item.dosage || '-'
+      ]),
+      theme: 'grid',
+      styles: { fontSize: 10 },
+    });
+
+    y = (doc as any).lastAutoTable.finalY + 4;
+
+    // Agendamentos
+    autoTable(doc, {
+      startY: y,
+      head: [['AGENDAMENTOS (Histórico e Futuros)']],
+      body: [],
+      theme: 'grid',
+      headStyles: { fillColor: [220, 220, 220], halign: 'center' },
+      styles: { fontSize: 10 },
+    });
+
+    y = (doc as any).lastAutoTable.finalY + 2;
+
+    autoTable(doc, {
+      startY: y,
+      head: [['Data', 'Horário', 'Status']], 
+      body: (appointments).map((item: any) => [
+        item.date || '-', item.time || '-', item.status || '-'
+      ]),
+      theme: 'grid',
+      styles: { fontSize: 10 },
+    });
+
+    y = (doc as any).lastAutoTable.finalY + 4;
+
+    // Frequência Cardíaca
+    autoTable(doc, {
+      startY: y,
+      head: [['Data da Aferição', 'Frequência Cardíaca (bpm)']],
+      body: (report.heartRate || []).map((item: any) => [
+        item.date || '-', item.value || '-'
+      ]),
+      theme: 'grid',
+      styles: { fontSize: 10 },
+    });
+
+    doc.save(`prontuario_${report.patientName || 'paciente'}_${report.id}.pdf`);
   };
 
+
+  // Função para cadastrar paciente
   const handleAddPatient = async (dadosPaciente: Omit<Patient, 'id'>) => {
     if(!user?.uid) return;
     const db = getDatabase(app);
@@ -474,10 +637,11 @@ const PatientsPage = () => {
             </Box>
         )}
         
-        <AddPatientModal 
-            open={addPatientModalOpen} 
-            onClose={() => setAddPatientModalOpen(false)} 
-            onAdd={handleAddPatient}
+        <AddPatientModal
+          open={addPatientModalOpen}
+          onClose={() => setAddPatientModalOpen(false)}
+          onAdd={handleAddPatient}
+          userId={user?.uid}
         />
         <DeleteConfirmationModal
           open={confirmDeleteOpen}
@@ -495,5 +659,7 @@ const PatientsPage = () => {
     </PageContainer>
   );
 };
+
+export type { Metric, BloodPressure };
 
 export default PatientsPage;

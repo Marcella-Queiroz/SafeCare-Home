@@ -18,7 +18,7 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PageContainer from '../components/PageContainer';
 import { useNavigate } from 'react-router-dom';
-import { getDatabase, ref, onValue, push, set } from "firebase/database";
+import { getDatabase, ref, onValue, push, set, get } from "firebase/database";
 import { app } from "@/services/firebaseConfig";
 import { useAuth } from '../contexts/AuthContext';
 
@@ -93,19 +93,40 @@ const ReportsPage = () => {
     try {
       const db = getDatabase(app);
       const reportsRef = ref(db, `reports/${user.uid}`);
-      const newReportRef = push(reportsRef);
-      const patient = patients.find(p => p.id === selectedPatient);
-      await set(newReportRef, {
-        patientId: selectedPatient,
-        patientName: patient ? patient.name : '',
+
+      // Busque o paciente selecionado
+      const selectedPatientObj = patients.find(p => p.id === selectedPatient);
+
+      // Busque todos os dados do paciente do banco
+      const patientRef = ref(db, `patients/${user.uid}/${selectedPatient}`);
+      const snapshot = await get(patientRef);
+      const patientData = snapshot.val();
+
+      // Monte o relatório com todos os campos necessários
+      const reportData = {
+        patientName: patientData.name,
+        birthDate: patientData.birthDate || '',
+        age: patientData.age || '',
+        gender: patientData.gender || '',
+        phone: patientData.phone || '',
+        address: patientData.address || '',
+        conditions: patientData.conditions || [],
+        weightHistory: patientData.weight || [],
+        bloodPressureHistory: patientData.bloodPressure || [],
+        glucoseHistory: patientData.glucose || [],
+        height: patientData.height || '',
+        temperature: patientData.temperature || '',
+        oxygen: patientData.oxygen || '',
+        medications: patientData.medications || [],
+        appointments: patientData.appointments || [],
+        heartRateHistory: patientData.heartRate || [],
         period: `${startDate} a ${endDate}`,
         createdAt: new Date().toISOString(),
-      });
+      };
+
+      await push(reportsRef, reportData);
+
       setSuccess(true);
-      setSelectedPatient('');
-      setStartDate('');
-      setEndDate('');
-      // Redireciona para a tela de relatórios salvos
       setTimeout(() => navigate('/patients?tab=relatorios'), 800);
     } catch (err) {
       setError('Erro ao salvar relatório.');

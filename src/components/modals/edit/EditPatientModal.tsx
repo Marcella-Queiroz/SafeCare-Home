@@ -18,6 +18,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import { getDatabase, ref, update } from "firebase/database";
 import { INPUT_LIMITS } from '@/constants/inputLimits';
+import { calcularIdade } from '@/utils/dateUtils';
 
 interface EditPatientModalProps {
   open: boolean;
@@ -27,6 +28,10 @@ interface EditPatientModalProps {
     name: string;
     age: number;
     conditions: string[];
+    birthDate?: string;
+    gender?: string;
+    phone?: string;
+    address?: string;
   };
   userId: string | undefined;
   onSave: (updatedPatient: any) => void;
@@ -34,8 +39,12 @@ interface EditPatientModalProps {
 
 const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatientModalProps) => {
   const [name, setName] = useState('');
-  const [age, setAge] = useState('');
   const [conditions, setConditions] = useState('');
+  const [birthDate, setBirthDate] = useState('');
+  const [gender, setGender] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [age, setAge] = useState('');
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -44,10 +53,18 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
   useEffect(() => {
     if (patient) {
       setName(patient.name);
-      setAge(patient.age.toString());
       setConditions(patient.conditions.join(', '));
+      setBirthDate(patient.birthDate || '');
+      setGender(patient.gender || '');
+      setPhone(patient.phone || '');
+      setAddress(patient.address || '');
+      setAge(patient.birthDate ? calcularIdade(patient.birthDate).toString() : '');
     }
   }, [patient]);
+  
+  useEffect(() => {
+    setAge(birthDate ? calcularIdade(birthDate).toString() : '');
+  }, [birthDate]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +85,11 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
       await update(patientRef, {
         name,
         age: parseInt(age),
-        conditions: conditions.split(',').map(c => c.trim()).filter(c => c)
+        conditions: conditions.split(',').map(c => c.trim()).filter(c => c),
+        birthDate,
+        gender,
+        phone,
+        address,
       });
 
       setSuccess(true);
@@ -137,16 +158,23 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
             </Grid>
             <Grid item xs={12}>
               <TextField
-                required
+                label="Data de Nascimento"
+                type="date"
+                value={birthDate}
+                onChange={e => setBirthDate(e.target.value)}
                 fullWidth
-                id="age"
-                label="Idade"
-                name="age"
-                type="number"
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
+                InputLabelProps={{ shrink: true }}
                 disabled={loading}
-                inputProps={{ maxLength: INPUT_LIMITS.AGE }}
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Idade"
+                value={age}
+                fullWidth
+                InputProps={{ readOnly: true }}
+                disabled
               />
             </Grid>
             <Grid item xs={12}>
@@ -161,6 +189,36 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
                 disabled={loading}
                 helperText="Separe as condições por vírgula"
                 inputProps={{ maxLength: INPUT_LIMITS.CONDITIONS }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Sexo"
+                value={gender}
+                onChange={e => setGender(e.target.value)}
+                fullWidth
+                disabled={loading}
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Contato"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                fullWidth
+                disabled={loading}
+                required
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Endereço"
+                value={address}
+                onChange={e => setAddress(e.target.value)}
+                fullWidth
+                disabled={loading}
+                required
               />
             </Grid>
           </Grid>

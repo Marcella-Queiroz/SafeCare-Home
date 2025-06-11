@@ -31,8 +31,15 @@ const AddWeightModal = ({ open, onClose, userId, patientId, onSave }: AddWeightM
       setLoading(false);
       return;
     }
+    // Calculo do IMC
+    const weightNum = parseFloat(weight);
+    const heightNum = parseFloat(height) / 100;
+    const bmi = (weightNum > 0 && heightNum > 0)
+      ? (weightNum / (heightNum * heightNum)).toFixed(1)
+      : '';
+
     try {
-      await onSave({ weight, height, date });
+      await onSave({ weight, height, date, bmi }); // Salve o IMC junto!
 
       // Atualiza o campo lastCheck do paciente
       const db = getDatabase();
