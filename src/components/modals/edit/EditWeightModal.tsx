@@ -88,7 +88,7 @@ const EditWeightModal = ({ open, onClose, record, onSave, userId, patientId, pat
       <DialogContent>
         <form onSubmit={handleSubmit}>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 label="Peso (kg)"
                 type="number"
@@ -99,7 +99,7 @@ const EditWeightModal = ({ open, onClose, record, onSave, userId, patientId, pat
                 helperText={error}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 label="Altura (cm)"
                 type="number"
@@ -110,7 +110,7 @@ const EditWeightModal = ({ open, onClose, record, onSave, userId, patientId, pat
                 helperText={error}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 label="Data"
                 type="date"
@@ -126,7 +126,7 @@ const EditWeightModal = ({ open, onClose, record, onSave, userId, patientId, pat
                 }}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <Chip label={`IMC: ${bmi}`} />
             </Grid>
           </Grid>

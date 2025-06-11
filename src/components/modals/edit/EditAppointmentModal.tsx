@@ -114,7 +114,7 @@ const EditAppointmentModal = ({ open, onClose, appointment, onSave }: EditAppoin
         
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 required
                 fullWidth
@@ -126,7 +126,7 @@ const EditAppointmentModal = ({ open, onClose, appointment, onSave }: EditAppoin
                 disabled={loading}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 required
                 fullWidth
@@ -142,7 +142,7 @@ const EditAppointmentModal = ({ open, onClose, appointment, onSave }: EditAppoin
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 required
                 fullWidth

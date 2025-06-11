@@ -73,7 +73,7 @@ const AddOxygenModal = ({ open, onClose, userId, patientId, patientCreatedAt, on
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <Grid container spacing={2} sx={{ mt: 1 }}>
-          <Grid item xs={12}>
+          <Grid size={{ xs:12, md:6 }}>
             <TextField
               label="Saturação (%)"
               type="number"
@@ -84,7 +84,7 @@ const AddOxygenModal = ({ open, onClose, userId, patientId, patientCreatedAt, on
               inputProps={{ maxLength: INPUT_LIMITS.OXYGEN || 3 }}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={{ xs:12, md:6 }}>
             <TextField
               required
               fullWidth
@@ -103,7 +103,7 @@ const AddOxygenModal = ({ open, onClose, userId, patientId, patientCreatedAt, on
               }}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={{ xs:12, md:6 }}>
             <TextField
               label="Hora"
               type="time"

@@ -141,7 +141,7 @@ const EditMedicationModal = ({ open, onClose, medication, onSave }: EditMedicati
         
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 label="Nome do medicamento"
                 value={name}
@@ -152,7 +152,7 @@ const EditMedicationModal = ({ open, onClose, medication, onSave }: EditMedicati
                 disabled={loading}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 label="Dosagem"
                 value={dosage}
@@ -163,7 +163,7 @@ const EditMedicationModal = ({ open, onClose, medication, onSave }: EditMedicati
                 disabled={loading}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 select
                 label="Frequência"
@@ -181,7 +181,7 @@ const EditMedicationModal = ({ open, onClose, medication, onSave }: EditMedicati
                 ))}
               </TextField>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 label="Horário"
                 value={time}

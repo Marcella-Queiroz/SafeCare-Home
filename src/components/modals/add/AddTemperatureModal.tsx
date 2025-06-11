@@ -71,7 +71,7 @@ const AddTemperatureModal = ({ open, onClose, userId, patientId, patientCreatedA
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <Grid container spacing={2} sx={{ mt: 1 }}>
-          <Grid item xs={12}>
+          <Grid size={{ xs:12, md:6 }}>
             <TextField
               label="Temperatura (°C)"
               type="number"
@@ -82,7 +82,7 @@ const AddTemperatureModal = ({ open, onClose, userId, patientId, patientCreatedA
               inputProps={{ maxLength: INPUT_LIMITS.TEMPERATURE }}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={{ xs:12, md:6 }}>
             <TextField
               label="Data"
               type="date"
@@ -97,7 +97,7 @@ const AddTemperatureModal = ({ open, onClose, userId, patientId, patientCreatedA
               }}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={{ xs:12, md:6 }}>
             <TextField
               label="Hora"
               type="time"

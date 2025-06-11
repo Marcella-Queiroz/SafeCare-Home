@@ -70,7 +70,7 @@ const AddHeartRateModal = ({ open, onClose, userId, patientId, patientCreatedAt,
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <Grid container spacing={2} sx={{ mt: 1 }}>
-          <Grid item xs={12}>
+          <Grid size={{ xs:12, md:6 }}>
             <TextField
               label="Frequência (bpm)"
               type="number"
@@ -80,7 +80,7 @@ const AddHeartRateModal = ({ open, onClose, userId, patientId, patientCreatedAt,
               required
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={{ xs:12, md:6 }}>
             <TextField
               label="Data"
               type="date"
@@ -95,7 +95,7 @@ const AddHeartRateModal = ({ open, onClose, userId, patientId, patientCreatedAt,
               }}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={{ xs:12, md:6 }}>
             <TextField
               label="Hora"
               type="time"

@@ -64,7 +64,7 @@ const HealthMetricsGrid = ({
   ];
 
   const renderCard = (metric: (typeof metrics)[number]) => (
-    <Grid item xs={12} sm={4} key={metric.type}>
+    <Grid size={{ xs:12, md:6 }} key={metric.type}>
       <Card
         sx={{
           height: { xs: 100, md: 170 },

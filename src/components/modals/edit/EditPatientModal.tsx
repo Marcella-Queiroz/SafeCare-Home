@@ -143,7 +143,7 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
         
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 required
                 fullWidth
@@ -156,7 +156,7 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
                 inputProps={{ maxLength: INPUT_LIMITS.NAME }}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 label="Data de Nascimento"
                 type="date"
@@ -168,7 +168,7 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
                 required
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 label="Idade"
                 value={age}
@@ -177,7 +177,7 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
                 disabled
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 fullWidth
                 id="conditions"
@@ -191,7 +191,7 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
                 inputProps={{ maxLength: INPUT_LIMITS.CONDITIONS }}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 label="Sexo"
                 value={gender}
@@ -201,7 +201,7 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
                 required
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 label="Contato"
                 value={phone}
@@ -211,7 +211,7 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
                 required
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 label="Endereço"
                 value={address}

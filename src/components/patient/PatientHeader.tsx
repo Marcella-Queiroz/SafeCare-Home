@@ -15,6 +15,7 @@ interface PatientHeaderProps {
     weight?: any[];
     glucose?: any[];
     temperature?: any[];
+    oxygen?: any[];
     bloodPressure?: any[];
     heartRate?: any[];
     lastCheck?: string;
@@ -87,38 +88,38 @@ const PatientHeader = ({ patient, onClose, onEditPatient }: PatientHeaderProps) 
         <Divider sx={{ my: 2 }} />
         
         <Grid container columnSpacing={7} rowSpacing={2}>
-          <Grid item xs={6}>
+          <Grid size={{ xs:6 }}>
             <Typography variant="body2" color="textSecondary">Peso:</Typography>
             <Typography variant="body1" sx={{ fontWeight: 500 }}>
               {getLastMetric(patient.weight, 'weight', 'kg')}
             </Typography>
           </Grid>
-          <Grid item xs={6}>
+          <Grid size={{ xs:6 }}>
             <Typography variant="body2" color="textSecondary">Glicose:</Typography>
             <Typography variant="body1" sx={{ fontWeight: 500 }}>
               {getLastMetric(patient.glucose, 'value', 'mg/dL')}
             </Typography>
           </Grid>
-          <Grid item xs={6}>
+          <Grid size={{ xs:6 }}>
             <Typography variant="body2" color="textSecondary">Temperatura:</Typography>
             <Typography variant="body1" sx={{ fontWeight: 500 }}>
               {getLastMetric(patient.temperature, 'value', '°C')}
             </Typography>
           </Grid>
-          <Grid item xs={6}>
+          <Grid size={{ xs:6 }}>
             <Typography variant="body2" color="textSecondary">Saturação:</Typography>
             <Typography variant="body1" sx={{ fontWeight: 500 }}>
               {getLastMetric(patient.oxygen, 'value', '%')}
             </Typography>
           </Grid>
-          <Grid item xs={6}>
+          <Grid size={{ xs:6 }}>
             <Typography variant="body2" color="textSecondary">Frequência Cardíaca:</Typography>
             <Typography variant="body1" sx={{ fontWeight: 500 }}>
               {getLastMetric(patient.heartRate, 'value', 'bpm')}
             </Typography>
           </Grid>
           {patient.lastCheck && (
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
                 Última verificação: {patient.lastCheck}
               </Typography>

@@ -113,7 +113,7 @@ const AddAppointmentModal = ({ open, onClose, userId, patientId }: AddAppointmen
         
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 required
                 fullWidth
@@ -126,7 +126,7 @@ const AddAppointmentModal = ({ open, onClose, userId, patientId }: AddAppointmen
                 disabled={loading}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 required
                 fullWidth
@@ -141,7 +141,7 @@ const AddAppointmentModal = ({ open, onClose, userId, patientId }: AddAppointmen
                 disabled={loading}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 required
                 fullWidth

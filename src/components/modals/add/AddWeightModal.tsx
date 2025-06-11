@@ -74,7 +74,7 @@ const AddWeightModal = ({ open, onClose, userId, patientId, onSave }: AddWeightM
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <Grid container spacing={2} sx={{ mt: 1 }}>
-          <Grid item xs={6}>
+          <Grid size={{ xs:6 }}>
             <TextField
               label="Peso (kg)"
               type="number"
@@ -85,7 +85,7 @@ const AddWeightModal = ({ open, onClose, userId, patientId, onSave }: AddWeightM
               inputProps={{ maxLength: INPUT_LIMITS.WEIGHT }}
             />
           </Grid>
-          <Grid item xs={6}>
+          <Grid size={{ xs:6 }}>
             <TextField
               label="Altura (cm)"
               type="number"
@@ -96,7 +96,7 @@ const AddWeightModal = ({ open, onClose, userId, patientId, onSave }: AddWeightM
               inputProps={{ maxLength: INPUT_LIMITS.HEIGHT }}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={{ xs:6 }}>
             <TextField
               label="Data"
               type="date"

@@ -73,7 +73,7 @@ const AddBloodPressureModal = ({ open, onClose, userId, patientId, patientCreate
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         <Grid container spacing={2} sx={{ mt: 1 }}>
-          <Grid item xs={12}>
+          <Grid size={{ xs:12, md:6 }}>
             <TextField
               label="Sistólica (mmHg)"
               type="number"
@@ -84,7 +84,7 @@ const AddBloodPressureModal = ({ open, onClose, userId, patientId, patientCreate
               inputProps={{ maxLength: INPUT_LIMITS.SYSTOLIC }}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={{ xs:12, md:6 }}>
             <TextField
               label="Diastólica (mmHg)"
               type="number"
@@ -95,7 +95,7 @@ const AddBloodPressureModal = ({ open, onClose, userId, patientId, patientCreate
               inputProps={{ maxLength: INPUT_LIMITS.DIASTOLIC }}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={{ xs:12, md:6 }}>
             <TextField
               label="Data"
               type="date"
@@ -110,7 +110,7 @@ const AddBloodPressureModal = ({ open, onClose, userId, patientId, patientCreate
               }}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={{ xs:12, md:6 }}>
             <TextField
               label="Hora"
               type="time"

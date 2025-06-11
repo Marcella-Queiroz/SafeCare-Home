@@ -175,7 +175,7 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
 
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 label="Nome"
                 value={name}
@@ -186,7 +186,7 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
                 disabled={loading}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 label="Idade"
                 value={age}
@@ -195,7 +195,7 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
                 disabled
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 label="Data de Nascimento"
                 type="date"
@@ -207,7 +207,7 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
                 required
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 select
                 label="Sexo"
@@ -225,7 +225,7 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
                 <MenuItem value="Outro">Outro</MenuItem>
               </TextField>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 label="Contato"
                 value={phone}
@@ -235,7 +235,7 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
                 required
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 label="Endereço"
                 value={address}
@@ -245,7 +245,7 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
                 required
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 label="Condições"
                 value={conditions}
