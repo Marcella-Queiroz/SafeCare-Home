@@ -30,3 +30,4 @@ yarn install
 ```
 npm run dev
 ```
+🔐 Veja nossa [Política de Segurança](SECURITY.md)
