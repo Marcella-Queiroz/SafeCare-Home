@@ -13,7 +13,8 @@ import {
 } from "@mui/material";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { getDatabase, ref, set } from "firebase/database";
-import { validatePassword } from "@/utils/passwordValidation";
+import { validatePassword } from "@/utils/validations";
+import { isValidEmail } from "@/utils/validations";
 import { app } from "@/services/firebaseConfig";
 import RoleSelector from "@/auth/RoleSelector";
 
@@ -42,6 +43,12 @@ const AccessRequestForm = ({ isOpen, onClose, showToast }: AccessRequestFormProp
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isValidEmail(email)) {
+    showToast("E-mail inválido. Por favor, insira um e-mail válido.", "error");
+    return;
+    }
+
     if (!checkPasswordValidity()) return;
 
     setIsSubmitting(true);

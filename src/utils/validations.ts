@@ -10,3 +10,10 @@ export const validatePassword = (password: string, confirmPassword: string): { v
     return { valid: true, error: "" };
   };
   
+
+  //Validação de email
+
+export const isValidEmail = (email: string): boolean => {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+};
