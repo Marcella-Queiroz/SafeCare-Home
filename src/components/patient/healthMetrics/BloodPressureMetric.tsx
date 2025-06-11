@@ -20,7 +20,7 @@ const BloodPressureMetric = ({ records, onEdit, onDelete }) => (
   <HealthMetricDisplay
     title="Histórico de Pressão Arterial"
     icon={<FavoriteIcon sx={{ color: '#e53935', mr: 1, verticalAlign: 'text-bottom' }} />}
-    tooltipText="Valores de glicose registrados para o paciente."
+    tooltipText="Pressão baixa: sistólica < 90 mmHg ou diastólica < 60 mmHg. Normal: sistólica 90-130 mmHg e diastólica 60-85 mmHg. Alta: sistólica > 130 mmHg ou diastólica > 85 mmHg."
   >
     <BasicMetricRecord
       records={formatRecords(Array.isArray(records) ? records : [])}

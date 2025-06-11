@@ -48,6 +48,10 @@ const AddWeightModal = ({ open, onClose, userId, patientId, onSave }: AddWeightM
       const lastCheck = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
       await update(patientRef, { lastCheck });
 
+      setWeight('');
+      setHeight('');
+      setDate('');
+      setError('');
       onClose();
     } catch {
       setError('Erro ao salvar dados');

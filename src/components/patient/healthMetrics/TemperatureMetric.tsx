@@ -8,6 +8,7 @@ const TemperatureMetric = ({ records, onEdit, onDelete }) => (
   <HealthMetricDisplay
     title="Histórico de Temperatura"
     icon={<DeviceThermostatIcon sx={{ color: '#1976d2', mr: 1, verticalAlign: 'text-bottom' }} />}
+    tooltipText="Temperatura baixa: < 36°C. Normal: 36°C a 37,2°C. Alta (febre): > 37,2°C."
   >
     <BasicMetricRecord
       records={Array.isArray(records) ? records : []}

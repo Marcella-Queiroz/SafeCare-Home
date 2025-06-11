@@ -12,7 +12,11 @@ type WeightMetricProps = {
 };
 
 const WeightMetric = ({ records, onEdit, onDelete }) => (
-  <HealthMetricDisplay title="Histórico de Peso e IMC" icon={''}>
+  <HealthMetricDisplay
+    title="Histórico de Peso e IMC"
+    icon={''}
+    tooltipText="IMC abaixo de 18,5: baixo peso. Entre 18,5 e 24,9: peso normal. Entre 25 e 29,9: sobrepeso. 30 ou mais: obesidade."
+  >
     <BasicMetricRecord
       records={records}
       onEdit={onEdit}

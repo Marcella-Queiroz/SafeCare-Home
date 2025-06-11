@@ -44,6 +44,12 @@ const AddBloodPressureModal = ({ open, onClose, userId, patientId, patientCreate
       const lastCheck = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
       await update(patientRef, { lastCheck });
 
+      setSystolic('');
+      setDiastolic('');
+      setDate('');
+      setTime('');
+      setError('');
+      
       onClose();
     } catch {
       setError('Erro ao salvar dados');

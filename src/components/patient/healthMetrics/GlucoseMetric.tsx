@@ -8,7 +8,7 @@ const GlucoseMetric = ({ records, onEdit, onDelete }) => (
   <HealthMetricDisplay
     title="Histórico de Glicose"
     icon={<BloodtypeIcon sx={{ color: '#ff9800', mr: 1, verticalAlign: 'text-bottom' }} />}
-    tooltipText="Valores de glicose registrados para o paciente."
+    tooltipText="Glicose baixa: &lt; 70 mg/dL. Normal: 70-125 mg/dL. Alta: &gt; 125 mg/dL (em jejum)."
   >
     <BasicMetricRecord
       records={records}

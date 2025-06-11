@@ -8,7 +8,7 @@ const OxygenMetric = ({ records, onEdit, onDelete }) => (
   <HealthMetricDisplay
     title="Histórico de Saturação"
     icon={<OpacityIcon sx={{ color: '#00bcd4', mr: 1, verticalAlign: 'text-bottom' }} />}
-    tooltipText="Valores de glicose registrados para o paciente."
+    tooltipText="Saturação baixa: < 95%. Normal: 95% a 100%. Valores persistentemente abaixo de 92% indicam alerta."
   >
     <BasicMetricRecord
       records={Array.isArray(records) ? records : []}

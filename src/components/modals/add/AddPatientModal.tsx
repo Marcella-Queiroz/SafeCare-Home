@@ -14,6 +14,7 @@ import {
   CircularProgress,
   Box,
   Alert,
+  MenuItem 
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import CloseIcon from '@mui/icons-material/Close';
@@ -208,13 +209,21 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
             </Grid>
             <Grid item xs={12}>
               <TextField
+                select
                 label="Sexo"
                 value={gender}
                 onChange={e => setGender(e.target.value)}
                 fullWidth
                 disabled={loading}
                 required
-              />
+                sx={{}
+                }
+              >
+                <MenuItem value="">Selecione</MenuItem>
+                <MenuItem value="Feminino">Feminino</MenuItem>
+                <MenuItem value="Masculino">Masculino</MenuItem>
+                <MenuItem value="Outro">Outro</MenuItem>
+              </TextField>
             </Grid>
             <Grid item xs={12}>
               <TextField

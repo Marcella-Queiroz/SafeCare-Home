@@ -8,7 +8,7 @@ const HeartRateMetric = ({ records, onEdit, onDelete }) => (
   <HealthMetricDisplay
     title="Histórico de Frequência Cardíaca"
     icon={<MonitorHeartIcon sx={{ color: '#e53935', mr: 1, verticalAlign: 'text-bottom' }} />}
-    tooltipText="Valores de glicose registrados para o paciente."
+    tooltipText="Baixa: < 60 bpm (bradicardia). Normal: 60-100 bpm. Alta: > 100 bpm (taquicardia)."
   >
     <BasicMetricRecord
       records={Array.isArray(records) ? records : []}

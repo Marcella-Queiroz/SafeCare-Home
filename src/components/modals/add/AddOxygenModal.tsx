@@ -45,6 +45,12 @@ const AddOxygenModal = ({ open, onClose, userId, patientId, patientCreatedAt, on
       const lastCheck = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
       await update(patientRef, { lastCheck });
 
+
+      setValue('');
+      setDate(patientCreatedAt);
+      setTime('');
+      setError('');
+      
       onClose();
     } catch {
       setError('Erro ao salvar dados');
