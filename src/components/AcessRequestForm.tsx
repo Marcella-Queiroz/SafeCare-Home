@@ -14,7 +14,7 @@ import {
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { getDatabase, ref, set } from "firebase/database";
 import { validatePassword } from "@/utils/validations";
-import { isValidEmail, isEmailDeliverable } from "@/utils/validations";
+import { isValidEmail } from "@/utils/validations";
 import { app } from "@/services/firebaseConfig";
 import RoleSelector from "@/auth/RoleSelector";
 
@@ -33,7 +33,6 @@ const AccessRequestForm = ({ isOpen, onClose, showToast }: AccessRequestFormProp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [passwordError, setPasswordError] = useState("");
-  const [emailError, setEmailError] = useState("");
   const [role, setRole] = useState("");
 
   const checkPasswordValidity = () => {
@@ -44,30 +43,17 @@ const AccessRequestForm = ({ isOpen, onClose, showToast }: AccessRequestFormProp
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setPasswordError("");
 
     if (!isValidEmail(email)) {
-      showToast("E-mail inválido. Por favor, insira um e-mail válido.", "error");
-      setIsSubmitting(false);
-      return;
+    showToast("E-mail inválido. Por favor, insira um e-mail válido.", "error");
+    return;
     }
 
-    if (!checkPasswordValidity()) {
-      setIsSubmitting(false);
-      return;
-    }
+    if (!checkPasswordValidity()) return;
 
-    // Verifica se o email existe de verdade
-    const emailOk = await isEmailDeliverable(email);
-    if (!emailOk) {
-      setIsSubmitting(false);
-      setEmailError("Email inválido ou inexistente.");
-      return;
-    }
-
+    setIsSubmitting(true);
+    const auth = getAuth(app);
     try {
-      const auth = getAuth(app);
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -96,7 +82,6 @@ const AccessRequestForm = ({ isOpen, onClose, showToast }: AccessRequestFormProp
     setPassword("");
     setConfirmPassword("");
     setPasswordError("");
-    setEmailError("");
     setRole("");
   };
 
@@ -138,8 +123,6 @@ const AccessRequestForm = ({ isOpen, onClose, showToast }: AccessRequestFormProp
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             margin="normal"
-            error={!!emailError}
-            helperText={emailError}
             required
           />
           <TextField
