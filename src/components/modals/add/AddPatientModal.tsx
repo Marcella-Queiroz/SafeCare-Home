@@ -65,7 +65,7 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
 
-  // Sempre que a data de nascimento mudar, atualize a idade
+  // Sempre que a data de nascimento mudar, atualiza a idade
   useEffect(() => {
     setAge(birthDate ? calcularIdade(birthDate).toString() : '');
   }, [birthDate]);
@@ -88,7 +88,7 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
         setLoading(false);
         return;
       }
-      console.log('userId para salvar paciente:', userId); // <-- Adicione isso
+      console.log('userId para salvar paciente:', userId);
       const patientsRef = ref(db, `patients/${userId}`);
       const newPatientRef = push(patientsRef);
       await set(newPatientRef, {
@@ -175,7 +175,7 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
 
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={2}>
-            <Grid size={{ xs:12, md:6 }}>
+            <Grid size={{ xs:12, md:12 }}>
               <TextField
                 label="Nome"
                 value={name}

@@ -143,7 +143,7 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
         
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={2}>
-            <Grid size={{ xs:12, md:6 }}>
+            <Grid size={{ xs:12, md:12 }}>
               <TextField
                 required
                 fullWidth

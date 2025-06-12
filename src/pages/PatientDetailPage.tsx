@@ -214,7 +214,6 @@ const PatientDetailPage = () => {
   };
 
   const handleSavePatient = (updatedPatient: any) => {
-    // Após salvar, recarregue do banco:
     fetchPatientFromFirebase();
     setEditPatientModalOpen(false);
   };

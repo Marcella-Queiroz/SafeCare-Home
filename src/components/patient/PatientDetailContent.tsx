@@ -22,7 +22,6 @@ interface Patient {
   lastCheck?: string;
   medications?: any[];
   appointments?: any[];
-  // ...outros campos
 }
 
 interface PatientDetailContentProps {
