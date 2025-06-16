@@ -6,23 +6,10 @@ import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import { getDatabase, ref, update } from "firebase/database";
 import { ReactNode } from 'react';
+import type { Patient } from './PatientDetailContent'; // ou do local correto
 
 interface PatientHeaderProps {
-  patient: {
-    [x: string]: ReactNode;
-    birthDate: ReactNode;
-    name: string;
-    status: string;
-    age: number;
-    conditions: string[];
-    weight?: any[];
-    glucose?: any[];
-    temperature?: any[];
-    oxygen?: any[];
-    bloodPressure?: any[];
-    heartRate?: any[];
-    lastCheck?: string;
-  };
+  patient: Patient;
   onClose: () => void;
   onEditPatient: () => void;
 }

@@ -4,14 +4,20 @@ import PatientHeader from './PatientHeader';
 import HealthMetricsGrid from './HealthMetricsGrid';
 import MedicationsSection from './MedicationsSection';
 import AppointmentsSection from './AppointmentsSection';
+import ObservationsSection, { Observation } from './ObservationsSection';
 import { Typography, Box } from '@mui/material';
+import { ReactNode } from 'react';
 
 type HealthMetricType = 'bloodPressure' | 'weight' | 'oxygen' | 'temperature' | 'glucose' | 'heartRate';
 
-interface Patient {
+export interface Patient {
+  phone: ReactNode;
   name: string;
   status: string;
   age: number;
+  birthDate: string;
+  gender?: string;
+  address?: string;
   conditions: string[];
   weight?: any[];
   glucose?: any[];
@@ -22,6 +28,7 @@ interface Patient {
   lastCheck?: string;
   medications?: any[];
   appointments?: any[];
+  observations?: Observation[];
 }
 
 interface PatientDetailContentProps {
@@ -35,6 +42,11 @@ interface PatientDetailContentProps {
   onAddAppointment: () => void;
   onEditAppointment: (appointment: any, index: number) => void;
   onDeleteAppointment: (index: number) => void;
+  // Adicione as props abaixo:
+  observations: Observation[];
+  onAddObservation: (text: string) => void;
+  onEditObservation: (id: string, text: string) => void;
+  onDeleteObservation: (id: string) => void;
 }
 
 const PatientDetailContent = ({
@@ -47,7 +59,11 @@ const PatientDetailContent = ({
   onDeleteMedication,
   onAddAppointment,
   onEditAppointment,
-  onDeleteAppointment
+  onDeleteAppointment,
+  observations,
+  onAddObservation,
+  onEditObservation,
+  onDeleteObservation
 }: PatientDetailContentProps) => {
   const getLastMetric = (metricArr: any[] | undefined, unit?: string) => {
     if (Array.isArray(metricArr) && metricArr.length > 0) {
@@ -87,6 +103,14 @@ const PatientDetailContent = ({
         onAddAppointment={onAddAppointment}
         onEditAppointment={onEditAppointment}
         onDeleteAppointment={onDeleteAppointment}
+      />
+
+      {/* Adicione a seção de observações */}
+      <ObservationsSection
+        observations={observations}
+        onAdd={onAddObservation}
+        onEdit={onEditObservation}
+        onDelete={onDeleteObservation}
       />
     </>
   );

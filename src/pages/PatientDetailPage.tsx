@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Typography, Button } from '@mui/material';
 import PageContainer from '../components/PageContainer';
-import { getDatabase, ref, onValue, get, update, push } from "firebase/database";
+import { getDatabase, ref, onValue, get, update, push, set, remove } from "firebase/database";
 import { app } from '../services/firebaseConfig';
 import PatientDetailContent from '../components/patient/PatientDetailContent';
 import PatientModalsContainer from '../components/patient/PatientModalsContainer';
 import { useAuth } from '../contexts/AuthContext';
+import ObservationsSection from '../components/patient/ObservationsSection';
+import type { Observation } from '../components/patient/ObservationsSection';
 
 type HealthMetricType = 'bloodPressure' | 'weight' | 'oxygen' | 'temperature' | 'glucose' | 'heartRate';
 
@@ -77,6 +79,7 @@ const PatientDetailPage = () => {
   const [currentPatient, setCurrentPatient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [editingWeight, setEditingWeight] = useState<any>(null);
+  const [observations, setObservations] = useState<Observation[]>([]);
 
   const [healthMetricModal, setHealthMetricModal] = useState<{
     open: boolean;
@@ -86,16 +89,18 @@ const PatientDetailPage = () => {
     type: null
   });
 
-  // Busca paciente no Firebase pelo id da URL
   useEffect(() => {
     if (!userId || !patientId) return;
     const db = getDatabase(app);
     const patientRef = ref(db, `patients/${userId}/${patientId}`);
     const unsubscribe = onValue(patientRef, (snapshot) => {
       if (snapshot.exists()) {
-        setCurrentPatient({ id: patientId, ...snapshot.val() });
+        const data = snapshot.val();
+        setCurrentPatient(normalizePatient(data, patientId));
+        setObservations(data.observations ? Object.values(data.observations) : []);
       } else {
         setCurrentPatient(null);
+        setObservations([]);
       }
       setLoading(false);
     });
@@ -296,6 +301,35 @@ const PatientDetailPage = () => {
     await update(refWeight, dataToSave);
   };
 
+  // Adicionar observação
+  const handleAddObservation = async (text: string) => {
+    if (!userId || !patientId) return;
+    const db = getDatabase(app);
+    const obsRef = ref(db, `patients/${userId}/${patientId}/observations`);
+    const newObsRef = push(obsRef);
+    await set(newObsRef, {
+      id: newObsRef.key,
+      text,
+      createdAt: new Date().toISOString(),
+    });
+  };
+
+  // Editar observação
+  const handleEditObservation = async (id: string, text: string) => {
+    if (!userId || !patientId) return;
+    const db = getDatabase(app);
+    const obsRef = ref(db, `patients/${userId}/${patientId}/observations/${id}`);
+    await update(obsRef, { text });
+  };
+
+  // Excluir observação
+  const handleDeleteObservation = async (id: string) => {
+    if (!userId || !patientId) return;
+    const db = getDatabase(app);
+    const obsRef = ref(db, `patients/${userId}/${patientId}/observations/${id}`);
+    await remove(obsRef);
+  };
+
   return (
     <PageContainer>
       <PatientDetailContent
@@ -309,6 +343,10 @@ const PatientDetailPage = () => {
         onAddAppointment={() => setAppointmentModalOpen(true)}
         onEditAppointment={handleEditAppointment}
         onDeleteAppointment={handleDeleteAppointment}
+        observations={observations}
+        onAddObservation={handleAddObservation}
+        onEditObservation={handleEditObservation}
+        onDeleteObservation={handleDeleteObservation}
       />
 
       <PatientModalsContainer
@@ -389,3 +427,28 @@ export default PatientDetailPage;
 function fetchPatientFromFirebase() {
   throw new Error('Function not implemented.');
 }
+
+function normalizePatient(data: any, patientId: string) {
+  return {
+    id: patientId,
+    name: data.name ?? '',
+    status: data.status ?? '',
+    age: data.age ?? 0,
+    birthDate: data.birthDate ?? '',
+    gender: data.gender ?? '',
+    address: data.address ?? '',
+    phone: data.phone ?? '',
+    conditions: data.conditions ?? [],
+    weight: data.weight ?? [],
+    glucose: data.glucose ?? [],
+    temperature: data.temperature ?? [],
+    bloodPressure: data.bloodPressure ?? [],
+    heartRate: data.heartRate ?? [],
+    oxygen: data.oxygen ?? [],
+    lastCheck: data.lastCheck ?? '',
+    medications: data.medications ?? [],
+    appointments: data.appointments ?? [],
+    observations: data.observations ? Object.values(data.observations) : [],
+  };
+}
+
