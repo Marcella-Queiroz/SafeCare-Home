@@ -1,3 +1,5 @@
+// Pagina de gerenciamento de pacientes e relatórios
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -58,6 +60,7 @@ interface Patient {
 }
 
 interface Report {
+  observations: boolean;
   heartRate: any[];
   id: string;
   patientName: string;
@@ -242,8 +245,15 @@ const PatientsPage = () => {
   //Função para exportar relatório
   const handleExportReport = (report: Report) => {
     const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
 
-    // Converte objetos em arrays, se necessário
+    const margin = {
+      top: 30,
+      bottom: 20,
+      left: 30,
+      right: 20
+    };
+    const usableWidth = pageWidth - margin.left - margin.right;
     const weightHistory = Array.isArray(report.weightHistory)
       ? report.weightHistory
       : report.weightHistory
@@ -270,18 +280,25 @@ const PatientsPage = () => {
         ? Object.values(report.appointments)
         : [];
 
-    // Título
-    doc.setFontSize(14);
-    doc.text('Prontuário Eletrônico do Paciente', 105, 15, { align: 'center' });
+    // Cabeçalho
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(15);
+    doc.setTextColor(33, 33, 33);
+    doc.text('Prontuário Eletrônico do Paciente', pageWidth / 2, margin.top, { align: 'center' });
 
-    // Dados do relatório
     doc.setFontSize(10);
-    doc.text(`Data de Emissão: ${new Date().toLocaleDateString()}`, 14, 25);
-    doc.text(`Relatório dos Últimos ${report.period || '--'}`, 14, 31);
+    doc.text(`Data de Emissão: ${new Date().toLocaleDateString()}`, margin.left, margin.top + 8);
+    doc.text(`Relatório dos Últimos ${report.period || '--'}`, margin.left, margin.top + 14);
+
+    const autoTableCommon = {
+      margin: { left: margin.left, right: margin.right, top: margin.top, bottom: margin.bottom },
+      tableWidth: usableWidth
+    };
 
     // Dados do paciente
     autoTable(doc, {
-      startY: 36,
+      ...autoTableCommon,
+      startY: margin.top + 19,
       head: [['DADOS DO PACIENTE', '']],
       body: [
         ['Nome Completo:', report.patientName || '-'],
@@ -294,17 +311,14 @@ const PatientsPage = () => {
       theme: 'grid',
       headStyles: { fillColor: [220, 220, 220], halign: 'center' },
       bodyStyles: { halign: 'left' },
-      styles: { fontSize: 10 },
-      columnStyles: {
-        0: { cellWidth: 60 },
-        1: { cellWidth: 120 }
-      }
+      styles: { fontSize: 10 }
     });
 
     let y = (doc as any).lastAutoTable.finalY + 4;
 
     // Condições clínicas
     autoTable(doc, {
+      ...autoTableCommon,
       startY: y,
       head: [['CONDIÇÕES CLÍNICAS']],
       body: (report.conditions || []).map((cond: string) => [cond]),
@@ -318,6 +332,7 @@ const PatientsPage = () => {
 
     // Histórico de indicadores de saúde
     autoTable(doc, {
+      ...autoTableCommon,
       startY: y,
       head: [['HISTÓRICO DE INDICADORES DE SAÚDE']],
       body: [],
@@ -330,6 +345,7 @@ const PatientsPage = () => {
 
     // Peso corporal
     autoTable(doc, {
+      ...autoTableCommon,
       startY: y,
       head: [['Data da Aferição', 'Peso', 'IMC (kg/m²)']],
       body: (weightHistory).map((item: any) => [
@@ -341,12 +357,14 @@ const PatientsPage = () => {
 
     y = (doc as any).lastAutoTable.finalY + 2;
 
-    // Pressão arterial
+    // Pressão arterial (removida a coluna de frequência cardíaca)
     autoTable(doc, {
+      ...autoTableCommon,
       startY: y,
-      head: [['Data da Aferição', 'Pressão Arterial (Sist/Diast)', 'Freq. Cardíaca (bpm)']],
+      head: [['Data da Aferição', 'Pressão Arterial (Sist/Diast)']],
       body: (bloodPressureHistory).map((item: any) => [
-        item.date || '-', item.value || '-', item.heartRate || '-'
+        item.date || '-',
+        (item.systolic && item.diastolic) ? `${item.systolic}/${item.diastolic}` : (item.value || '-')
       ]),
       theme: 'grid',
       styles: { fontSize: 10 },
@@ -354,8 +372,23 @@ const PatientsPage = () => {
 
     y = (doc as any).lastAutoTable.finalY + 2;
 
+    // Frequência Cardíaca (mantida como tabela separada)
+    autoTable(doc, {
+      ...autoTableCommon,
+      startY: y,
+      head: [['Data da Aferição', 'Frequência Cardíaca (bpm)']],
+      body: (report.heartRate || []).map((item: any) => [
+        item.date || '-', item.value || '-'
+      ]),
+      theme: 'grid',
+      styles: { fontSize: 10 }
+    });
+
+    y = (doc as any).lastAutoTable.finalY + 4;
+
     // Glicose
     autoTable(doc, {
+      ...autoTableCommon,
       startY: y,
       head: [['Data da Aferição', 'Glicose (Jejum)']],
       body: (glucoseHistory).map((item: any) => [
@@ -369,6 +402,7 @@ const PatientsPage = () => {
 
     // Medicamentos
     autoTable(doc, {
+      ...autoTableCommon,
       startY: y,
       head: [['MEDICAMENTOS (Prescrições Ativas)']],
       body: [],
@@ -380,6 +414,7 @@ const PatientsPage = () => {
     y = (doc as any).lastAutoTable.finalY + 2;
 
     autoTable(doc, {
+      ...autoTableCommon,
       startY: y,
       head: [['Medicamento', 'Posologia']],
       body: (medications).map((item: any) => [
@@ -393,6 +428,7 @@ const PatientsPage = () => {
 
     // Agendamentos
     autoTable(doc, {
+      ...autoTableCommon,
       startY: y,
       head: [['AGENDAMENTOS (Histórico e Futuros)']],
       body: [],
@@ -404,6 +440,7 @@ const PatientsPage = () => {
     y = (doc as any).lastAutoTable.finalY + 2;
 
     autoTable(doc, {
+      ...autoTableCommon,
       startY: y,
       head: [['Data', 'Horário', 'Status']], 
       body: (appointments).map((item: any) => [
@@ -415,16 +452,48 @@ const PatientsPage = () => {
 
     y = (doc as any).lastAutoTable.finalY + 4;
 
-    // Frequência Cardíaca
-    autoTable(doc, {
-      startY: y,
-      head: [['Data da Aferição', 'Frequência Cardíaca (bpm)']],
-      body: (report.heartRate || []).map((item: any) => [
-        item.date || '-', item.value || '-'
-      ]),
-      theme: 'grid',
-      styles: { fontSize: 10 },
-    });
+    // Observações
+    if (Array.isArray(report.observations) && report.observations.length > 0) {
+      autoTable(doc, {
+        ...autoTableCommon,
+        startY: y,
+        head: [['OBSERVAÇÕES']],
+        body: report.observations.map((obs: any) => [
+          `${obs.text} (${new Date(obs.createdAt).toLocaleDateString('pt-BR')})`
+        ]),
+        theme: 'grid',
+        headStyles: { fillColor: [220, 220, 220], halign: 'center' },
+        bodyStyles: { halign: 'left' },
+        styles: { fontSize: 10 },
+      });
+      y = (doc as any).lastAutoTable.finalY + 4;
+    } else {
+      autoTable(doc, {
+        ...autoTableCommon,
+        startY: y,
+        head: [['OBSERVAÇÕES']],
+        body: [['Nenhuma observação registrada.']],
+        theme: 'grid',
+        headStyles: { fillColor: [220, 220, 220], halign: 'center' },
+        bodyStyles: { halign: 'left' },
+        styles: { fontSize: 10 },
+      });
+      y = (doc as any).lastAutoTable.finalY + 4;
+    }
+
+    // Rodapé
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(9);
+      doc.setTextColor(150, 150, 150);
+      doc.text(
+        'Gerado por SafeCare Home',
+        pageWidth - margin.right,
+        doc.internal.pageSize.getHeight() - margin.bottom,
+        { align: 'right' }
+      );
+    }
 
     doc.save(`prontuario_${report.patientName || 'paciente'}_${report.id}.pdf`);
   };

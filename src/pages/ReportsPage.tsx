@@ -102,7 +102,6 @@ const ReportsPage = () => {
       const snapshot = await get(patientRef);
       const patientData = snapshot.val();
 
-      // Monte o relatório com todos os campos necessários
       const reportData = {
         patientName: patientData.name,
         birthDate: patientData.birthDate || '',
@@ -120,6 +119,9 @@ const ReportsPage = () => {
         medications: patientData.medications || [],
         appointments: patientData.appointments || [],
         heartRateHistory: patientData.heartRate || [],
+        observations: patientData.observations
+          ? Object.values(patientData.observations)
+          : [],
         period: `${startDate} a ${endDate}`,
         createdAt: new Date().toISOString(),
       };
