@@ -5,9 +5,12 @@ import Grid from '@mui/material/Grid';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import { getDatabase, ref, update } from "firebase/database";
+import { ReactNode } from 'react';
 
 interface PatientHeaderProps {
   patient: {
+    [x: string]: ReactNode;
+    birthDate: ReactNode;
     name: string;
     status: string;
     age: number;
@@ -69,11 +72,37 @@ const PatientHeader = ({ patient, onClose, onEditPatient }: PatientHeaderProps) 
               {patient.name}
             </Typography>
             
-            <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
-              {patient.age} anos - {patient.conditions.join(', ')}
-            </Typography>
+            <Box sx={{ mt: 1, mb: 2 }}>
+              <Typography variant="body2" color="textSecondary">
+                <strong>Idade:</strong> {patient.age} anos
+              </Typography>
+              {patient.birthDate && (
+                <Typography variant="body2" color="textSecondary">
+                  <strong>Data de Nascimento:</strong> {patient.birthDate}
+                </Typography>
+              )}
+              {patient.gender && (
+                <Typography variant="body2" color="textSecondary">
+                  <strong>Sexo:</strong> {patient.gender}
+                </Typography>
+              )}
+              {patient.phone && (
+                <Typography variant="body2" color="textSecondary">
+                  <strong>Telefone:</strong> {patient.phone}
+                </Typography>
+              )}
+              {patient.address && (
+                <Typography variant="body2" color="textSecondary">
+                  <strong>Endereço:</strong> {patient.address}
+                </Typography>
+              )}
+              {patient.conditions && patient.conditions.length > 0 && (
+                <Typography variant="body2" color="textSecondary">
+                  <strong>Condições:</strong> {patient.conditions.join(', ')}
+                </Typography>
+              )}
+            </Box>
           </Box>
-          
           <Button
             variant="outlined"
             size="small"
