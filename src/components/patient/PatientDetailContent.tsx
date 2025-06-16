@@ -11,6 +11,7 @@ import { ReactNode } from 'react';
 type HealthMetricType = 'bloodPressure' | 'weight' | 'oxygen' | 'temperature' | 'glucose' | 'heartRate';
 
 export interface Patient {
+  cpf: any;
   phone: ReactNode;
   name: string;
   status: string;

@@ -25,10 +25,12 @@ import { app } from "@/services/firebaseConfig";
 import { INPUT_LIMITS } from '@/constants/inputLimits';
 import type { Metric, BloodPressure } from '../../../pages/PatientsPage';
 import { calcularIdade } from '@/utils/dateUtils';
+import { validateCPF } from '@/utils/validations';
 
 export interface Patient {
   id: string;
   name: string;
+  cpf: string;
   age: number;
   birthDate?: string;
   gender?: string;
@@ -64,6 +66,7 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
   const [gender, setGender] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
+  const [cpf, setCpf] = useState('');
 
   // Sempre que a data de nascimento mudar, atualiza a idade
   useEffect(() => {
@@ -72,9 +75,16 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setSuccess(false);
 
     if (!name || !age) {
       setError('Preencha os campos obrigatórios');
+      return;
+    }
+
+    if (!validateCPF(cpf)) {
+      setError('CPF inválido');
       return;
     }
 
@@ -93,6 +103,7 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
       const newPatientRef = push(patientsRef);
       await set(newPatientRef, {
         name,
+        cpf,
         age: Number(age),
         birthDate,
         gender,
@@ -128,6 +139,7 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
     setName('');
     setAge('');
     setConditions('');
+    setCpf('');
     setError('');
     setSuccess(false);
     onClose();
@@ -175,7 +187,7 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
 
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={2}>
-            <Grid size={{ xs:12, md:12 }}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 label="Nome"
                 value={name}
@@ -183,6 +195,17 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
                 required
                 fullWidth
                 inputProps={{ maxLength: INPUT_LIMITS.NAME }}
+                disabled={loading}
+              />
+            </Grid>
+            <Grid size={{ xs:12, md:6 }}>
+              <TextField
+                label="CPF"
+                value={cpf}
+                onChange={e => setCpf(e.target.value)}
+                required
+                fullWidth
+                inputProps={{ maxLength: 14 }}
                 disabled={loading}
               />
             </Grid>

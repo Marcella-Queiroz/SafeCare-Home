@@ -6,7 +6,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import { getDatabase, ref, update } from "firebase/database";
 import { ReactNode } from 'react';
-import type { Patient } from './PatientDetailContent'; // ou do local correto
+import type { Patient } from './PatientDetailContent';
 
 interface PatientHeaderProps {
   patient: Patient;
@@ -31,7 +31,7 @@ const getLastMetric = (
 
 const PatientHeader = ({ patient, onClose, onEditPatient }: PatientHeaderProps) => {
   const db = getDatabase();
-  const patientId = "ID_DO_PACIENTE"; // Substitua pelo id real do paciente
+  const patientId = "ID_DO_PACIENTE";
   const now = new Date();
   const lastCheck = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
@@ -86,6 +86,11 @@ const PatientHeader = ({ patient, onClose, onEditPatient }: PatientHeaderProps) 
               {patient.conditions && patient.conditions.length > 0 && (
                 <Typography variant="body2" color="textSecondary">
                   <strong>Condições:</strong> {patient.conditions.join(', ')}
+                </Typography>
+              )}
+              {patient.cpf && (
+                <Typography variant="body2" color="textSecondary">
+                  <strong>CPF:</strong> {patient.cpf}
                 </Typography>
               )}
             </Box>

@@ -19,11 +19,13 @@ import CloseIcon from '@mui/icons-material/Close';
 import { getDatabase, ref, update } from "firebase/database";
 import { INPUT_LIMITS } from '@/constants/inputLimits';
 import { calcularIdade } from '@/utils/dateUtils';
+import { validateCPF } from '@/utils/validations';
 
 interface EditPatientModalProps {
   open: boolean;
   onClose: () => void;
   patient: {
+    cpf: string;
     id: string;
     name: string;
     age: number;
@@ -39,13 +41,13 @@ interface EditPatientModalProps {
 
 const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatientModalProps) => {
   const [name, setName] = useState('');
+  const [cpf, setCpf] = useState('');
   const [conditions, setConditions] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [gender, setGender] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [age, setAge] = useState('');
-  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -53,6 +55,7 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
   useEffect(() => {
     if (patient) {
       setName(patient.name);
+      setCpf(patient.cpf || '');
       setConditions(patient.conditions.join(', '));
       setBirthDate(patient.birthDate || '');
       setGender(patient.gender || '');
@@ -76,14 +79,19 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
       return;
     }
 
+    if (!validateCPF(cpf)) {
+      setError('CPF inválido');
+      return;
+    }
+
     try {
       setLoading(true);
 
-      // Caminho correto
       const db = getDatabase();
       const patientRef = ref(db, `patients/${userId}/${patient.id}`);
       await update(patientRef, {
         name,
+        cpf,
         age: parseInt(age),
         conditions: conditions.split(',').map(c => c.trim()).filter(c => c),
         birthDate,
@@ -95,7 +103,7 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
-        handleClose(); // Feche o modal após mostrar sucesso
+        handleClose();
       }, 1200);
     } catch (err) {
       setError('Erro ao atualizar paciente');
@@ -107,6 +115,7 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
   const handleClose = () => {
     setError('');
     setSuccess(false);
+    setCpf('');
     onClose();
   };
   
@@ -143,7 +152,7 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
         
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={2}>
-            <Grid size={{ xs:12, md:12 }}>
+            <Grid size={{ xs:12, md:6 }}>
               <TextField
                 required
                 fullWidth
@@ -154,6 +163,17 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
                 onChange={(e) => setName(e.target.value)}
                 disabled={loading}
                 inputProps={{ maxLength: INPUT_LIMITS.NAME }}
+              />
+            </Grid>
+            <Grid size={{ xs:12, md:6 }}>
+              <TextField
+                label="CPF"
+                value={cpf}
+                onChange={e => setCpf(e.target.value)}
+                required
+                fullWidth
+                inputProps={{ maxLength: 14 }}
+                disabled={loading}
               />
             </Grid>
             <Grid size={{ xs:12, md:6 }}>
