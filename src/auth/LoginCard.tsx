@@ -72,22 +72,6 @@ const handleUserLogin = async (e: React.FormEvent) => {
     }
   };
 
- 
-
-  const handleEmailUpdate = async (novoEmail: string) => {
-    const auth = getAuth(app);
-    const user = auth.currentUser;
-
-    if (user) {
-      try {
-        await updateEmail(user, novoEmail);
-        showToast("Email atualizado com sucesso", "success");
-      } catch (error: any) {
-        showToast(error.message, "error");
-      }
-    }
-  };
-
   return (
     <Box>
       <div className="card login-card">
