@@ -176,17 +176,19 @@ button {
 .login-container {
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   background: linear-gradient(to bottom, #E3F2FD, #FFFFFF);
-  padding: 1rem;
 }
 
 .login-card {
   width: 100%;
   max-width: 425px;
   animation: fadeIn 0.3s ease-out;
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(30, 136, 229, 0.08);
+  padding: 2rem 2rem 1.5rem 2rem;
 }
 
 /***************************** Estilização de componentes de cartões *****************************/
@@ -314,7 +316,7 @@ select:focus {
 @media (max-width: 500px) {
   .login-card {
     padding: 1.5rem 0.5rem;
-    max-width: 98vw;
+    max-width: 350px;
   }
 }
 

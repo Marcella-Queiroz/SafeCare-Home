@@ -20,19 +20,17 @@ const LoginForm = ({ showToast }: LoginFormProps) => {
   };
 
   return (
-    <div style={{ padding: "2rem", display: "flex", justifyContent: "center" }}>
+    <div className="login-container">
       <LoginCard
         onForgotPassword={handleForgotPassword}
         onRequestAccess={() => setIsAccessRequestOpen(true)}
         showToast={showToast}
       />
-
       <AccessRequestForm
         isOpen={isAccessRequestOpen}
         onClose={() => setIsAccessRequestOpen(false)}
         showToast={showToast}
       />
-
       <PasswordResetDialog
         isOpen={isResetPasswordOpen}
         onOpenChange={setIsResetPasswordOpen}

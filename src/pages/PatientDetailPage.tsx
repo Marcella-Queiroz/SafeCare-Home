@@ -52,6 +52,7 @@ const PatientDetailPage = () => {
   const { userId, patientId } = useParams<{ userId: string; patientId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const urlUserId = userId;
 
   const [weightModalOpen, setWeightModalOpen] = useState(false);
   const [medicationModalOpen, setMedicationModalOpen] = useState(false);
@@ -90,6 +91,12 @@ const PatientDetailPage = () => {
   });
 
   useEffect(() => {
+    if (!user || !urlUserId || user.uid !== urlUserId) {
+      // Redirecione ou mostre erro
+      navigate('/patients');
+      return;
+    }
+
     if (!userId || !patientId) return;
     const db = getDatabase(app);
     const patientRef = ref(db, `patients/${userId}/${patientId}`);
@@ -105,7 +112,7 @@ const PatientDetailPage = () => {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, [userId, patientId]);
+  }, [user, urlUserId, patientId]);
 
   if (loading) {
     return (
@@ -432,6 +439,7 @@ function normalizePatient(data: any, patientId: string) {
   return {
     id: patientId,
     name: data.name ?? '',
+    cpf: data.cpf ?? '',
     status: data.status ?? '',
     age: data.age ?? 0,
     birthDate: data.birthDate ?? '',

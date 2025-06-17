@@ -54,8 +54,8 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
 
   useEffect(() => {
     if (patient) {
-      setName(patient.name);
       setCpf(patient.cpf || '');
+      setName(patient.name);
       setConditions(patient.conditions.join(', '));
       setBirthDate(patient.birthDate || '');
       setGender(patient.gender || '');

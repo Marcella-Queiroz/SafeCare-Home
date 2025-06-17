@@ -5,7 +5,7 @@ import Grid from '@mui/material/Grid';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import { getDatabase, ref, update } from "firebase/database";
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import type { Patient } from './PatientDetailContent';
 
 interface PatientHeaderProps {
@@ -34,10 +34,17 @@ const PatientHeader = ({ patient, onClose, onEditPatient }: PatientHeaderProps) 
   const patientId = "ID_DO_PACIENTE";
   const now = new Date();
   const lastCheck = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const [cpf, setCpf] = useState<string>('');
 
   const handleSaveLastCheck = async () => {
     await update(ref(db, `patients/${patientId}`), { lastCheck });
   };
+
+  useEffect(() => {
+    if (patient) {
+      setCpf(patient.cpf || '');
+    }
+  }, [patient]);
 
   return (
     <Card sx={{ mb: 3, position: 'relative', borderRadius: 3 }}>

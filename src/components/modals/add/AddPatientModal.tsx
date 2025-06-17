@@ -53,9 +53,10 @@ export interface AddPatientModalProps {
   onClose: () => void;
   onAdd: (dadosPaciente: Omit<Patient, "id">) => Promise<void>;
   userId: string;
+  initialCPF?: string;
 }
 
-const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
+const AddPatientModal = ({ open, onClose, userId, onAdd, initialCPF }: AddPatientModalProps) => {
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [conditions, setConditions] = useState('');
@@ -66,12 +67,16 @@ const AddPatientModal = ({ open, onClose, userId }: AddPatientModalProps) => {
   const [gender, setGender] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
-  const [cpf, setCpf] = useState('');
+  const [cpf, setCpf] = useState(initialCPF || '');
 
   // Sempre que a data de nascimento mudar, atualiza a idade
   useEffect(() => {
     setAge(birthDate ? calcularIdade(birthDate).toString() : '');
   }, [birthDate]);
+
+  useEffect(() => {
+    if (initialCPF) setCpf(initialCPF);
+  }, [initialCPF]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
