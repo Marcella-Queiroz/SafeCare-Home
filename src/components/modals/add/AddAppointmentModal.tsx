@@ -35,12 +35,25 @@ const AddAppointmentModal = ({ open, onClose, userId, patientId }: AddAppointmen
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   
+  //Validar se a data é anterior a data de registro do agendamento
+  const isDateTimeInPast = (dateStr: string, timeStr: string) => {
+    const selected = new Date(`${dateStr}T${timeStr}`);
+    return selected < new Date();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !date || !time) {
       setError('Preencha todos os campos');
       return;
     }
+    
+    //Aplicação da regra para datas anteriores
+    if (isDateTimeInPast(date, time)) {
+      setError('Não é possível realizar agendamentos com datas anteriores a data atual');
+      return;
+    }
+
     try {
       setLoading(true);
       setError('');
@@ -55,9 +68,9 @@ const AddAppointmentModal = ({ open, onClose, userId, patientId }: AddAppointmen
       setTimeout(() => {
         handleClose();
       }, 1200);
-      setLoading(false);
-    } catch (err) {
-      setError('Erro ao agendar');
+    } catch (err: any) {
+      setError(err?.message || 'Erro ao agendar');
+    } finally {
       setLoading(false);
     }
   };
@@ -86,7 +99,7 @@ const AddAppointmentModal = ({ open, onClose, userId, patientId }: AddAppointmen
           Adicionar Agendamento
         </Typography>
         <IconButton
-          aria-label="close"
+          aria-label="Fechar"
           onClick={handleClose}
           sx={{
             position: 'absolute',
