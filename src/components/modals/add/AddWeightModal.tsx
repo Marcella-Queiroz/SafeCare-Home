@@ -14,9 +14,10 @@ interface AddWeightModalProps {
   userId: string;
   patientId: string;
   onSave: (data: any) => void | Promise<void>;
+  userName: string; 
 }
 
-const AddWeightModal = ({ open, onClose, userId, patientId, onSave }: AddWeightModalProps) => {
+const AddWeightModal = ({ open, onClose, userId, patientId, onSave, userName }: AddWeightModalProps) => {
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
   const [date, setDate] = useState('');
@@ -39,7 +40,7 @@ const AddWeightModal = ({ open, onClose, userId, patientId, onSave }: AddWeightM
       : '';
 
     try {
-      await onSave({ weight, height, date, bmi }); // Salve o IMC junto!
+      await onSave({ weight, height, date, bmi, createdBy: userName }); // Salva o nome do usuário
 
       // Atualiza o campo lastCheck do paciente
       const db = getDatabase();

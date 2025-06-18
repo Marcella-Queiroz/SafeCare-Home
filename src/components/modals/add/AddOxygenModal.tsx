@@ -15,10 +15,11 @@ interface AddOxygenModalProps {
   userId: string;
   patientId: string;
   patientCreatedAt: string;
+  userName: string;
   onSave: (data: any) => void | Promise<void>;
 }
 
-const AddOxygenModal = ({ open, onClose, userId, patientId, patientCreatedAt, onSave }: AddOxygenModalProps) => {
+const AddOxygenModal = ({ open, onClose, userId, patientId, patientCreatedAt, userName, onSave }: AddOxygenModalProps) => {
   const [value, setValue] = useState('');
   const [date, setDate] = useState(patientCreatedAt);
   const [time, setTime] = useState('');
@@ -36,7 +37,7 @@ const AddOxygenModal = ({ open, onClose, userId, patientId, patientCreatedAt, on
       return;
     }
     try {
-      await onSave({ value, date, time });
+      await onSave({ value, date, time, createdBy: userName });
 
       // Atualiza o campo lastCheck do paciente
       const db = getDatabase();

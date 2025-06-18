@@ -6,7 +6,7 @@ import { Box, Typography, Button } from '@mui/material';
 import PageContainer from '../components/PageContainer';
 import { getDatabase, ref, onValue, get, update, push, set, remove } from "firebase/database";
 import { app } from '../services/firebaseConfig';
-import PatientDetailContent from '../components/patient/PatientDetailContent';
+import PatientDetailContent, { Patient } from '../components/patient/PatientDetailContent';
 import PatientModalsContainer from '../components/patient/PatientModalsContainer';
 import { useAuth } from '../contexts/AuthContext';
 import ObservationsSection from '../components/patient/ObservationsSection';
@@ -37,7 +37,7 @@ const metricKeys = [
   'heartRate'
 ];
 
-function convertPatientMetrics(patient: any) {
+function convertPatientMetrics(patient: any): Patient {
   if (!patient) return patient;
   const converted = { ...patient };
   metricKeys.forEach((key) => {
@@ -45,6 +45,8 @@ function convertPatientMetrics(patient: any) {
       converted[key] = convertMetricsToArray(patient[key]);
     }
   });
+  if (patient.createdBy) converted.createdBy = patient.createdBy;
+  if (patient.editedBy) converted.editedBy = patient.editedBy;
   return converted;
 }
 
@@ -457,6 +459,9 @@ function normalizePatient(data: any, patientId: string) {
     medications: data.medications ?? [],
     appointments: data.appointments ?? [],
     observations: data.observations ? Object.values(data.observations) : [],
+    createdBy: data.createdBy ?? '',
+    editedBy: data.editedBy ?? '',
+    editedAt: data.editedAt ?? '',
   };
 }
 

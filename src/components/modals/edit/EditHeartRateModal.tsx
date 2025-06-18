@@ -10,9 +10,10 @@ interface EditHeartRateModalProps {
   record: any;
   onSave: (data: any) => void | Promise<void>;
   patientCreatedAt: string;
+  userName: string;
 }
 
-const EditHeartRateModal = ({ open, onClose, record, onSave, patientCreatedAt }: EditHeartRateModalProps) => {
+const EditHeartRateModal = ({ open, onClose, record, onSave, patientCreatedAt, userName }: EditHeartRateModalProps) => {
   const [value, setValue] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -47,7 +48,7 @@ const EditHeartRateModal = ({ open, onClose, record, onSave, patientCreatedAt }:
     }
     setLoading(true);
     try {
-      await onSave({ ...record, value, date, time });
+      await onSave({ ...record, value, date, time, editedBy: userName });
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);

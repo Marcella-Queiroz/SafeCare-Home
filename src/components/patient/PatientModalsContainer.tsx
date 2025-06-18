@@ -21,8 +21,9 @@ import AddTemperatureModal from "../modals/add/AddTemperatureModal";
 import AddOxygenModal from "../modals/add/AddOxygenModal";
 import AddHeartRateModal from "../modals/add/AddHeartRateModal";
 import { useState } from "react";
-import { getDatabase, ref as dbRef, remove } from "firebase/database";
+import { getDatabase, ref as dbRef, remove, get, update } from "firebase/database";
 import HealthMetricModal from "../modals/HealthMetricModal";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Função utilitária para garantir array de métricas
 function toArray(records: any) {
@@ -211,6 +212,9 @@ const PatientModalsContainer = ({
     type: string;
   } | null>(null);
 
+  const { user } = useAuth();
+  const userName = user?.displayName || user?.name || user?.email || user?.uid || "";
+
   // Funções para abrir cada modal
   const handleAddBloodPressure = () => setAddBloodPressureModalOpen(true);
   const handleAddGlucose = () => setAddGlucoseModalOpen(true);
@@ -279,6 +283,31 @@ const PatientModalsContainer = ({
     );
   };
 
+  const [editingMedication, setEditingMedication] = useState<any>(null);
+
+  // Função de edição de medicamento
+  const onEditMedication = async (medicationEditado: any) => {
+    if (!userId || !patientId) return;
+    const db = getDatabase();
+    const patientRef = dbRef(db, `patients/${userId}/${patientId}`);
+    const snapshot = await get(patientRef); // corrigido
+    const patientData = snapshot.val() || {};
+    const medications = patientData.medications || [];
+    // Busca pelo id único
+    const index = medications.findIndex(
+      (med: any) => med.id === medicationEditado.id
+    );
+    if (index !== -1) {
+      medications[index] = {
+        ...medicationEditado,
+        editedBy: userName,
+      };
+      await update(patientRef, { medications }); // corrigido
+    }
+    setEditMedicationModalOpen(false);
+    setEditingMedication(null);
+  };
+
   return (
     <>
       <AddWeightModal
@@ -287,6 +316,7 @@ const PatientModalsContainer = ({
         userId={userId}
         patientId={patientId}
         onSave={onSaveWeight}
+        userName={userName}
       />
 
       <AddMedicationModal
@@ -294,13 +324,18 @@ const PatientModalsContainer = ({
         onClose={() => setMedicationModalOpen(false)}
         userId={userId}
         patientId={patientId}
+        userName={userName}
       />
 
       <EditMedicationModal
         open={editMedicationModalOpen}
-        onClose={() => setEditMedicationModalOpen(false)}
-        medication={selectedMedication}
-        onSave={onSaveMedication}
+        onClose={() => {
+          setEditMedicationModalOpen(false);
+          setEditingMedication(null);
+        }}
+        medication={editingMedication}
+        onSave={onEditMedication}
+        userName={userName}
       />
 
       <EditAppointmentModal
@@ -308,6 +343,7 @@ const PatientModalsContainer = ({
         onClose={() => setEditAppointmentModalOpen(false)}
         appointment={selectedAppointment}
         onSave={onSaveAppointment}
+        userName={userName}
       />
 
       <DeleteConfirmationModal
@@ -335,6 +371,7 @@ const PatientModalsContainer = ({
         onClose={() => setAppointmentModalOpen(false)}
         userId={userId}
         patientId={patientId}
+        userName={userName}
       />
 
       <EditPatientModal
@@ -417,63 +454,96 @@ const PatientModalsContainer = ({
         record={editingWeight}
         onSave={onEditWeight}
         userId={userId || ""}
-        patientId={patientId || ""} patientCreatedAt={""}      />
+        patientId={patientId || ""}
+        patientCreatedAt={""}
+        userName={userName}
+      />
       <EditGlucoseModal
         open={editGlucoseModalOpen}
         onClose={() => setEditGlucoseModalOpen(false)}
         record={editingGlucose}
-        onSave={onEditGlucose} patientCreatedAt={""}      />
+        onSave={onEditGlucose}
+        patientCreatedAt={""}
+        userName={userName}
+      />
       <EditBloodPressureModal
         open={editBloodPressureModalOpen}
         onClose={() => setEditBloodPressureModalOpen(false)}
         record={editingBloodPressure}
-        onSave={onEditBloodPressure} patientCreatedAt={""}      />
+        onSave={onEditBloodPressure}
+        patientCreatedAt={""}
+        userName={userName}
+      />
       <EditTemperatureModal
         open={editTemperatureModalOpen}
         onClose={() => setEditTemperatureModalOpen(false)}
         record={editingTemperature}
-        onSave={onEditTemperature} patientCreatedAt={""}      />
+        onSave={onEditTemperature}
+        patientCreatedAt={""}
+        userName={userName}
+      />
       <EditOxygenModal
         open={editOxygenModalOpen}
         onClose={() => setEditOxygenModalOpen(false)}
         record={editingOxygen}
-        onSave={onEditOxygen} patientCreatedAt={""}      />
+        onSave={onEditOxygen}
+        patientCreatedAt={""}
+        userName={userName}
+      />
       <EditHeartRateModal
         open={editHeartRateModalOpen}
         onClose={() => setEditHeartRateModalOpen(false)}
         record={editingHeartRate}
-        onSave={onEditHeartRate} patientCreatedAt={""}      />
+        onSave={onEditHeartRate}
+        patientCreatedAt={""}
+        userName={userName}
+      />
       {/* Inclua os modais de adicionar registro: */}
       <AddGlucoseModal
         open={addGlucoseModalOpen}
         onClose={() => setAddGlucoseModalOpen(false)}
         userId={userId}
         patientId={patientId}
-        onSave={onSaveGlucose} patientCreatedAt={""}      />
+        onSave={onSaveGlucose}
+        patientCreatedAt={""}
+        userName={userName}
+      />
       <AddBloodPressureModal
         open={addBloodPressureModalOpen}
         onClose={() => setAddBloodPressureModalOpen(false)}
         userId={userId}
         patientId={patientId}
-        onSave={onSaveBloodPressure} patientCreatedAt={""}      />
+        onSave={onSaveBloodPressure}
+        patientCreatedAt={""}
+        userName={userName}
+      />
       <AddTemperatureModal
         open={addTemperatureModalOpen}
         onClose={() => setAddTemperatureModalOpen(false)}
         userId={userId}
         patientId={patientId}
-        onSave={onSaveTemperature} patientCreatedAt={""}      />
+        onSave={onSaveTemperature}
+        patientCreatedAt={""}
+        userName={userName}
+      />
       <AddOxygenModal
         open={addOxygenModalOpen}
         onClose={() => setAddOxygenModalOpen(false)}
         userId={userId}
         patientId={patientId}
-        onSave={onSaveOxygen} patientCreatedAt={""}      />
+        onSave={onSaveOxygen}
+        patientCreatedAt={""}
+        userName={userName}
+      />
       <AddHeartRateModal
         open={addHeartRateModalOpen}
         onClose={() => setAddHeartRateModalOpen(false)}
         userId={userId}
         patientId={patientId}
-        onSave={onSaveHeartRate} patientCreatedAt={""}      />
+        onSave={onSaveHeartRate}
+        patientCreatedAt={""}
+        userName={userName}
+      />
 
       <DeleteConfirmationModal
         open={deleteMetricModalOpen}

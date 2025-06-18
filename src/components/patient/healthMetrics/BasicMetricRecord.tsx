@@ -74,6 +74,11 @@ const BasicMetricRecord = ({
           <Typography variant="body2" color="textSecondary">
             {item.date}
             {item.height && ` - Altura: ${item.height}`}
+            {item.editedBy
+              ? ` | Editado por: ${item.editedBy}`
+              : item.createdBy
+              ? ` | Cadastrado por: ${item.createdBy}`
+              : ""}
           </Typography>
         </CardContent>
       </Card>

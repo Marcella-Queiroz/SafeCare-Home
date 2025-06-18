@@ -13,10 +13,11 @@ interface AddTemperatureModalProps {
   userId: string;
   patientId: string;
   patientCreatedAt: string;
+  userName: string;
   onSave: (data: any) => void | Promise<void>;
 }
 
-const AddTemperatureModal = ({ open, onClose, userId, patientId, patientCreatedAt, onSave }: AddTemperatureModalProps) => {
+const AddTemperatureModal = ({ open, onClose, userId, patientId, patientCreatedAt, userName, onSave }: AddTemperatureModalProps) => {
   const [value, setValue] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -34,7 +35,7 @@ const AddTemperatureModal = ({ open, onClose, userId, patientId, patientCreatedA
       return;
     }
     try {
-      await onSave({ value, date, time });
+      await onSave({ value, date, time, createdBy: userName });
 
       // Atualiza o campo lastCheck do paciente
       const db = getDatabase();

@@ -14,9 +14,10 @@ interface EditWeightModalProps {
   userId: string;
   patientId: string;
   patientCreatedAt: string;
+  userName: string; 
 }
 
-const EditWeightModal = ({ open, onClose, record, onSave, userId, patientId, patientCreatedAt }: EditWeightModalProps) => {
+const EditWeightModal = ({ open, onClose, record, onSave, userId, patientId, patientCreatedAt, userName }: EditWeightModalProps) => {
   const [weight, setWeight] = useState('');
   const [height, setHeight] = useState('');
   const [date, setDate] = useState('');
@@ -64,7 +65,7 @@ const EditWeightModal = ({ open, onClose, record, onSave, userId, patientId, pat
     try {
       setLoading(true);
       setError('');
-      await onSave({ ...record, weight, height, date, bmi });
+      await onSave({ ...record, weight, height, date, bmi, editedBy: userName }); // <-- Salva quem editou
       setSuccess(true);
       setTimeout(() => {
         onClose();

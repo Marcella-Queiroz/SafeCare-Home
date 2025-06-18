@@ -12,11 +12,12 @@ interface AddGlucoseModalProps {
   onClose: () => void;
   userId: string;
   patientId: string;
-  patientCreatedAt: string;
   onSave: (data: any) => void | Promise<void>;
+  patientCreatedAt: string;
+  userName: string;
 }
 
-const AddGlucoseModal = ({ open, onClose, userId, patientId, patientCreatedAt, onSave }: AddGlucoseModalProps) => {
+const AddGlucoseModal = ({ open, onClose, userId, patientId, patientCreatedAt, onSave, userName }: AddGlucoseModalProps) => {
   const [value, setValue] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -34,7 +35,7 @@ const AddGlucoseModal = ({ open, onClose, userId, patientId, patientCreatedAt, o
       return;
     }
     try {
-      await onSave({ value, date, time });
+      await onSave({ value, date, time, createdBy: userName });
 
       // Atualiza o campo lastCheck do paciente
       const db = getDatabase();

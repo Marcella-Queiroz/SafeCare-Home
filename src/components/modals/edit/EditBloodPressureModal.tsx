@@ -3,7 +3,6 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Button, Alert
 } from '@mui/material';
-import { INPUT_LIMITS } from '@/constants/inputLimits';
 
 interface EditBloodPressureModalProps {
   open: boolean;
@@ -11,9 +10,10 @@ interface EditBloodPressureModalProps {
   record: any;
   onSave: (data: any) => void | Promise<void>;
   patientCreatedAt: string;
+  userName: string; // <-- NOVO
 }
 
-const EditBloodPressureModal = ({ open, onClose, record, onSave, patientCreatedAt }: EditBloodPressureModalProps) => {
+const EditBloodPressureModal = ({ open, onClose, record, onSave, patientCreatedAt, userName }: EditBloodPressureModalProps) => {
   const [systolic, setSystolic] = useState('');
   const [diastolic, setDiastolic] = useState('');
   const [date, setDate] = useState('');
@@ -50,7 +50,7 @@ const EditBloodPressureModal = ({ open, onClose, record, onSave, patientCreatedA
     }
     setLoading(true);
     try {
-      await onSave({ ...record, systolic, diastolic, date, time });
+      await onSave({ ...record, systolic, diastolic, date, time, editedBy: userName }); // <-- Salva quem editou
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
@@ -77,7 +77,7 @@ const EditBloodPressureModal = ({ open, onClose, record, onSave, patientCreatedA
             onChange={e => setSystolic(e.target.value)}
             fullWidth
             required
-            inputProps={{ maxLength: INPUT_LIMITS.SYSTOLIC }}
+            inputProps={{ maxLength: 3 }}
             sx={{ mb: 2 }}
           />
           <TextField
@@ -87,7 +87,7 @@ const EditBloodPressureModal = ({ open, onClose, record, onSave, patientCreatedA
             onChange={e => setDiastolic(e.target.value)}
             fullWidth
             required
-            inputProps={{ maxLength: INPUT_LIMITS.DIASTOLIC }}
+            inputProps={{ maxLength: 3 }}
             sx={{ mb: 2 }}
           />
           <TextField

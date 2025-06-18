@@ -20,21 +20,14 @@ import { getDatabase, ref, update } from "firebase/database";
 import { INPUT_LIMITS } from '@/constants/inputLimits';
 import { calcularIdade } from '@/utils/dateUtils';
 import { validateCPF } from '@/utils/validations';
+import { useAuth } from "@/contexts/AuthContext";
+import { updatePatientEverywhere } from "@/utils/patientSync";
+import type { Patient } from '@/components/patient/PatientDetailContent';
 
 interface EditPatientModalProps {
   open: boolean;
   onClose: () => void;
-  patient: {
-    cpf: string;
-    id: string;
-    name: string;
-    age: number;
-    conditions: string[];
-    birthDate?: string;
-    gender?: string;
-    phone?: string;
-    address?: string;
-  };
+  patient: Patient;
   userId: string | undefined;
   onSave: (updatedPatient: any) => void;
 }
@@ -51,6 +44,7 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (patient) {
@@ -87,9 +81,8 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
     try {
       setLoading(true);
 
-      const db = getDatabase();
-      const patientRef = ref(db, `patients/${userId}/${patient.id}`);
-      await update(patientRef, {
+      // Atualize em todos os usuários
+      await updatePatientEverywhere(patient.id, {
         name,
         cpf,
         age: parseInt(age),
@@ -98,6 +91,8 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
         gender,
         phone,
         address,
+        editedBy: user?.displayName || user?.email || user?.uid,
+        editedAt: new Date().toISOString(),
       });
 
       setSuccess(true);
@@ -133,6 +128,13 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
         <Typography variant="h6" component="div">
           Editar Dados do Paciente
         </Typography>
+        {patient.editedBy && patient.editedAt && (
+          <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+            <strong>Editado por:</strong> {patient.editedBy} em{" "}
+            {new Date(patient.editedAt).toLocaleDateString("pt-BR")} às{" "}
+            {new Date(patient.editedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+          </Typography>
+        )}
         <IconButton
           aria-label="close"
           onClick={handleClose}

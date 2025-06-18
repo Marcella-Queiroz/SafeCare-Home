@@ -25,6 +25,7 @@ interface AddMedicationModalProps {
   onClose: () => void;
   userId: string;
   patientId: string;
+  userName: string;
   medication?: any;
 }
 
@@ -39,7 +40,7 @@ const frequencies = [
   { value: 'Conforme necessário', label: 'Conforme necessário' },
 ];
 
-const AddMedicationModal = ({ open, onClose, userId, patientId, medication }: AddMedicationModalProps) => {
+const AddMedicationModal = ({ open, onClose, userId, patientId, userName, medication }: AddMedicationModalProps) => {
   const [name, setName] = useState('');
   const [dosage, setDosage] = useState('');
   const [frequency, setFrequency] = useState('');
@@ -78,23 +79,20 @@ const AddMedicationModal = ({ open, onClose, userId, patientId, medication }: Ad
       const snapshot = await get(patientRef);
       const patientData = snapshot.val() || {};
       const medications = patientData.medications || [];
-      if (medication && typeof medication.index === 'number') {
-        // Edição
-        medications[medication.index] = { name, dosage, frequency, time };
-        await update(patientRef, { medications });
-        setSuccess(true);
-        setTimeout(() => {
-          handleClose();
-        }, 1200);
-      } else {
-        // Cadastro
-        medications.push({ name, dosage, frequency, time });
-        await update(patientRef, { medications });
-        setSuccess(true);
-        setTimeout(() => {
-          handleClose();
-        }, 1200);
-      }
+      const newMedication = {
+        id: crypto.randomUUID(), // <-- ID único
+        name,
+        dosage,
+        frequency,
+        time,
+        createdBy: userName,
+      };
+      medications.push(newMedication);
+      await update(patientRef, { medications });
+      setSuccess(true);
+      setTimeout(() => {
+        handleClose();
+      }, 1200);
       setLoading(false);
     } catch (err) {
       setError('Erro ao salvar medicamento');

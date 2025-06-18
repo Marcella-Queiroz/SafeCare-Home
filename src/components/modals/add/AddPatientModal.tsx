@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import CloseIcon from '@mui/icons-material/Close';
+import { useAuth } from "@/contexts/AuthContext";
 
 // Importações do Firebase
 import { getDatabase, ref, push, set } from "firebase/database";
@@ -46,6 +47,9 @@ export interface Patient {
   heartRate: Metric[];
   medications?: any[];
   appointments?: any[];
+  createdBy?: string; 
+  editedBy?: string;  
+  editedAt?: string;  
 }
 
 export interface AddPatientModalProps {
@@ -68,6 +72,7 @@ const AddPatientModal = ({ open, onClose, userId, onAdd, initialCPF }: AddPatien
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [cpf, setCpf] = useState(initialCPF || '');
+  const { user } = useAuth(); // Certifique-se de ter acesso ao usuário autenticado
 
   // Sempre que a data de nascimento mudar, atualiza a idade
   useEffect(() => {
@@ -118,6 +123,7 @@ const AddPatientModal = ({ open, onClose, userId, onAdd, initialCPF }: AddPatien
           ? conditions.split(",").map((c) => c.trim())
           : [],
         createdAt: new Date().toISOString(),
+        createdBy: user?.displayName || user?.email || user?.uid,
         weight: [],
         glucose: [],
         temperature: [],

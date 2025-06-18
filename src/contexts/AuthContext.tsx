@@ -17,6 +17,7 @@ import {
 } from 'firebase/auth';
 
 interface User {
+  displayName: string;
   uid: string;
   id: string;
   name: string;

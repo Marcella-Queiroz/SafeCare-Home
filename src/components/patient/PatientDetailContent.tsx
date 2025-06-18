@@ -11,14 +11,15 @@ import { ReactNode } from 'react';
 type HealthMetricType = 'bloodPressure' | 'weight' | 'oxygen' | 'temperature' | 'glucose' | 'heartRate';
 
 export interface Patient {
-  cpf: any;
-  phone: ReactNode;
+  id: string;
   name: string;
   status: string;
   age: number;
+  cpf: string;
   birthDate: string;
   gender?: string;
   address?: string;
+  phone?: string;
   conditions: string[];
   weight?: any[];
   glucose?: any[];
@@ -30,6 +31,9 @@ export interface Patient {
   medications?: any[];
   appointments?: any[];
   observations?: Observation[];
+  createdBy?: string;
+  editedBy?: string; 
+  editedAt?: string; 
 }
 
 interface PatientDetailContentProps {

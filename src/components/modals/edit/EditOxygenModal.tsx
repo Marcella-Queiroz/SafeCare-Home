@@ -10,9 +10,10 @@ interface EditOxygenModalProps {
   record: any;
   onSave: (data: any) => void | Promise<void>;
   patientCreatedAt: string;
+  userName: string;
 }
 
-const EditOxygenModal = ({ open, onClose, record, onSave, patientCreatedAt }: EditOxygenModalProps) => {
+const EditOxygenModal = ({ open, onClose, record, onSave, patientCreatedAt, userName }: EditOxygenModalProps) => {
   const [value, setValue] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -47,7 +48,7 @@ const EditOxygenModal = ({ open, onClose, record, onSave, patientCreatedAt }: Ed
     }
     setLoading(true);
     try {
-      await onSave({ ...record, value, date, time });
+      await onSave({ ...record, value, date, time, editedBy: userName });
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);

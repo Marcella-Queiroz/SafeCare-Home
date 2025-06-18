@@ -20,15 +20,12 @@ import CloseIcon from '@mui/icons-material/Close';
 interface EditAppointmentModalProps {
   open: boolean;
   onClose: () => void;
-  appointment: {
-    title: string;
-    date: string;
-    time: string;
-  } | null;
-  onSave: (appointment: any) => void;
+  appointment: any;
+  onSave: (data: any) => void | Promise<void>;
+  userName: string; // <-- NOVO
 }
 
-const EditAppointmentModal = ({ open, onClose, appointment, onSave }: EditAppointmentModalProps) => {
+const EditAppointmentModal = ({ open, onClose, appointment, onSave, userName }: EditAppointmentModalProps) => {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -55,12 +52,17 @@ const EditAppointmentModal = ({ open, onClose, appointment, onSave }: EditAppoin
     
     setLoading(true);
     setError('');
-    onSave({ title, date, time }); // Isso chama handleSaveAppointment do PatientDetailPage
-    setSuccess(true);
-    setTimeout(() => {
-      handleClose();
+    try {
+      await onSave({ title, date, time, editedBy: userName }); // <-- Salva quem editou
+      setSuccess(true);
+      setTimeout(() => {
+        handleClose();
+        setLoading(false);
+      }, 1200);
+    } catch (err) {
       setLoading(false);
-    }, 1200);
+      setError('Ocorreu um erro ao salvar o agendamento');
+    }
   };
   
   const handleClose = () => {

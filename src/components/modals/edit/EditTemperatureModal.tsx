@@ -10,9 +10,10 @@ interface EditTemperatureModalProps {
   record: any;
   onSave: (data: any) => void | Promise<void>;
   patientCreatedAt: string;
+  userName: string;
 }
 
-const EditTemperatureModal = ({ open, onClose, record, onSave, patientCreatedAt }: EditTemperatureModalProps) => {
+const EditTemperatureModal = ({ open, onClose, record, onSave, patientCreatedAt, userName }: EditTemperatureModalProps) => {
   const [value, setValue] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -47,7 +48,7 @@ const EditTemperatureModal = ({ open, onClose, record, onSave, patientCreatedAt 
     }
     setLoading(true);
     try {
-      await onSave({ ...record, value, date, time });
+      await onSave({ ...record, value, date, time, editedBy: userName });
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);

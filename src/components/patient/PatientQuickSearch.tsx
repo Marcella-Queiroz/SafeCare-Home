@@ -9,6 +9,10 @@ import {
   ListItem,
   ListItemText,
   ListItemButton,
+  Avatar,
+  Box,
+  Typography,
+  Divider,
 } from "@mui/material";
 import { useState } from "react";
 import { Patient } from "../modals/add/AddPatientModal";
@@ -46,9 +50,7 @@ const PatientQuickSearchModal = ({
         overflow: 'visible',
       }}
     >
-      <DialogTitle
-       
-      >
+      <DialogTitle>
         Buscar Paciente
       </DialogTitle>
       <DialogContent>
@@ -58,17 +60,47 @@ const PatientQuickSearchModal = ({
           onChange={(e) => setSearch(e.target.value)}
           fullWidth
           autoFocus
-            InputLabelProps={{ shrink: true }}
-            sx={{ mt: 1, mb: 2 }}
+          InputLabelProps={{ shrink: true }}
+          sx={{ mt: 1, mb: 2 }}
         />
         <List>
-          {filtered.map((p) => (
-            <ListItem key={p.id} disablePadding>
-              <ListItemButton onClick={() => onSelect(p)}>
-                <ListItemText primary={p.name} secondary={p.age} />
-              </ListItemButton>
-            </ListItem>
+          {filtered.map((p, idx) => (
+            <Box key={p.id}>
+              <ListItem disablePadding sx={{ mb: 1 }}>
+                <ListItemButton
+                  onClick={() => onSelect(p)}
+                  sx={{
+                    borderRadius: 2,
+                    border: "1px solid #e0e0e0",
+                    background: "#f9f9f9",
+                    mb: 0.5,
+                    "&:hover": {
+                      background: "#e3f2fd",
+                      borderColor: "#90caf9",
+                    },
+                  }}
+                >
+                  <Avatar sx={{ mr: 2, bgcolor: "#1976d2", color: "#fff" }}>
+                    {p.name.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                      {p.name}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Idade: {p.age} {p.cpf && `| CPF: ${p.cpf}`}
+                    </Typography>
+                  </Box>
+                </ListItemButton>
+              </ListItem>
+              {idx < filtered.length - 1 && <Divider sx={{ my: 0.5 }} />}
+            </Box>
           ))}
+          {filtered.length === 0 && (
+            <Typography variant="body2" color="textSecondary" sx={{ mt: 2, textAlign: "center" }}>
+              Nenhum paciente encontrado.
+            </Typography>
+          )}
         </List>
       </DialogContent>
       <DialogActions>
@@ -76,7 +108,6 @@ const PatientQuickSearchModal = ({
         <Button
           variant="contained"
           onClick={() => onCreateNew(search)}
-          // Só habilita se não houver paciente com o CPF exato
           disabled={
             !search ||
             filtered.some(
@@ -85,6 +116,14 @@ const PatientQuickSearchModal = ({
                 p.cpf.replace(/\D/g, '') === search.replace(/\D/g, '')
             )
           }
+          sx={{
+            backgroundColor: "#000 !important",
+            color: "#fff !important",
+            "&:hover": {
+              backgroundColor: "#222 !important",
+            },
+            boxShadow: "none",
+          }}
         >
           Cadastrar novo paciente
         </Button>

@@ -12,10 +12,11 @@ interface AddHeartRateModalProps {
   userId: string;
   patientId: string;
   patientCreatedAt: string;
+  userName: string;
   onSave: (data: any) => void | Promise<void>;
 }
 
-const AddHeartRateModal = ({ open, onClose, userId, patientId, patientCreatedAt, onSave }: AddHeartRateModalProps) => {
+const AddHeartRateModal = ({ open, onClose, userId, patientId, patientCreatedAt, userName, onSave }: AddHeartRateModalProps) => {
   const [value, setValue] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -33,7 +34,7 @@ const AddHeartRateModal = ({ open, onClose, userId, patientId, patientCreatedAt,
       return;
     }
     try {
-      await onSave({ value, date, time });
+      await onSave({ value, date, time, createdBy: userName });
 
       // Atualiza o campo lastCheck do paciente
       const db = getDatabase();

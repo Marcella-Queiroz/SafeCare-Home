@@ -12,9 +12,10 @@ interface EditGlucoseModalProps {
   record: any;
   onSave: (data: any) => void | Promise<void>;
   patientCreatedAt: string;
+  userName: string;
 }
 
-const EditGlucoseModal = ({ open, onClose, record, onSave, patientCreatedAt }: EditGlucoseModalProps) => {
+const EditGlucoseModal = ({ open, onClose, record, onSave, patientCreatedAt, userName }: EditGlucoseModalProps) => {
   const [value, setValue] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -49,7 +50,7 @@ const EditGlucoseModal = ({ open, onClose, record, onSave, patientCreatedAt }: E
     }
     setLoading(true);
     try {
-      await onSave({ ...record, value, date, time });
+      await onSave({ ...record, value, date, time, editedBy: userName });
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);

@@ -13,10 +13,11 @@ interface AddBloodPressureModalProps {
   userId: string;
   patientId: string;
   patientCreatedAt: string;
+  userName: string; // <-- NOVO
   onSave: (data: any) => void | Promise<void>;
 }
 
-const AddBloodPressureModal = ({ open, onClose, userId, patientId, patientCreatedAt, onSave }: AddBloodPressureModalProps) => {
+const AddBloodPressureModal = ({ open, onClose, userId, patientId, patientCreatedAt, userName, onSave }: AddBloodPressureModalProps) => {
   const [systolic, setSystolic] = useState('');
   const [diastolic, setDiastolic] = useState('');
   const [date, setDate] = useState('');
@@ -35,7 +36,7 @@ const AddBloodPressureModal = ({ open, onClose, userId, patientId, patientCreate
       return;
     }
     try {
-      await onSave({ systolic, diastolic, date, time });
+      await onSave({ systolic, diastolic, date, time, createdBy: userName }); // <-- Adicione createdBy
 
       // Atualize o campo lastCheck do paciente
       const db = getDatabase();

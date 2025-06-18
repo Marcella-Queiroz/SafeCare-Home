@@ -24,6 +24,8 @@ interface MedicationsSectionProps {
     dosage: string;
     frequency: string;
     time?: string;
+    createdBy?: string;
+    editedBy?: string;
   }>;
   onAddMedication: () => void;
   onEditMedication: (medication: any, index: number) => void;
@@ -126,6 +128,11 @@ const MedicationsSection = ({
                   </MenuItem>
                 </Menu>
               </Box>
+              
+              <Typography variant="body2" color="textSecondary">
+                {med.createdBy && `Cadastrado por: ${med.createdBy}`}
+                {med.editedBy && ` | Editado por: ${med.editedBy}`}
+              </Typography>
             </CardContent>
           </Card>
         ))

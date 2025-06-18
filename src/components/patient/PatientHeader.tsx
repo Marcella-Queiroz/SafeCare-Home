@@ -65,7 +65,6 @@ const PatientHeader = ({ patient, onClose, onEditPatient }: PatientHeaderProps) 
             <Typography variant="h5" component="h1" sx={{ fontWeight: 600 }}>
               {patient.name}
             </Typography>
-            
             <Box sx={{ mt: 1, mb: 2 }}>
               <Typography variant="body2" color="textSecondary">
                 <strong>Idade:</strong> {patient.age} anos
@@ -100,6 +99,7 @@ const PatientHeader = ({ patient, onClose, onEditPatient }: PatientHeaderProps) 
                   <strong>CPF:</strong> {patient.cpf}
                 </Typography>
               )}
+
             </Box>
           </Box>
           <Button
@@ -153,6 +153,12 @@ const PatientHeader = ({ patient, onClose, onEditPatient }: PatientHeaderProps) 
               </Typography>
             </Grid>
           )}
+          {patient.createdBy && (
+            <Typography variant="body2" color="textSecondary">
+              <strong>Paciente cadastrado por:</strong> {patient.createdBy}
+            </Typography>
+          )}
+
         </Grid>
       </CardContent>
     </Card>

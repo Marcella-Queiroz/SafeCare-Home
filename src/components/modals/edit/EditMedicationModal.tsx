@@ -22,13 +22,9 @@ import { INPUT_LIMITS } from '@/constants/inputLimits';
 interface EditMedicationModalProps {
   open: boolean;
   onClose: () => void;
-  medication: {
-    name: string;
-    dosage: string;
-    frequency: string;
-    time?: string;
-  } | null;
-  onSave: (medication: any) => void;
+  medication: any;
+  onSave: (data: any) => void | Promise<void>;
+  userName: string;
 }
 
 const frequencies = [
@@ -42,7 +38,7 @@ const frequencies = [
   { value: 'Conforme necessário', label: 'Conforme necessário' },
 ];
 
-const EditMedicationModal = ({ open, onClose, medication, onSave }: EditMedicationModalProps) => {
+const EditMedicationModal = ({ open, onClose, medication, onSave, userName }: EditMedicationModalProps) => {
   const [name, setName] = useState('');
   const [dosage, setDosage] = useState('');
   const [frequency, setFrequency] = useState('');
@@ -74,7 +70,7 @@ const EditMedicationModal = ({ open, onClose, medication, onSave }: EditMedicati
       setError('');
       
       setTimeout(() => {
-        onSave({ name, dosage, frequency, time });
+        onSave({ name, dosage, frequency, time, editedBy: userName }); // <-- Salva quem editou
         setSuccess(true);
         setTimeout(() => {
           handleClose();

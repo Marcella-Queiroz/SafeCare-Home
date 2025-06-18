@@ -18,12 +18,16 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 
+interface Appointment {
+  title: string;
+  date: string;
+  time: string;
+  createdBy?: string;
+  editedBy?: string;
+}
+
 interface AppointmentsSectionProps {
-  appointments?: Array<{
-    title: string;
-    date: string;
-    time: string;
-  }>;
+  appointments?: Appointment[];
   onAddAppointment: () => void;
   onEditAppointment: (appointment: any, index: number) => void;
   onDeleteAppointment: (index: number) => void;
@@ -122,6 +126,11 @@ const AppointmentsSection = ({
                   </MenuItem>
                 </Menu>
               </Box>
+              
+              <Typography variant="body2" color="textSecondary">
+                {appointment.createdBy && `Cadastrado por: ${appointment.createdBy}`}
+                {appointment.editedBy && ` | Editado por: ${appointment.editedBy}`}
+              </Typography>
             </CardContent>
           </Card>
         ))

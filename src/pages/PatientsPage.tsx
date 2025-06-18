@@ -67,6 +67,11 @@ interface Patient {
   temperature: Metric[];
   oxygen: Metric[];
   heartRate: Metric[];
+  medications?: any[];
+  appointments?: any[];
+  createdBy?: string; 
+  editedBy?: string;  
+  editedAt?: string;  
 }
 
 interface Report {
@@ -168,6 +173,9 @@ function convertPatientMetrics(patient: any): Patient {
   converted.temperature = convertMetricsToArray<Metric>(patient.temperature);
   converted.oxygen = convertMetricsToArray<Metric>(patient.oxygen);
   converted.heartRate = convertMetricsToArray<Metric>(patient.heartRate);
+  // Garante que createdBy e editedBy sejam mantidos
+  if (patient.createdBy) converted.createdBy = patient.createdBy;
+  if (patient.editedBy) converted.editedBy = patient.editedBy;
   return converted;
 }
 
@@ -570,7 +578,10 @@ const PatientsPage = () => {
     const db = getDatabase(app);
     const patientsRef = ref(db, `patients/${user.uid}`);
     const newPatientRef = push(patientsRef);
-    await set(newPatientRef, dadosPaciente);
+    await set(newPatientRef, {
+      ...dadosPaciente,
+      createdBy: user?.displayName || user?.email || user?.uid, // <-- Garante que sempre salva quem criou
+    });
   };
 
   const handleAddPatientClick = () => {
@@ -590,6 +601,8 @@ const PatientsPage = () => {
       shared: true,
       originalOwner: patient.ownerUserId,
       cpf: patient.cpf || '',
+      createdBy: patient.createdBy || patient.ownerUserId || '',
+      editedBy: patient.editedBy || '',
     });
   };
 
