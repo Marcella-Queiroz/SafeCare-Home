@@ -3,6 +3,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Button, Alert
 } from '@mui/material';
+import { validateHeartRate } from '@/utils/validations';
 
 interface EditHeartRateModalProps {
   open: boolean;
@@ -34,18 +35,14 @@ const EditHeartRateModal = ({ open, onClose, record, onSave, patientCreatedAt, u
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!value || !date) {
-      setError('Preencha todos os campos obrigatórios');
+    
+    // Validação usando função padronizada
+    const validation = validateHeartRate(value, date, patientCreatedAt);
+    if (!validation.valid) {
+      setError(validation.error);
       return;
     }
-    if (date < patientCreatedAt) {
-      setError(`A data não pode ser anterior a ${patientCreatedAt}`);
-      return;
-    }
-    if (date > today) {
-      setError('A data não pode ser maior que hoje');
-      return;
-    }
+    
     setLoading(true);
     try {
       await onSave({ ...record, value, date, time, editedBy: userName });

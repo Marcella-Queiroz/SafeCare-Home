@@ -19,7 +19,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { getDatabase, ref, update } from "firebase/database";
 import { INPUT_LIMITS } from '@/constants/inputLimits';
 import { calcularIdade } from '@/utils/dateUtils';
-import { validateCPF } from '@/utils/validations';
+import { validatePatientData } from '@/utils/validations';
 import { useAuth } from "@/contexts/AuthContext";
 import { updatePatientEverywhere } from "@/utils/patientSync";
 import type { Patient } from '@/components/patient/PatientDetailContent';
@@ -62,19 +62,41 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
   useEffect(() => {
     setAge(birthDate ? calcularIdade(birthDate).toString() : '');
   }, [birthDate]);
+
+  // Limpa todos os campos quando o modal é fechado
+  useEffect(() => {
+    if (!open) {
+      setName('');
+      setCpf('');
+      setConditions('');
+      setBirthDate('');
+      setGender('');
+      setPhone('');
+      setAddress('');
+      setAge('');
+      setError('');
+      setSuccess(false);
+      setLoading(false);
+    }
+  }, [open]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess(false);
 
-    if (!name || !age) {
-      setError('Preencha os campos obrigatórios');
-      return;
-    }
+    // Validação usando função padronizada
+    const validation = validatePatientData({
+      name,
+      cpf,
+      birthDate,
+      gender,
+      phone,
+      address
+    });
 
-    if (!validateCPF(cpf)) {
-      setError('CPF inválido');
+    if (!validation.valid) {
+      setError(validation.errors.join(', '));
       return;
     }
 
@@ -91,7 +113,7 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
         gender,
         phone,
         address,
-        editedBy: user?.displayName || user?.email || user?.uid,
+        editedBy: user?.name || user?.email || user?.uid,
         editedAt: new Date().toISOString(),
       });
 
@@ -108,9 +130,17 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
   };
   
   const handleClose = () => {
+    setName('');
+    setCpf('');
+    setConditions('');
+    setBirthDate('');
+    setGender('');
+    setPhone('');
+    setAddress('');
+    setAge('');
     setError('');
     setSuccess(false);
-    setCpf('');
+    setLoading(false);
     onClose();
   };
   

@@ -5,6 +5,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Button, Alert
 } from '@mui/material';
+import { validateGlucose } from '@/utils/validations';
 
 interface EditGlucoseModalProps {
   open: boolean;
@@ -36,18 +37,14 @@ const EditGlucoseModal = ({ open, onClose, record, onSave, patientCreatedAt, use
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!value || !date) {
-      setError('Preencha todos os campos obrigatórios');
+    
+    // Validação usando função padronizada
+    const validation = validateGlucose(value, date, patientCreatedAt);
+    if (!validation.valid) {
+      setError(validation.error);
       return;
     }
-    if (date < patientCreatedAt) {
-      setError(`A data não pode ser anterior a ${patientCreatedAt}`);
-      return;
-    }
-    if (date > today) {
-      setError('A data não pode ser maior que hoje');
-      return;
-    }
+    
     setLoading(true);
     try {
       await onSave({ ...record, value, date, time, editedBy: userName });

@@ -2,41 +2,29 @@
 
 import { Modal, Box, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import AddWeightModal from "../modals/add/AddWeightModal";
-import AddMedicationModal from "../modals/add/AddMedicationModal";
-import EditMedicationModal from "../modals/edit/EditMedicationModal";
-import EditAppointmentModal from "../modals/edit/EditAppointmentModal";
-import DeleteConfirmationModal from "../modals/DeleteConfirmationModal";
-import AddAppointmentModal from "../modals/add/AddAppointmentModal";
-import EditPatientModal from "../modals/edit/EditPatientModal";
-import EditWeightModal from "../modals/edit/EditWeightModal";
-import EditGlucoseModal from "../modals/edit/EditGlucoseModal";
-import EditBloodPressureModal from "../modals/edit/EditBloodPressureModal";
-import EditTemperatureModal from "../modals/edit/EditTemperatureModal";
-import EditOxygenModal from "../modals/edit/EditOxygenModal";
-import EditHeartRateModal from "../modals/edit/EditHeartRateModal";
-import AddBloodPressureModal from "../modals/add/AddBloodPressureModal";
-import AddGlucoseModal from "../modals/add/AddGlucoseModal";
-import AddTemperatureModal from "../modals/add/AddTemperatureModal";
-import AddOxygenModal from "../modals/add/AddOxygenModal";
-import AddHeartRateModal from "../modals/add/AddHeartRateModal";
+import AddWeightModal from "@/components/modals/add/AddWeightModal";
+import AddMedicationModal from "@/components/modals/add/AddMedicationModal";
+import EditMedicationModal from "@/components/modals/edit/EditMedicationModal";
+import EditAppointmentModal from "@/components/modals/edit/EditAppointmentModal";
+import DeleteConfirmationModal from "@/components/modals/DeleteConfirmationModal";
+import AddAppointmentModal from "@/components/modals/add/AddAppointmentModal";
+import EditPatientModal from "@/components/modals/edit/EditPatientModal";
+import EditWeightModal from "@/components/modals/edit/EditWeightModal";
+import EditGlucoseModal from "@/components/modals/edit/EditGlucoseModal";
+import EditBloodPressureModal from "@/components/modals/edit/EditBloodPressureModal";
+import EditTemperatureModal from "@/components/modals/edit/EditTemperatureModal";
+import EditOxygenModal from "@/components/modals/edit/EditOxygenModal";
+import EditHeartRateModal from "@/components/modals/edit/EditHeartRateModal";
+import AddBloodPressureModal from "@/components/modals/add/AddBloodPressureModal";
+import AddGlucoseModal from "@/components/modals/add/AddGlucoseModal";
+import AddTemperatureModal from "@/components/modals/add/AddTemperatureModal";
+import AddOxygenModal from "@/components/modals/add/AddOxygenModal";
+import AddHeartRateModal from "@/components/modals/add/AddHeartRateModal";
 import { useState } from "react";
 import { getDatabase, ref as dbRef, remove, get, update } from "firebase/database";
-import HealthMetricModal from "../modals/HealthMetricModal";
+import HealthMetricModal from "@/components/modals/HealthMetricModal";
 import { useAuth } from "@/contexts/AuthContext";
-
-// Função utilitária para garantir array de métricas
-function toArray(records: any) {
-  if (Array.isArray(records)) return records;
-  if (records && typeof records === "object") {
-    return Object.entries(records).map(([id, data]) =>
-      typeof data === "object" && data !== null
-        ? { id, ...data }
-        : { id, value: data }
-    );
-  }
-  return [];
-}
+import { toArray } from "@/utils/dataUtils";
 
 type HealthMetricType =
   | "bloodPressure"
@@ -213,7 +201,7 @@ const PatientModalsContainer = ({
   } | null>(null);
 
   const { user } = useAuth();
-  const userName = user?.displayName || user?.name || user?.email || user?.uid || "";
+  const userName = user?.name || user?.email || user?.uid || "";
 
   // Funções para abrir cada modal
   const handleAddBloodPressure = () => setAddBloodPressureModalOpen(true);
@@ -228,7 +216,7 @@ const PatientModalsContainer = ({
     await remove(
       dbRef(
         getDatabase(),
-        `patients/${userId}/${patientId}/weight/${record.id}`
+        `patientsGlobal/${patientId}/weight/${record.id}`
       )
     );
   };
@@ -238,7 +226,7 @@ const PatientModalsContainer = ({
     await remove(
       dbRef(
         getDatabase(),
-        `patients/${userId}/${patientId}/glucose/${record.id}`
+        `patientsGlobal/${patientId}/glucose/${record.id}`
       )
     );
   };
@@ -248,7 +236,7 @@ const PatientModalsContainer = ({
     await remove(
       dbRef(
         getDatabase(),
-        `patients/${userId}/${patientId}/bloodPressure/${record.id}`
+        `patientsGlobal/${patientId}/bloodPressure/${record.id}`
       )
     );
   };
@@ -258,7 +246,7 @@ const PatientModalsContainer = ({
     await remove(
       dbRef(
         getDatabase(),
-        `patients/${userId}/${patientId}/temperature/${record.id}`
+        `patientsGlobal/${patientId}/temperature/${record.id}`
       )
     );
   };
@@ -268,7 +256,7 @@ const PatientModalsContainer = ({
     await remove(
       dbRef(
         getDatabase(),
-        `patients/${userId}/${patientId}/oxygen/${record.id}`
+        `patientsGlobal/${patientId}/oxygen/${record.id}`
       )
     );
   };
@@ -278,7 +266,7 @@ const PatientModalsContainer = ({
     await remove(
       dbRef(
         getDatabase(),
-        `patients/${userId}/${patientId}/heartRate/${record.id}`
+        `patientsGlobal/${patientId}/heartRate/${record.id}`
       )
     );
   };
@@ -289,7 +277,7 @@ const PatientModalsContainer = ({
   const onEditMedication = async (medicationEditado: any) => {
     if (!userId || !patientId) return;
     const db = getDatabase();
-    const patientRef = dbRef(db, `patients/${userId}/${patientId}`);
+    const patientRef = dbRef(db, `patientsGlobal/${patientId}`);
     const snapshot = await get(patientRef); // corrigido
     const patientData = snapshot.val() || {};
     const medications = patientData.medications || [];
@@ -498,7 +486,7 @@ const PatientModalsContainer = ({
         patientCreatedAt={""}
         userName={userName}
       />
-      {/* Inclua os modais de adicionar registro: */}
+      
       <AddGlucoseModal
         open={addGlucoseModalOpen}
         onClose={() => setAddGlucoseModalOpen(false)}

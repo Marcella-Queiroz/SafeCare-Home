@@ -17,6 +17,7 @@ import {
 import Grid from "@mui/material/Grid";
 import CloseIcon from "@mui/icons-material/Close";
 import { getDatabase, ref, push } from "firebase/database";
+import { validateAppointment } from '@/utils/validations';
 
 interface AddAppointmentModalProps {
   open: boolean;
@@ -44,11 +45,20 @@ const AddAppointmentModal = ({
     e.preventDefault();
     setError("");
     setLoading(true);
+    
+    // Validação usando função padronizada
+    const validation = validateAppointment(title, date, time);
+    if (!validation.valid) {
+      setError(validation.errors.join(', '));
+      setLoading(false);
+      return;
+    }
+    
     try {
       const db = getDatabase();
       const appointmentsRef = ref(
         db,
-        `patients/${userId}/${patientId}/appointments`
+        `patientsGlobal/${patientId}/appointments`
       );
       await push(appointmentsRef, {
         title,

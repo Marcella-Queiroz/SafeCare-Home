@@ -1,4 +1,4 @@
-// Pagina de gerenciamento de pacientes e relatórios
+// Página de gerenciamento de pacientes e relatórios
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -23,24 +23,24 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import DescriptionIcon from "@mui/icons-material/Description";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
-import PageContainer from "../components/PageContainer";
-import AddPatientModal from "../components/modals/add/AddPatientModal";
-import DeleteConfirmationModal from "../components/modals/DeleteConfirmationModal";
+import PageContainer from "@/components/PageContainer";
+import AddPatientModal from "@/components/modals/add/AddPatientModal";
+import DeleteConfirmationModal from "@/components/modals/DeleteConfirmationModal";
 import CheckPatientByCPFModal from '@/components/patient/CheckPatientByCPFModal';
 import { INPUT_LIMITS } from "@/constants/inputLimits";
-import {
-  getDatabase,
-  ref,
-  onValue,
-  set,
-  push,
-  remove,
-} from "firebase/database";
+import { getDatabase, ref, onValue, set, push, remove, get, update } from "firebase/database";
 import { app } from "@/services/firebaseConfig";
 import { useAuth } from "@/contexts/AuthContext";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import PatientQuickSearchModal from "@/components/patient/PatientQuickSearch";
+import { convertMetricsToArray, formatBirthDate } from '@/utils/dataUtils';
+import { 
+  getUserPatientsWithData, 
+  createPatientSecure, 
+  grantPatientAccess, 
+  revokePatientAccess 
+} from '@/utils/securityUtils';
 
 interface Metric {
   id: string;
@@ -69,9 +69,9 @@ interface Patient {
   heartRate: Metric[];
   medications?: any[];
   appointments?: any[];
-  createdBy?: string; 
-  editedBy?: string;  
-  editedAt?: string;  
+  createdBy?: string;
+  editedBy?: string;
+  editedAt?: string;
 }
 
 interface Report {
@@ -147,20 +147,6 @@ function getLastMetricValue(metric: Metric[], suffix: string = ""): string {
   return "-";
 }
 
-// Função para converter métricas em array
-function convertMetricsToArray<T extends Metric>(metricsObj: any): T[] {
-  if (!metricsObj) return [];
-  if (Array.isArray(metricsObj)) return metricsObj.filter(Boolean);
-  if (typeof metricsObj === "object") {
-    return Object.entries(metricsObj).map(([id, data]) =>
-      typeof data === "object" && data !== null
-        ? ({ id, ...data } as T)
-        : ({ id, value: data } as T)
-    );
-  }
-  return [];
-}
-
 // Função para converter os dados do paciente
 function convertPatientMetrics(patient: any): Patient {
   if (!patient) return patient;
@@ -195,32 +181,57 @@ const PatientsPage = () => {
   const [checkCPFModalOpen, setCheckCPFModalOpen] = useState(false);
   const [pendingCPF, setPendingCPF] = useState<string | null>(null);
 
-  // Carrega pacientes do Firebase
+  // Carrega pacientes do Firebase usando função segura
   useEffect(() => {
-    if (!user?.uid) return;
-    const db = getDatabase(app);
-    const patientsRef = ref(db, `patients/${user.uid}`);
-
-    //
-    const unsubscribe = onValue(patientsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const patientArray: Patient[] = Object.entries(data).map(
-          ([id, value]) => {
-            const patientData = { id, ...(value as Omit<Patient, "id">) };
-            return convertPatientMetrics(patientData);
-          }
-        );
-        setPatients(patientArray);
-      } else {
-        setPatients([]);
+    const loadPatients = async () => {
+      if (!user?.uid) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
-    });
 
-    return () => unsubscribe();
+      try {
+        const patientsData = await getUserPatientsWithData(user.uid);
+        const patientsWithMetrics = patientsData.map(patient => 
+          convertPatientMetrics(patient)
+        );
+        setPatients(patientsWithMetrics);
+      } catch (error) {
+        console.error('Erro ao carregar pacientes:', error);
+        setPatients([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPatients();
+
+    // Listener em tempo real para atualizações
+    if (user?.uid) {
+      const db = getDatabase();
+      const userPatientsRef = ref(db, `userPatients/${user.uid}`);
+      const unsubscribe = onValue(userPatientsRef, async (snapshot) => {
+        const patientIdsObj = snapshot.val();
+        if (!patientIdsObj) {
+          setPatients([]);
+          return;
+        }
+
+        try {
+          const patientsData = await getUserPatientsWithData(user.uid);
+          const patientsWithMetrics = patientsData.map(patient => 
+            convertPatientMetrics(patient)
+          );
+          setPatients(patientsWithMetrics);
+        } catch (error) {
+          console.error('Erro ao atualizar pacientes:', error);
+        }
+      });
+
+      return () => unsubscribe();
+    }
   }, [user?.uid]);
 
+  // Carrega relatórios do Firebase
   useEffect(() => {
     if (!user?.uid) return;
     const db = getDatabase(app);
@@ -276,16 +287,49 @@ const PatientsPage = () => {
     navigate("/reports");
   };
 
-  // Função para excluir paciente
+  // Função para cadastrar paciente usando função segura
+  const handleAddPatient = async (dadosPaciente: Omit<Patient, "id">) => {
+    if (!user?.uid) return;
+
+    try {
+      const patientData = {
+        ...dadosPaciente,
+        createdAt: new Date().toISOString(),
+        createdBy: user?.name || user?.email || user?.uid,
+      };
+
+      const patientId = await createPatientSecure(user.uid, patientData);
+      
+      if (!patientId) {
+        console.error('Erro ao criar paciente');
+        return;
+      }
+
+      console.log('Paciente criado com sucesso:', patientId);
+    } catch (error) {
+      console.error('Erro ao adicionar paciente:', error);
+    }
+  };
+
+  // Compartilhar paciente com outro usuário usando função segura
+  const handleSharePatient = async (patientId: string, otherUserId: string) => {
+    try {
+      await grantPatientAccess(otherUserId, patientId);
+      console.log('Acesso concedido com sucesso');
+    } catch (error) {
+      console.error('Erro ao compartilhar paciente:', error);
+    }
+  };
+
+  // Função para excluir paciente (remove só do usuário logado) usando função segura
   const handleDeletePatient = async (patientId: string) => {
     if (!user?.uid || !patientId) return;
-    const db = getDatabase(app);
-    const patientRef = ref(db, `patients/${user.uid}/${patientId}`);
+
     try {
-      await remove(patientRef);
+      await revokePatientAccess(user.uid, patientId);
+      console.log('Acesso removido com sucesso');
     } catch (error) {
-      console.error("Erro ao excluir paciente:", error);
-      alert("Não foi possível excluir o paciente.");
+      console.error('Erro ao remover acesso ao paciente:', error);
     }
   };
 
@@ -365,7 +409,7 @@ const PatientsPage = () => {
       body: [
         ["Nome Completo:", report.patientName || "-"],
         ["CPF:", report.cpf || "-"],
-        ["Data de Nascimento:", report.birthDate || "-"],
+        ["Data de Nascimento:", formatBirthDate(report.birthDate || "")],
         ["Idade:", report.age || "-"],
         ["Sexo:", report.gender || "-"],
         ["Contato:", report.phone || "-"],
@@ -570,18 +614,6 @@ const PatientsPage = () => {
     }
 
     doc.save(`prontuario_${report.patientName || "paciente"}_${report.id}.pdf`);
-  };
-
-  // Função para cadastrar paciente
-  const handleAddPatient = async (dadosPaciente: Omit<Patient, "id">) => {
-    if (!user?.uid) return;
-    const db = getDatabase(app);
-    const patientsRef = ref(db, `patients/${user.uid}`);
-    const newPatientRef = push(patientsRef);
-    await set(newPatientRef, {
-      ...dadosPaciente,
-      createdBy: user?.displayName || user?.email || user?.uid, // <-- Garante que sempre salva quem criou
-    });
   };
 
   const handleAddPatientClick = () => {

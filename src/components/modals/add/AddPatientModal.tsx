@@ -26,7 +26,7 @@ import { app } from "@/services/firebaseConfig";
 import { INPUT_LIMITS } from '@/constants/inputLimits';
 import type { Metric, BloodPressure } from '../../../pages/PatientsPage';
 import { calcularIdade } from '@/utils/dateUtils';
-import { validateCPF } from '@/utils/validations';
+import { validatePatientData } from '@/utils/validations';
 
 export interface Patient {
   id: string;
@@ -76,25 +76,52 @@ const AddPatientModal = ({ open, onClose, userId, onAdd, initialCPF }: AddPatien
 
   // Sempre que a data de nascimento mudar, atualiza a idade
   useEffect(() => {
-    setAge(birthDate ? calcularIdade(birthDate).toString() : '');
+    if (birthDate) {
+      const calculatedAge = calcularIdade(birthDate);
+      setAge(calculatedAge ? calculatedAge.toString() : '');
+    } else {
+      setAge('');
+    }
   }, [birthDate]);
 
   useEffect(() => {
     if (initialCPF) setCpf(initialCPF);
   }, [initialCPF]);
 
+  // Limpa todos os campos quando o modal é fechado
+  useEffect(() => {
+    if (!open) {
+      setName('');
+      setAge('');
+      setConditions('');
+      setCpf(initialCPF || '');
+      setBirthDate('');
+      setGender('');
+      setPhone('');
+      setAddress('');
+      setError('');
+      setSuccess(false);
+      setLoading(false);
+    }
+  }, [open, initialCPF]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess(false);
 
-    if (!name || !age) {
-      setError('Preencha os campos obrigatórios');
-      return;
-    }
+    // Validação usando função padronizada
+    const validation = validatePatientData({
+      name,
+      cpf,
+      birthDate,
+      gender,
+      phone,
+      address
+    });
 
-    if (!validateCPF(cpf)) {
-      setError('CPF inválido');
+    if (!validation.valid) {
+      setError(validation.errors.join(', '));
       return;
     }
 
@@ -102,16 +129,13 @@ const AddPatientModal = ({ open, onClose, userId, onAdd, initialCPF }: AddPatien
       setLoading(true);
       setError('');
 
-      const db = getDatabase(app);
-      if (!userId) {
-        setError('Usuário não autenticado');
-        setLoading(false);
-        return;
-      }
-      console.log('userId para salvar paciente:', userId);
-      const patientsRef = ref(db, `patients/${userId}`);
-      const newPatientRef = push(patientsRef);
+      const db = getDatabase();
+      const patientsGlobalRef = ref(db, `patientsGlobal`);
+      const newPatientRef = push(patientsGlobalRef);
+      const patientId = newPatientRef.key;
+
       await set(newPatientRef, {
+        id: patientId,
         name,
         cpf,
         age: Number(age),
@@ -123,7 +147,7 @@ const AddPatientModal = ({ open, onClose, userId, onAdd, initialCPF }: AddPatien
           ? conditions.split(",").map((c) => c.trim())
           : [],
         createdAt: new Date().toISOString(),
-        createdBy: user?.displayName || user?.email || user?.uid,
+        createdBy: user?.name || user?.email || user?.uid,
         weight: [],
         glucose: [],
         temperature: [],
@@ -133,6 +157,10 @@ const AddPatientModal = ({ open, onClose, userId, onAdd, initialCPF }: AddPatien
         medications: [],
         appointments: [],
       });
+
+      // Adiciona referência para o usuário
+      const userPatientsRef = ref(db, `userPatients/${userId}/${patientId}`);
+      await set(userPatientsRef, true);
 
       setSuccess(true);
       setTimeout(() => {
@@ -151,8 +179,13 @@ const AddPatientModal = ({ open, onClose, userId, onAdd, initialCPF }: AddPatien
     setAge('');
     setConditions('');
     setCpf('');
+    setBirthDate('');
+    setGender('');
+    setPhone('');
+    setAddress('');
     setError('');
     setSuccess(false);
+    setLoading(false);
     onClose();
   };
 
@@ -250,8 +283,6 @@ const AddPatientModal = ({ open, onClose, userId, onAdd, initialCPF }: AddPatien
                 fullWidth
                 disabled={loading}
                 required
-                sx={{}
-                }
               >
                 <MenuItem value="">Selecione</MenuItem>
                 <MenuItem value="Feminino">Feminino</MenuItem>

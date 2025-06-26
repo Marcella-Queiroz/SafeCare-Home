@@ -21,6 +21,8 @@ import { useNavigate } from 'react-router-dom';
 import { getDatabase, ref, onValue, push, set, get } from "firebase/database";
 import { app } from "@/services/firebaseConfig";
 import { useAuth } from '../contexts/AuthContext';
+import { getUserPatientsWithData } from '@/utils/securityUtils';
+import { formatBirthDate } from '@/utils/dataUtils';
 
 const ReportsPage = () => {
   const navigate = useNavigate();
@@ -33,24 +35,93 @@ const ReportsPage = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
-  // Buscar pacientes do Firebase (incluindo createdAt)
+  // Buscar pacientes do Firebase usando função segura
   useEffect(() => {
-    const db = getDatabase(app);
-    const patientsRef = ref(db, `patients/${user?.uid}`);
-    onValue(patientsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const arr = Object.entries(data).map(([id, value]: any) => ({
-          id,
-          name: value.name,
-          createdAt: value.createdAt || '',
+    const loadPatients = async () => {
+      if (!user?.uid) {
+        setPatients([]);
+        return;
+      }
+
+      try {
+        const patientsData = await getUserPatientsWithData(user.uid);
+        const patientsArray = patientsData.map(patient => ({
+          id: patient.id,
+          name: patient.name,
+          createdAt: patient.createdAt || '',
         }));
-        setPatients(arr);
-      } else {
+        setPatients(patientsArray);
+      } catch (error) {
+        console.error('Erro ao carregar pacientes:', error);
         setPatients([]);
       }
-    });
-  }, []);
+    };
+
+    if (user?.uid) {
+      const db = getDatabase();
+      
+      // Listener em tempo real para mudanças na lista de pacientes do usuário
+      const userPatientsRef = ref(db, `userPatients/${user.uid}`);
+      const unsubscribeUserPatients = onValue(userPatientsRef, async (snapshot) => {
+        const patientIdsObj = snapshot.val();
+        if (!patientIdsObj) {
+          setPatients([]);
+          setSelectedPatient(''); // Limpar seleção se não há pacientes
+          return;
+        }
+
+        try {
+          const patientsData = await getUserPatientsWithData(user.uid);
+          const patientsArray = patientsData.map(patient => ({
+            id: patient.id,
+            name: patient.name,
+            createdAt: patient.createdAt || '',
+          }));
+          setPatients(patientsArray);
+          
+          // Se o paciente selecionado foi removido, limpar a seleção
+          const currentPatientIds = patientsArray.map(p => p.id);
+          if (selectedPatient && !currentPatientIds.includes(selectedPatient)) {
+            setSelectedPatient('');
+          }
+        } catch (error) {
+          console.error('Erro ao atualizar pacientes:', error);
+          setPatients([]);
+        }
+      });
+
+      // Listener adicional para mudanças nos dados globais dos pacientes
+      const patientsGlobalRef = ref(db, 'patientsGlobal');
+      const unsubscribePatientsGlobal = onValue(patientsGlobalRef, async () => {
+        // Recarregar a lista quando houver mudanças nos dados globais
+        try {
+          const patientsData = await getUserPatientsWithData(user.uid);
+          const patientsArray = patientsData.map(patient => ({
+            id: patient.id,
+            name: patient.name,
+            createdAt: patient.createdAt || '',
+          }));
+          setPatients(patientsArray);
+          
+          // Verificar se o paciente selecionado ainda existe
+          const currentPatientIds = patientsArray.map(p => p.id);
+          if (selectedPatient && !currentPatientIds.includes(selectedPatient)) {
+            setSelectedPatient('');
+          }
+        } catch (error) {
+          console.error('Erro ao recarregar pacientes:', error);
+        }
+      });
+
+      return () => {
+        unsubscribeUserPatients();
+        unsubscribePatientsGlobal();
+      };
+    } else {
+      setPatients([]);
+      setSelectedPatient('');
+    }
+  }, [user?.uid, selectedPatient]);
 
   // Limpar datas ao trocar de paciente
   useEffect(() => {
@@ -94,17 +165,19 @@ const ReportsPage = () => {
       const db = getDatabase(app);
       const reportsRef = ref(db, `reports/${user.uid}`);
 
-      // Busque o paciente selecionado
-      const selectedPatientObj = patients.find(p => p.id === selectedPatient);
-
-      // Busque todos os dados do paciente do banco
-      const patientRef = ref(db, `patients/${user.uid}/${selectedPatient}`);
+      // Busque todos os dados do paciente do banco usando estrutura global
+      const patientRef = ref(db, `patientsGlobal/${selectedPatient}`);
       const snapshot = await get(patientRef);
       const patientData = snapshot.val();
 
+      if (!patientData) {
+        setError('Paciente não encontrado.');
+        return;
+      }
+
       const reportData = {
         patientName: patientData.name,
-        birthDate: patientData.birthDate || '',
+        birthDate: formatBirthDate(patientData.birthDate || ''),
         age: patientData.age || '',
         gender: patientData.gender || '',
         phone: patientData.phone || '',

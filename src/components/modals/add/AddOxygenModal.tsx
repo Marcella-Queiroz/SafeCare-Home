@@ -8,6 +8,8 @@ import {
 import Grid from '@mui/material/Grid';
 import { getDatabase, ref, update } from "firebase/database";
 import { INPUT_LIMITS } from '@/constants/inputLimits';
+import { validateOxygen } from '@/utils/validations';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AddOxygenModalProps {
   open: boolean;
@@ -31,21 +33,24 @@ const AddOxygenModal = ({ open, onClose, userId, patientId, patientCreatedAt, us
   const handleSave = async () => {
     setLoading(true);
     setError('');
-    if (!value || !date) {
-      setError('Preencha todos os campos obrigatórios');
+    
+    // Validação usando função padronizada
+    const validation = validateOxygen(value, date, patientCreatedAt);
+    if (!validation.valid) {
+      setError(validation.error);
       setLoading(false);
       return;
     }
+    
     try {
       await onSave({ value, date, time, createdBy: userName });
 
       // Atualiza o campo lastCheck do paciente
       const db = getDatabase();
-      const patientRef = ref(db, `patients/${userId}/${patientId}`);
+      const patientRef = ref(db, `patientsGlobal/${patientId}`);
       const now = new Date();
       const lastCheck = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
       await update(patientRef, { lastCheck });
-
 
       setValue('');
       setDate(patientCreatedAt);

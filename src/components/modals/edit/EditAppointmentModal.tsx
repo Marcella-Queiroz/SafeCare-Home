@@ -16,6 +16,7 @@ import {
   Alert,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { validateAppointment } from '@/utils/validations';
 
 interface EditAppointmentModalProps {
   open: boolean;
@@ -45,8 +46,10 @@ const EditAppointmentModal = ({ open, onClose, appointment, onSave, userName }: 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!title || !date || !time) {
-      setError('Preencha todos os campos obrigatórios');
+    // Validação usando função padronizada
+    const validation = validateAppointment(title, date, time);
+    if (!validation.valid) {
+      setError(validation.errors.join(', '));
       return;
     }
     

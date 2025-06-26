@@ -45,7 +45,7 @@ function getRoleLabel(role: string) {
 }
 
 const ProfilePage = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUserData } = useAuth();
   const navigate = useNavigate();
 
   // Estados do formulário
@@ -147,6 +147,10 @@ const ProfilePage = () => {
       const db = getDatabase();
       const userRef = ref(db, `users/${user.uid}`);
       await update(userRef, { name, email, phone, role });
+      
+      // Atualiza o contexto com os novos dados
+      updateUserData({ name, email, role });
+      
       setSuccess(true);
       setEditing(false);
       setReload(r => !r);
@@ -204,9 +208,13 @@ const ProfilePage = () => {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
   };
 
   return (

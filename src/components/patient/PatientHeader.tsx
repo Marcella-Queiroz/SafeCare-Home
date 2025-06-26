@@ -7,6 +7,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { getDatabase, ref, update } from "firebase/database";
 import { ReactNode, useEffect, useState } from 'react';
 import type { Patient } from './PatientDetailContent';
+import { formatBirthDate } from '@/utils/dataUtils';
 
 interface PatientHeaderProps {
   patient: Patient;
@@ -71,7 +72,7 @@ const PatientHeader = ({ patient, onClose, onEditPatient }: PatientHeaderProps) 
               </Typography>
               {patient.birthDate && (
                 <Typography variant="body2" color="textSecondary">
-                  <strong>Data de Nascimento:</strong> {patient.birthDate}
+                  <strong>Data de Nascimento:</strong> {formatBirthDate(patient.birthDate)}
                 </Typography>
               )}
               {patient.gender && (

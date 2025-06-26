@@ -1,9 +1,8 @@
 // Card de Login
 import React, { useState } from "react";
 import { Button, TextField, Typography, Box } from "@mui/material";
-import { getAuth, signInWithEmailAndPassword, updateEmail } from "firebase/auth";
-import { getDatabase, ref, get } from "firebase/database";
-import { app } from "@/services/firebaseConfig";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import Logo from "@/components/Logo";
 
 interface LoginCardProps {
@@ -18,19 +17,19 @@ const LoginCard = ({ onForgotPassword, onRequestAccess, showToast }: LoginCardPr
   const [isLoading, setIsLoading] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   function validateEmail(email: string): boolean {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return re.test(email);
-}
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  }
 
-const handleUserLogin = async (e: React.FormEvent) => {
+  const handleUserLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setEmailError("");
     setPasswordError("");
-
-
 
     if (!validateEmail(email)) {
       setEmailError("Formato de email inválido.");
@@ -38,35 +37,17 @@ const handleUserLogin = async (e: React.FormEvent) => {
       return;
     }
 
-    const auth = getAuth(app);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      // Busque os dados do usuário no banco
-      const db = getDatabase(app);
-      const userRef = ref(db, "users/" + user.uid);
-      const snapshot = await get(userRef);
-      if (snapshot.exists()) {
-        const userData = snapshot.val();
-        // Salve no localStorage/contexto para uso no ProfilePage
-        localStorage.setItem("safecare-user", JSON.stringify({ ...userData, uid: user.uid }));
-      }
-      showToast("Login realizado", "success");
-      localStorage.setItem("isLoggedIn", "true");
-      window.location.href = "/patients";
-    } catch (error: any) {
-      if (
-        error.code === "auth/user-not-found" ||
-        error.code === "auth/wrong-password" ||
-        error.code === "auth/invalid-credential"
-      ) {
+      const success = await login(email, password);
+      if (success) {
+        showToast("Login realizado", "success");
+        navigate("/patients");
+      } else {
         setEmailError("Email ou senha incorretos.");
         setPasswordError("Email ou senha incorretos.");
-      } else if (error.code === "auth/invalid-email") {
-        setEmailError("Formato de email inválido.");
-      } else {
-        showToast(error.message, "error");
       }
+    } catch (error: any) {
+      showToast("Erro ao fazer login", "error");
     } finally {
       setIsLoading(false);
     }

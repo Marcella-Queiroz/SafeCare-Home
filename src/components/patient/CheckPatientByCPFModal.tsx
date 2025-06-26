@@ -5,6 +5,8 @@ import {
 } from '@mui/material';
 
 import { validateCPF } from '@/utils/validations';
+import { findPatientByCPFSecure } from '@/utils/securityUtils';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Props {
   open: boolean;
@@ -14,6 +16,7 @@ interface Props {
 }
 
 const CheckPatientByCPFModal = ({ open, onClose, onFound, onNotFound }: Props) => {
+  const { user } = useAuth();
   const [cpf, setCpf] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,36 +26,28 @@ const CheckPatientByCPFModal = ({ open, onClose, onFound, onNotFound }: Props) =
     setError('');
     setLoading(true);
 
-    // Busca em todos os usuários
-    const db = (await import("firebase/database")).getDatabase();
-    const ref = (await import("firebase/database")).ref;
-    const snapshot = await (await import("firebase/database")).get(ref(db, 'patients'));
-    const allPatients = snapshot.val() || {};
-
-    let found = null;
-    let foundUserId = null;
-    let foundPatientId = null;
-
-    for (const userId in allPatients) {
-      for (const patientId in allPatients[userId]) {
-        const patient = allPatients[userId][patientId];
-        if (patient.cpf === cpf) {
-          found = { ...patient, id: patientId };
-          foundUserId = userId;
-          foundPatientId = patientId;
-          break;
-        }
-      }
-      if (found) break;
+    if (!user?.uid) {
+      setError('Usuário não autenticado');
+      setLoading(false);
+      return;
     }
 
-    setLoading(false);
+    try {
+      // Busca paciente por CPF de forma segura
+      const patient = await findPatientByCPFSecure(user.uid, cpf);
+      
+      setLoading(false);
 
-    if (found) {
-      setFoundPatient({ ...found, ownerUserId: foundUserId });
-    } else {
-      setFoundPatient(null);
-      onNotFound(cpf);
+      if (patient) {
+        setFoundPatient(patient);
+      } else {
+        setFoundPatient(null);
+        onNotFound(cpf);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar paciente:', error);
+      setError('Erro ao buscar paciente');
+      setLoading(false);
     }
   };
 

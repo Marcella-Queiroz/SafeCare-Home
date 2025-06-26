@@ -19,6 +19,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import { getDatabase, ref, get, update } from "firebase/database";
 import { INPUT_LIMITS } from '@/constants/inputLimits';
+import { validateMedication } from '@/utils/validations';
 
 interface AddMedicationModalProps {
   open: boolean;
@@ -67,15 +68,19 @@ const AddMedicationModal = ({ open, onClose, userId, patientId, userName, medica
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !dosage || !frequency) {
-      setError('Preencha os campos obrigatórios');
+    
+    // Validação usando função padronizada
+    const validation = validateMedication(name, dosage, frequency);
+    if (!validation.valid) {
+      setError(validation.errors.join(', '));
       return;
     }
+    
     try {
       setLoading(true);
       setError('');
       const db = getDatabase();
-      const patientRef = ref(db, `patients/${userId}/${patientId}`);
+      const patientRef = ref(db, `patientsGlobal/${patientId}`);
       const snapshot = await get(patientRef);
       const patientData = snapshot.val() || {};
       const medications = patientData.medications || [];

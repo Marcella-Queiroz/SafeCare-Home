@@ -3,30 +3,25 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Typography, Button } from '@mui/material';
-import PageContainer from '../components/PageContainer';
-import { getDatabase, ref, onValue, get, update, push, set, remove } from "firebase/database";
-import { app } from '../services/firebaseConfig';
-import PatientDetailContent, { Patient } from '../components/patient/PatientDetailContent';
-import PatientModalsContainer from '../components/patient/PatientModalsContainer';
-import { useAuth } from '../contexts/AuthContext';
-import ObservationsSection from '../components/patient/ObservationsSection';
-import type { Observation } from '../components/patient/ObservationsSection';
+import PageContainer from '@/components/PageContainer';
+import { getDatabase, ref, get, set, push, update, remove, onValue } from "firebase/database";
+import { app } from '@/services/firebaseConfig';
+import PatientDetailContent, { Patient } from '@/components/patient/PatientDetailContent';
+import PatientModalsContainer from '@/components/patient/PatientModalsContainer';
+import { useAuth } from '@/contexts/AuthContext';
+import ObservationsSection from '@/components/patient/ObservationsSection';
+import type { Observation } from '@/components/patient/ObservationsSection';
+import { convertMetricsToArray } from '@/utils/dataUtils';
+import { 
+  getPatientWithAccess, 
+  hasPatientAccess,
+  updatePatientSecure,
+  addHealthMetricSecure,
+  updateHealthMetricSecure,
+  removeHealthMetricSecure 
+} from '@/utils/securityUtils';
 
 type HealthMetricType = 'bloodPressure' | 'weight' | 'oxygen' | 'temperature' | 'glucose' | 'heartRate';
-
-// Função para converter objeto de métricas em array, tratando null, array e objeto
-function convertMetricsToArray(metricsObj: any) {
-  if (!metricsObj) return [];
-  if (Array.isArray(metricsObj)) {
-    return metricsObj.filter(Boolean);
-  }
-  if (typeof metricsObj === 'object') {
-    return Object.entries(metricsObj).map(([id, data]) =>
-      typeof data === 'object' && data !== null ? { id, ...data } : { id, value: data }
-    );
-  }
-  return [];
-}
 
 const metricKeys = [
   'weight',
@@ -93,28 +88,62 @@ const PatientDetailPage = () => {
   });
 
   useEffect(() => {
-    if (!user || !urlUserId || user.uid !== urlUserId) {
-      // Redirecione ou mostre erro
-      navigate('/patients');
-      return;
-    }
-
-    if (!userId || !patientId) return;
-    const db = getDatabase(app);
-    const patientRef = ref(db, `patients/${userId}/${patientId}`);
-    const unsubscribe = onValue(patientRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        setCurrentPatient(normalizePatient(data, patientId));
-        setObservations(data.observations ? Object.values(data.observations) : []);
-      } else {
-        setCurrentPatient(null);
-        setObservations([]);
+    const loadPatientData = async () => {
+      if (!patientId || !user?.uid) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, [user, urlUserId, patientId]);
+
+      try {
+        // Verifica acesso e carrega dados do paciente de forma segura
+        const patientData = await getPatientWithAccess(user.uid, patientId);
+        
+        if (patientData) {
+          setCurrentPatient(normalizePatient(patientData, patientId));
+          
+          // Carrega observações se existirem
+          if (patientData.observations) {
+            setObservations(convertMetricsToArray(patientData.observations));
+          } else {
+            setObservations([]);
+          }
+        } else {
+          setCurrentPatient(null);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar dados do paciente:', error);
+        setCurrentPatient(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPatientData();
+    
+    // Configurar listener em tempo real apenas se tiver acesso
+    if (patientId && user?.uid) {
+      hasPatientAccess(user.uid, patientId).then(hasAccess => {
+        if (hasAccess) {
+          const db = getDatabase();
+          const patientRef = ref(db, `patientsGlobal/${patientId}`);
+          const unsubscribe = onValue(patientRef, (snapshot) => {
+            if (snapshot.exists()) {
+              const data = snapshot.val();
+              setCurrentPatient(normalizePatient(data, patientId));
+              
+              if (data.observations) {
+                setObservations(convertMetricsToArray(data.observations));
+              } else {
+                setObservations([]);
+              }
+            }
+          });
+          
+          return () => unsubscribe();
+        }
+      });
+    }
+  }, [patientId, user?.uid]);
 
   if (loading) {
     return (
@@ -166,16 +195,21 @@ const PatientDetailPage = () => {
 
   // Salva edição de medicamento no Firebase
   const handleSaveMedication = async (updatedMedication: any) => {
-    if (!userId || !patientId || selectedMedication?.index === undefined) return;
-    const db = getDatabase();
-    const patientRef = ref(db, `patients/${userId}/${patientId}`);
-    const snapshot = await get(patientRef);
-    const patientData = snapshot.val() || {};
-    const medications = patientData.medications || [];
-    medications[selectedMedication.index] = updatedMedication;
-    await update(patientRef, { medications });
-    setEditMedicationModalOpen(false);
-    setSelectedMedication(null);
+    if (!user?.uid || !patientId || selectedMedication?.index === undefined) return;
+    
+    try {
+      const patientData = await getPatientWithAccess(user.uid, patientId);
+      if (!patientData) return;
+      
+      const medications = patientData.medications || [];
+      medications[selectedMedication.index] = updatedMedication;
+      
+      await updatePatientSecure(user.uid, patientId, { medications });
+      setEditMedicationModalOpen(false);
+      setSelectedMedication(null);
+    } catch (error) {
+      console.error('Erro ao salvar medicamento:', error);
+    }
   };
 
   const handleEditAppointment = (appointment: any, index: number) => {
@@ -190,37 +224,45 @@ const PatientDetailPage = () => {
 
   // Salva edição de agendamento no Firebase
   const handleSaveAppointment = async (updatedAppointment: any) => {
-    if (!userId || !patientId || selectedAppointment?.index === undefined) return;
-    const db = getDatabase();
-    const patientRef = ref(db, `patients/${userId}/${patientId}`);
-    const snapshot = await get(patientRef);
-    const patientData = snapshot.val() || {};
-    const appointments = patientData.appointments || [];
-    appointments[selectedAppointment.index] = updatedAppointment;
-    await update(patientRef, { appointments });
-    setEditAppointmentModalOpen(false);
-    setSelectedAppointment(null);
+    if (!user?.uid || !patientId || selectedAppointment?.index === undefined) return;
+    
+    try {
+      const patientData = await getPatientWithAccess(user.uid, patientId);
+      if (!patientData) return;
+      
+      const appointments = patientData.appointments || [];
+      appointments[selectedAppointment.index] = updatedAppointment;
+      
+      await updatePatientSecure(user.uid, patientId, { appointments });
+      setEditAppointmentModalOpen(false);
+      setSelectedAppointment(null);
+    } catch (error) {
+      console.error('Erro ao salvar agendamento:', error);
+    }
   };
 
   const confirmDelete = async () => {
-    if (!userId || !patientId) return;
-    const db = getDatabase();
-    const patientRef = ref(db, `patients/${userId}/${patientId}`);
-    const snapshot = await get(patientRef);
-    const patientData = snapshot.val() || {};
+    if (!user?.uid || !patientId) return;
+    
+    try {
+      const patientData = await getPatientWithAccess(user.uid, patientId);
+      if (!patientData) return;
 
-    if (medicationToDelete !== null) {
-      const medications = patientData.medications || [];
-      medications.splice(medicationToDelete, 1);
-      await update(patientRef, { medications });
-      setMedicationToDelete(null);
-    } else if (appointmentToDelete !== null) {
-      const appointments = patientData.appointments || [];
-      appointments.splice(appointmentToDelete, 1);
-      await update(patientRef, { appointments });
-      setAppointmentToDelete(null);
+      if (medicationToDelete !== null) {
+        const medications = patientData.medications || [];
+        medications.splice(medicationToDelete, 1);
+        await updatePatientSecure(user.uid, patientId, { medications });
+        setMedicationToDelete(null);
+      } else if (appointmentToDelete !== null) {
+        const appointments = patientData.appointments || [];
+        appointments.splice(appointmentToDelete, 1);
+        await updatePatientSecure(user.uid, patientId, { appointments });
+        setAppointmentToDelete(null);
+      }
+      setDeleteModalOpen(false);
+    } catch (error) {
+      console.error('Erro ao deletar item:', error);
     }
-    setDeleteModalOpen(false);
   };
 
   const handleEditPatient = () => {
@@ -228,115 +270,114 @@ const PatientDetailPage = () => {
   };
 
   const handleSavePatient = (updatedPatient: any) => {
-    fetchPatientFromFirebase();
+    // Os dados já são atualizados automaticamente via listener
     setEditPatientModalOpen(false);
   };
 
-  // --- Funções para salvar métricas de saúde no caminho correto ---
-  // Funções de cadastro (push)
   const handleSaveGlucose = async (data: any) => {
-    if (!userId || !patientId) return;
-    const db = getDatabase();
-    const refGlucose = ref(db, `patients/${userId}/${patientId}/glucose`);
-    await push(refGlucose, data);
+    if (!user?.uid || !patientId) return;
+    await addHealthMetricSecure(user.uid, patientId, 'glucose', data);
   };
+  
   const handleSaveBloodPressure = async (data: any) => {
-    if (!userId || !patientId) return;
-    const db = getDatabase();
-    const refBP = ref(db, `patients/${userId}/${patientId}/bloodPressure`);
-    await push(refBP, data);
+    if (!user?.uid || !patientId) return;
+    await addHealthMetricSecure(user.uid, patientId, 'bloodPressure', data);
   };
+  
   const handleSaveTemperature = async (data: any) => {
-    if (!userId || !patientId) return;
-    const db = getDatabase();
-    const refTemp = ref(db, `patients/${userId}/${patientId}/temperature`);
-    await push(refTemp, data);
+    if (!user?.uid || !patientId) return;
+    await addHealthMetricSecure(user.uid, patientId, 'temperature', data);
   };
+  
   const handleSaveOxygen = async (data: any) => {
-    if (!userId || !patientId) return;
-    const db = getDatabase();
-    const refOxy = ref(db, `patients/${userId}/${patientId}/oxygen`);
-    await push(refOxy, data);
+    if (!user?.uid || !patientId) return;
+    await addHealthMetricSecure(user.uid, patientId, 'oxygen', data);
   };
+  
   const handleSaveHeartRate = async (data: any) => {
-    if (!userId || !patientId) return;
-    const db = getDatabase();
-    const refHR = ref(db, `patients/${userId}/${patientId}/heartRate`);
-    await push(refHR, data);
+    if (!user?.uid || !patientId) return;
+    await addHealthMetricSecure(user.uid, patientId, 'heartRate', data);
   };
+  
   const handleSaveWeight = async (data: any) => {
-    if (!userId || !patientId) return;
-    const db = getDatabase();
-    const refWeight = ref(db, `patients/${userId}/${patientId}/weight`);
-    await push(refWeight, data);
+    if (!user?.uid || !patientId) return;
+    await addHealthMetricSecure(user.uid, patientId, 'weight', data);
   };
 
   // Funções de edição (update por id)
   const handleEditGlucose = async (updated: any) => {
-    if (!userId || !patientId || !updated || !updated.id) return;
-    const db = getDatabase();
-    const glucoseRef = ref(db, `patients/${userId}/${patientId}/glucose/${updated.id}`);
-    await update(glucoseRef, updated);
+    if (!user?.uid || !patientId || !updated || !updated.id) return;
+    const { id, ...dataToSave } = updated;
+    await updateHealthMetricSecure(user.uid, patientId, 'glucose', id, dataToSave);
   };
+  
   const handleEditBloodPressure = async (updated: any) => {
-    if (!userId || !patientId || !updated || !updated.id) return;
-    const db = getDatabase();
-    const bpRef = ref(db, `patients/${userId}/${patientId}/bloodPressure/${updated.id}`);
-    await update(bpRef, updated);
+    if (!user?.uid || !patientId || !updated || !updated.id) return;
+    const { id, ...dataToSave } = updated;
+    await updateHealthMetricSecure(user.uid, patientId, 'bloodPressure', id, dataToSave);
   };
+  
   const handleEditTemperature = async (updated: any) => {
-    if (!userId || !patientId || !updated || !updated.id) return;
-    const db = getDatabase();
-    const tempRef = ref(db, `patients/${userId}/${patientId}/temperature/${updated.id}`);
-    await update(tempRef, updated);
+    if (!user?.uid || !patientId || !updated || !updated.id) return;
+    const { id, ...dataToSave } = updated;
+    await updateHealthMetricSecure(user.uid, patientId, 'temperature', id, dataToSave);
   };
+  
   const handleEditOxygen = async (updated: any) => {
-    if (!userId || !patientId || !updated || !updated.id) return;
-    const db = getDatabase();
-    const oxyRef = ref(db, `patients/${userId}/${patientId}/oxygen/${updated.id}`);
-    await update(oxyRef, updated);
+    if (!user?.uid || !patientId || !updated || !updated.id) return;
+    const { id, ...dataToSave } = updated;
+    await updateHealthMetricSecure(user.uid, patientId, 'oxygen', id, dataToSave);
   };
+  
   const handleEditHeartRate = async (updated: any) => {
-    if (!userId || !patientId || !updated || !updated.id) return;
-    const db = getDatabase();
-    const hrRef = ref(db, `patients/${userId}/${patientId}/heartRate/${updated.id}`);
-    await update(hrRef, updated);
+    if (!user?.uid || !patientId || !updated || !updated.id) return;
+    const { id, ...dataToSave } = updated;
+    await updateHealthMetricSecure(user.uid, patientId, 'heartRate', id, dataToSave);
   };
+  
   const handleEditWeight = async (updated: any) => {
-    if (!userId || !patientId || !updated || !updated.id) return;
-    const db = getDatabase();
-    const refWeight = ref(db, `patients/${userId}/${patientId}/weight/${updated.id}`);
-    const { id, ...dataToSave } = updated || {};
-    await update(refWeight, dataToSave);
+    if (!user?.uid || !patientId || !updated || !updated.id) return;
+    const { id, ...dataToSave } = updated;
+    await updateHealthMetricSecure(user.uid, patientId, 'weight', id, dataToSave);
   };
 
   // Adicionar observação
   const handleAddObservation = async (text: string) => {
-    if (!userId || !patientId) return;
-    const db = getDatabase(app);
-    const obsRef = ref(db, `patients/${userId}/${patientId}/observations`);
-    const newObsRef = push(obsRef);
-    await set(newObsRef, {
-      id: newObsRef.key,
-      text,
-      createdAt: new Date().toISOString(),
-    });
+    if (!user?.uid || !patientId) return;
+    
+    try {
+      const newObservation = {
+        text,
+        date: new Date().toISOString(),
+        authorId: user.uid
+      };
+      
+      await addHealthMetricSecure(user.uid, patientId, 'observations', newObservation);
+    } catch (error) {
+      console.error('Erro ao adicionar observação:', error);
+    }
   };
 
   // Editar observação
   const handleEditObservation = async (id: string, text: string) => {
-    if (!userId || !patientId) return;
-    const db = getDatabase(app);
-    const obsRef = ref(db, `patients/${userId}/${patientId}/observations/${id}`);
-    await update(obsRef, { text });
+    if (!user?.uid || !patientId) return;
+    
+    try {
+      await updateHealthMetricSecure(user.uid, patientId, 'observations', id, { text });
+    } catch (error) {
+      console.error('Erro ao editar observação:', error);
+    }
   };
 
   // Excluir observação
   const handleDeleteObservation = async (id: string) => {
-    if (!userId || !patientId) return;
-    const db = getDatabase(app);
-    const obsRef = ref(db, `patients/${userId}/${patientId}/observations/${id}`);
-    await remove(obsRef);
+    if (!user?.uid || !patientId) return;
+    
+    try {
+      await removeHealthMetricSecure(user.uid, patientId, 'observations', id);
+    } catch (error) {
+      console.error('Erro ao excluir observação:', error);
+    }
   };
 
   return (
@@ -432,10 +473,6 @@ const PatientDetailPage = () => {
 };
 
 export default PatientDetailPage;
-
-function fetchPatientFromFirebase() {
-  throw new Error('Function not implemented.');
-}
 
 function normalizePatient(data: any, patientId: string) {
   return {

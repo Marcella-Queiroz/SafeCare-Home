@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { INPUT_LIMITS } from '@/constants/inputLimits';
+import { validateMedication } from '@/utils/validations';
 
 interface EditMedicationModalProps {
   open: boolean;
@@ -60,8 +61,10 @@ const EditMedicationModal = ({ open, onClose, medication, onSave, userName }: Ed
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name || !dosage || !frequency) {
-      setError('Preencha os campos obrigatórios');
+    // Validação usando função padronizada
+    const validation = validateMedication(name, dosage, frequency);
+    if (!validation.valid) {
+      setError(validation.errors.join(', '));
       return;
     }
     

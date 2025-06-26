@@ -15,11 +15,10 @@ import {
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
 } from 'firebase/auth';
+import { getDatabase, ref, get, set } from 'firebase/database';
 
 interface User {
-  displayName: string;
   uid: string;
-  id: string;
   name: string;
   email: string;
   role: string;
@@ -28,8 +27,9 @@ interface User {
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   register: (
     name: string,
     email: string,
@@ -37,6 +37,7 @@ interface AuthContextType {
     role: string
   ) => Promise<boolean>;
   resetPassword: (email: string) => Promise<boolean>;
+  updateUserData: (updates: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -52,29 +53,50 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Função auxiliar para buscar dados do usuário no banco
+  const fetchUserData = async (firebaseUser: any): Promise<User> => {
+    try {
+      const db = getDatabase();
+      const userRef = ref(db, `users/${firebaseUser.uid}`);
+      const snapshot = await get(userRef);
+      
+      if (snapshot.exists()) {
+        const userData = snapshot.val();
+        return {
+          uid: firebaseUser.uid,
+          name: userData.name || firebaseUser.displayName || firebaseUser.email?.split('@')[0] || '',
+          email: firebaseUser.email || '',
+          role: userData.role || 'Usuário',
+        };
+      }
+    } catch (error) {
+      console.error('Erro ao buscar dados do usuário:', error);
+    }
+    
+    // Fallback se não conseguir buscar do banco
+    return {
+      uid: firebaseUser.uid,
+      name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || '',
+      email: firebaseUser.email || '',
+      role: 'Usuário',
+    };
+  };
 
   // Sincroniza com Firebase Auth
   useEffect(() => {
     const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const userData: User = {
-          uid: firebaseUser.uid,
-          id: firebaseUser.uid,
-          name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || '',
-          email: firebaseUser.email || '',
-          role: 'Usuário', // Pode ser ajustado conforme necessário
-        };
+        const userData = await fetchUserData(firebaseUser);
         setUser(userData);
         setIsAuthenticated(true);
-        localStorage.setItem('safecare-user', JSON.stringify(userData));
-        localStorage.setItem('safecare-auth', 'true');
       } else {
         setUser(null);
         setIsAuthenticated(false);
-        localStorage.removeItem('safecare-user');
-        localStorage.removeItem('safecare-auth');
       }
+      setIsLoading(false);
     });
 
     return () => unsubscribe();
@@ -86,18 +108,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const result = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = result.user;
 
-      const userData: User = {
-        uid: firebaseUser.uid,
-        id: firebaseUser.uid,
-        name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || '',
-        email: firebaseUser.email || '',
-        role: 'Usuário',
-      };
-
+      const userData = await fetchUserData(firebaseUser);
       setUser(userData);
       setIsAuthenticated(true);
-      localStorage.setItem('safecare-user', JSON.stringify(userData));
-      localStorage.setItem('safecare-auth', 'true');
+
       return true;
     } catch (error) {
       console.error('Erro ao logar no Firebase:', error);
@@ -105,18 +119,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const logout = () => {
-    const auth = getAuth();
-    signOut(auth)
-      .then(() => {
-        setUser(null);
-        setIsAuthenticated(false);
-        localStorage.removeItem('safecare-user');
-        localStorage.removeItem('safecare-auth');
-      })
-      .catch((error) => {
-        console.error('Erro ao fazer logout:', error);
-      });
+  const logout = async () => {
+    try {
+      const auth = getAuth();
+      await signOut(auth);
+      // Os estados serão atualizados automaticamente pelo onAuthStateChanged
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
   };
 
   const register = async (
@@ -132,18 +142,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const userData: User = {
         uid: firebaseUser.uid,
-        id: firebaseUser.uid,
         name: name,
         email: firebaseUser.email || '',
         role: role,
       };
 
+      // Salva os dados do usuário no banco de dados
+      const db = getDatabase();
+      const userRef = ref(db, `users/${firebaseUser.uid}`);
+      await set(userRef, {
+        name: name,
+        email: firebaseUser.email,
+        role: role,
+        createdAt: new Date().toISOString()
+      });
+
       setUser(userData);
       setIsAuthenticated(true);
-      localStorage.setItem('safecare-user', JSON.stringify(userData));
-      localStorage.setItem('safecare-auth', 'true');
-
-      // Opcional: você pode salvar o userData em um banco de dados como Firestore
 
       return true;
     } catch (error) {
@@ -163,13 +178,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateUserData = (updates: Partial<User>) => {
+    if (user) {
+      setUser({ ...user, ...updates });
+    }
+  };
+
   const value: AuthContextType = {
     isAuthenticated,
     user,
+    isLoading,
     login,
     logout,
     register,
     resetPassword,
+    updateUserData,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

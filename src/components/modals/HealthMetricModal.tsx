@@ -8,6 +8,7 @@ import BloodPressureMetric from '../patient/healthMetrics/BloodPressureMetric';
 import TemperatureMetric from '../patient/healthMetrics/TemperatureMetric';
 import OxygenMetric from '../patient/healthMetrics/OxygenMetric';
 import HeartRateMetric from '../patient/healthMetrics/HeartRateMetric';
+import { toArray } from '@/utils/dataUtils';
 
 type HealthMetricType = 'bloodPressure' | 'weight' | 'oxygen' | 'temperature' | 'glucose' | 'heartRate';
 
@@ -30,17 +31,6 @@ interface HealthMetricModalProps {
   setEditingHeartRate?: (record: any) => void;
   setEditHeartRateModalOpen?: (open: boolean) => void;
   onDeleteRecord?: (id: string) => void;
-}
-
-// Função utilitária para garantir array
-function toArray(records: any) {
-  if (Array.isArray(records)) return records;
-  if (records && typeof records === 'object') {
-    return Object.entries(records).map(([id, data]) =>
-      typeof data === 'object' && data !== null ? { id, ...data } : { id, value: data }
-    );
-  }
-  return [];
 }
 
 const HealthMetricModal = ({
