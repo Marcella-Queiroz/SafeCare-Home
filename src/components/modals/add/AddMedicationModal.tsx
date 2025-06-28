@@ -68,8 +68,6 @@ const AddMedicationModal = ({ open, onClose, userId, patientId, userName, medica
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validação usando função padronizada
     const validation = validateMedication(name, dosage, frequency);
     if (!validation.valid) {
       setError(validation.errors.join(', '));
@@ -90,7 +88,7 @@ const AddMedicationModal = ({ open, onClose, userId, patientId, userName, medica
         dosage,
         frequency,
         time,
-        createdBy: userName,
+        authorId: userId,
       };
       medications.push(newMedication);
       await update(patientRef, { medications });
@@ -198,10 +196,11 @@ const AddMedicationModal = ({ open, onClose, userId, patientId, userName, medica
             <Grid size={{ xs:12, md:6 }}>
               <TextField
                 label="Horário"
+                type="time"
                 value={time}
                 onChange={e => setTime(e.target.value)}
                 fullWidth
-                inputProps={{ maxLength: INPUT_LIMITS.TIME }}
+                InputLabelProps={{ shrink: true }}
                 disabled={loading}
               />
             </Grid>

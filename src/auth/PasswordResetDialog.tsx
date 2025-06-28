@@ -12,6 +12,7 @@ import {
   Box
 } from "@mui/material";
 import { Mail, X as CloseIcon } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 interface PasswordResetDialogProps {
   isOpen: boolean;
@@ -23,17 +24,33 @@ interface PasswordResetDialogProps {
 const PasswordResetDialog = ({ isOpen, onOpenChange, email, showToast }: PasswordResetDialogProps) => {
   const [resetEmail, setResetEmail] = useState(email);
   const [isResetting, setIsResetting] = useState(false);
+  const { resetPassword } = useAuth();
 
-  const handleResetPassword = (e: React.FormEvent) => {
+  const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!resetEmail || !resetEmail.trim()) {
+      showToast("Por favor, informe um email válido.", "error");
+      return;
+    }
+
     setIsResetting(true);
 
-    setTimeout(() => {
+    try {
+      const success = await resetPassword(resetEmail);
+      
+      if (success) {
+        onOpenChange(false);
+        showToast("Email de recuperação enviado com sucesso! Verifique sua caixa de entrada.", "success");
+      } else {
+        showToast("Erro ao enviar email de recuperação. Verifique se o email está correto.", "error");
+      }
+    } catch (error) {
+      console.error("Erro ao resetar senha:", error);
+      showToast("Erro ao enviar email de recuperação. Tente novamente.", "error");
+    } finally {
       setIsResetting(false);
-      onOpenChange(false);
-
-      showToast("Verifique sua caixa de entrada para redefinir sua senha.", "success");
-    }, 1500);
+    }
   };
 
   return (

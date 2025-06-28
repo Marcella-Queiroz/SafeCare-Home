@@ -60,8 +60,6 @@ const EditMedicationModal = ({ open, onClose, medication, onSave, userName }: Ed
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validação usando função padronizada
     const validation = validateMedication(name, dosage, frequency);
     if (!validation.valid) {
       setError(validation.errors.join(', '));
@@ -83,7 +81,6 @@ const EditMedicationModal = ({ open, onClose, medication, onSave, userName }: Ed
       
     } catch (err) {
       setError('Erro ao editar medicamento');
-      console.error(err);
       setLoading(false);
     }
   };
@@ -183,10 +180,11 @@ const EditMedicationModal = ({ open, onClose, medication, onSave, userName }: Ed
             <Grid size={{ xs:12, md:6 }}>
               <TextField
                 label="Horário"
+                type="time"
                 value={time}
                 onChange={e => setTime(e.target.value)}
                 fullWidth
-                inputProps={{ maxLength: INPUT_LIMITS.TIME }}
+                InputLabelProps={{ shrink: true }}
                 disabled={loading}
               />
             </Grid>

@@ -1,5 +1,4 @@
-//Modal novo paciente
-//Permite o cadastro de um novo paciente, e armazenamento dos dados no Firebase
+//Modal para cadastro de novos pacientes
 
 import { useState, useEffect } from 'react';
 import {
@@ -19,38 +18,12 @@ import {
 import Grid from '@mui/material/Grid';
 import CloseIcon from '@mui/icons-material/Close';
 import { useAuth } from "@/contexts/AuthContext";
-
-// Importações do Firebase
 import { getDatabase, ref, push, set } from "firebase/database";
 import { app } from "@/services/firebaseConfig";
 import { INPUT_LIMITS } from '@/constants/inputLimits';
-import type { Metric, BloodPressure } from '../../../pages/PatientsPage';
 import { calcularIdade } from '@/utils/dateUtils';
 import { validatePatientData } from '@/utils/validations';
-
-export interface Patient {
-  id: string;
-  name: string;
-  cpf: string;
-  age: number;
-  birthDate?: string;
-  gender?: string;
-  phone?: string;
-  address?: string;
-  conditions: string[];
-  lastCheck?: string;
-  weight: Metric[];
-  glucose: Metric[];
-  bloodPressure: BloodPressure[];
-  temperature: Metric[];
-  oxygen: Metric[];
-  heartRate: Metric[];
-  medications?: any[];
-  appointments?: any[];
-  createdBy?: string; 
-  editedBy?: string;  
-  editedAt?: string;  
-}
+import { Patient, Metric, BloodPressure } from '../../../types/patient';
 
 export interface AddPatientModalProps {
   open: boolean;
@@ -72,9 +45,8 @@ const AddPatientModal = ({ open, onClose, userId, onAdd, initialCPF }: AddPatien
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [cpf, setCpf] = useState(initialCPF || '');
-  const { user } = useAuth(); // Certifique-se de ter acesso ao usuário autenticado
+  const { user } = useAuth();
 
-  // Sempre que a data de nascimento mudar, atualiza a idade
   useEffect(() => {
     if (birthDate) {
       const calculatedAge = calcularIdade(birthDate);
@@ -88,7 +60,6 @@ const AddPatientModal = ({ open, onClose, userId, onAdd, initialCPF }: AddPatien
     if (initialCPF) setCpf(initialCPF);
   }, [initialCPF]);
 
-  // Limpa todos os campos quando o modal é fechado
   useEffect(() => {
     if (!open) {
       setName('');
@@ -109,8 +80,6 @@ const AddPatientModal = ({ open, onClose, userId, onAdd, initialCPF }: AddPatien
     e.preventDefault();
     setError('');
     setSuccess(false);
-
-    // Validação usando função padronizada
     const validation = validatePatientData({
       name,
       cpf,
@@ -157,8 +126,6 @@ const AddPatientModal = ({ open, onClose, userId, onAdd, initialCPF }: AddPatien
         medications: [],
         appointments: [],
       });
-
-      // Adiciona referência para o usuário
       const userPatientsRef = ref(db, `userPatients/${userId}/${patientId}`);
       await set(userPatientsRef, true);
 

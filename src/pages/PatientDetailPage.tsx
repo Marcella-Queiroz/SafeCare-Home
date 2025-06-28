@@ -1,4 +1,5 @@
-//Pagina de detalhes do paciente
+
+// Página de visualização detalhada dos dados do paciente com métricas de saúde, medicamentos e observações
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -6,11 +7,11 @@ import { Box, Typography, Button } from '@mui/material';
 import PageContainer from '@/components/PageContainer';
 import { getDatabase, ref, get, set, push, update, remove, onValue } from "firebase/database";
 import { app } from '@/services/firebaseConfig';
-import PatientDetailContent, { Patient } from '@/components/patient/PatientDetailContent';
+import PatientDetailContent from '@/components/patient/PatientDetailContent';
+import { Patient, Observation } from '../types/patient';
 import PatientModalsContainer from '@/components/patient/PatientModalsContainer';
 import { useAuth } from '@/contexts/AuthContext';
 import ObservationsSection from '@/components/patient/ObservationsSection';
-import type { Observation } from '@/components/patient/ObservationsSection';
 import { convertMetricsToArray } from '@/utils/dataUtils';
 import { 
   getPatientWithAccess, 
@@ -18,7 +19,10 @@ import {
   updatePatientSecure,
   addHealthMetricSecure,
   updateHealthMetricSecure,
-  removeHealthMetricSecure 
+  removeHealthMetricSecure,
+  isPatientBeingShared,
+  getPatientSharedWithUsers,
+  getUserNameById
 } from '@/utils/securityUtils';
 
 type HealthMetricType = 'bloodPressure' | 'weight' | 'oxygen' | 'temperature' | 'glucose' | 'heartRate';
@@ -95,13 +99,10 @@ const PatientDetailPage = () => {
       }
 
       try {
-        // Verifica acesso e carrega dados do paciente de forma segura
         const patientData = await getPatientWithAccess(user.uid, patientId);
         
         if (patientData) {
           setCurrentPatient(normalizePatient(patientData, patientId));
-          
-          // Carrega observações se existirem
           if (patientData.observations) {
             setObservations(convertMetricsToArray(patientData.observations));
           } else {
@@ -120,7 +121,6 @@ const PatientDetailPage = () => {
 
     loadPatientData();
     
-    // Configurar listener em tempo real apenas se tiver acesso
     if (patientId && user?.uid) {
       hasPatientAccess(user.uid, patientId).then(hasAccess => {
         if (hasAccess) {
@@ -171,8 +171,6 @@ const PatientDetailPage = () => {
       </PageContainer>
     );
   }
-
-  // Converte as métricas do paciente para arrays antes de passar para o PatientDetailContent
   const patientWithMetricsArray = convertPatientMetrics(currentPatient);
 
   const handleCloseHealthMetricModal = () => {
@@ -192,8 +190,6 @@ const PatientDetailPage = () => {
     setMedicationToDelete(index);
     setDeleteModalOpen(true);
   };
-
-  // Salva edição de medicamento no Firebase
   const handleSaveMedication = async (updatedMedication: any) => {
     if (!user?.uid || !patientId || selectedMedication?.index === undefined) return;
     
@@ -221,8 +217,6 @@ const PatientDetailPage = () => {
     setAppointmentToDelete(index);
     setDeleteModalOpen(true);
   };
-
-  // Salva edição de agendamento no Firebase
   const handleSaveAppointment = async (updatedAppointment: any) => {
     if (!user?.uid || !patientId || selectedAppointment?.index === undefined) return;
     
@@ -270,7 +264,6 @@ const PatientDetailPage = () => {
   };
 
   const handleSavePatient = (updatedPatient: any) => {
-    // Os dados já são atualizados automaticamente via listener
     setEditPatientModalOpen(false);
   };
 
@@ -303,8 +296,6 @@ const PatientDetailPage = () => {
     if (!user?.uid || !patientId) return;
     await addHealthMetricSecure(user.uid, patientId, 'weight', data);
   };
-
-  // Funções de edição (update por id)
   const handleEditGlucose = async (updated: any) => {
     if (!user?.uid || !patientId || !updated || !updated.id) return;
     const { id, ...dataToSave } = updated;
@@ -340,15 +331,13 @@ const PatientDetailPage = () => {
     const { id, ...dataToSave } = updated;
     await updateHealthMetricSecure(user.uid, patientId, 'weight', id, dataToSave);
   };
-
-  // Adicionar observação
   const handleAddObservation = async (text: string) => {
     if (!user?.uid || !patientId) return;
     
     try {
       const newObservation = {
         text,
-        date: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
         authorId: user.uid
       };
       
@@ -357,8 +346,6 @@ const PatientDetailPage = () => {
       console.error('Erro ao adicionar observação:', error);
     }
   };
-
-  // Editar observação
   const handleEditObservation = async (id: string, text: string) => {
     if (!user?.uid || !patientId) return;
     
@@ -368,8 +355,6 @@ const PatientDetailPage = () => {
       console.error('Erro ao editar observação:', error);
     }
   };
-
-  // Excluir observação
   const handleDeleteObservation = async (id: string) => {
     if (!user?.uid || !patientId) return;
     

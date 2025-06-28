@@ -1,40 +1,16 @@
-//Exibe e organiza informações detalhadas sobre um paciente.
+// Componente principal de exibição e organização das informações detalhadas do paciente
 
 import PatientHeader from './PatientHeader';
 import HealthMetricsGrid from './HealthMetricsGrid';
 import MedicationsSection from './MedicationsSection';
 import AppointmentsSection from './AppointmentsSection';
-import ObservationsSection, { Observation } from './ObservationsSection';
+import ObservationsSection from './ObservationsSection';
 import { Typography, Box } from '@mui/material';
 import { ReactNode } from 'react';
 
-type HealthMetricType = 'bloodPressure' | 'weight' | 'oxygen' | 'temperature' | 'glucose' | 'heartRate';
+import { Patient, Observation } from '../../types/patient';
 
-export interface Patient {
-  id: string;
-  name: string;
-  status: string;
-  age: number;
-  cpf: string;
-  birthDate: string;
-  gender?: string;
-  address?: string;
-  phone?: string;
-  conditions: string[];
-  weight?: any[];
-  glucose?: any[];
-  temperature?: any[];
-  bloodPressure?: any[];
-  heartRate?: any[];
-  oxygen?: any[];
-  lastCheck?: string;
-  medications?: any[];
-  appointments?: any[];
-  observations?: Observation[];
-  createdBy?: string;
-  editedBy?: string; 
-  editedAt?: string; 
-}
+type HealthMetricType = 'bloodPressure' | 'weight' | 'oxygen' | 'temperature' | 'glucose' | 'heartRate';
 
 interface PatientDetailContentProps {
   patient: Patient;
@@ -47,7 +23,6 @@ interface PatientDetailContentProps {
   onAddAppointment: () => void;
   onEditAppointment: (appointment: any, index: number) => void;
   onDeleteAppointment: (index: number) => void;
-  // Adicione as props abaixo:
   observations: Observation[];
   onAddObservation: (text: string) => void;
   onEditObservation: (id: string, text: string) => void;
@@ -110,7 +85,6 @@ const PatientDetailContent = ({
         onDeleteAppointment={onDeleteAppointment}
       />
 
-      {/* Adicione a seção de observações */}
       <ObservationsSection
         observations={observations}
         onAdd={onAddObservation}

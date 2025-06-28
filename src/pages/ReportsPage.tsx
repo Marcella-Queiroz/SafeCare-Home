@@ -1,4 +1,5 @@
-//Pagina de criação de relatórios
+
+// Página de criação e gerenciamento de relatórios médicos dos pacientes
 
 import { useState, useEffect } from 'react';
 import {
@@ -34,8 +35,6 @@ const ReportsPage = () => {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-
-  // Buscar pacientes do Firebase usando função segura
   useEffect(() => {
     const loadPatients = async () => {
       if (!user?.uid) {
@@ -60,13 +59,12 @@ const ReportsPage = () => {
     if (user?.uid) {
       const db = getDatabase();
       
-      // Listener em tempo real para mudanças na lista de pacientes do usuário
       const userPatientsRef = ref(db, `userPatients/${user.uid}`);
       const unsubscribeUserPatients = onValue(userPatientsRef, async (snapshot) => {
         const patientIdsObj = snapshot.val();
         if (!patientIdsObj) {
           setPatients([]);
-          setSelectedPatient(''); // Limpar seleção se não há pacientes
+          setSelectedPatient('');
           return;
         }
 
@@ -78,8 +76,6 @@ const ReportsPage = () => {
             createdAt: patient.createdAt || '',
           }));
           setPatients(patientsArray);
-          
-          // Se o paciente selecionado foi removido, limpar a seleção
           const currentPatientIds = patientsArray.map(p => p.id);
           if (selectedPatient && !currentPatientIds.includes(selectedPatient)) {
             setSelectedPatient('');
@@ -90,10 +86,8 @@ const ReportsPage = () => {
         }
       });
 
-      // Listener adicional para mudanças nos dados globais dos pacientes
       const patientsGlobalRef = ref(db, 'patientsGlobal');
       const unsubscribePatientsGlobal = onValue(patientsGlobalRef, async () => {
-        // Recarregar a lista quando houver mudanças nos dados globais
         try {
           const patientsData = await getUserPatientsWithData(user.uid);
           const patientsArray = patientsData.map(patient => ({
@@ -103,7 +97,6 @@ const ReportsPage = () => {
           }));
           setPatients(patientsArray);
           
-          // Verificar se o paciente selecionado ainda existe
           const currentPatientIds = patientsArray.map(p => p.id);
           if (selectedPatient && !currentPatientIds.includes(selectedPatient)) {
             setSelectedPatient('');
@@ -123,25 +116,33 @@ const ReportsPage = () => {
     }
   }, [user?.uid, selectedPatient]);
 
-  // Limpar datas ao trocar de paciente
   useEffect(() => {
     setStartDate('');
     setEndDate('');
   }, [selectedPatient]);
-
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toLocaleDateString('en-CA');
+  
   const selectedPatientObj = patients.find(p => p.id === selectedPatient);
-  const patientCreatedAt = selectedPatientObj?.createdAt
-    ? selectedPatientObj.createdAt.split('T')[0]
-    : '';
+  
+  let patientCreatedAt = '';
+  if (selectedPatientObj?.createdAt) {
+    try {
+      const patientDate = new Date(selectedPatientObj.createdAt);
+      patientCreatedAt = patientDate.toLocaleDateString('en-CA');
+    } catch (error) {
+      patientCreatedAt = '1900-01-01';
+    }
+  }
 
   const isStartDateValid =
     !startDate ||
-    (startDate >= (patientCreatedAt || '1900-01-01') && startDate <= today);
+    (patientCreatedAt && startDate >= patientCreatedAt && startDate <= today) ||
+    (!patientCreatedAt && startDate <= today);
 
   const isEndDateValid =
     !endDate ||
-    (endDate >= (patientCreatedAt || '1900-01-01') && endDate <= today);
+    (patientCreatedAt && endDate >= patientCreatedAt && endDate <= today) ||
+    (!patientCreatedAt && endDate <= today);
 
   const isCreateDisabled =
     !selectedPatient ||
@@ -165,7 +166,6 @@ const ReportsPage = () => {
       const db = getDatabase(app);
       const reportsRef = ref(db, `reports/${user.uid}`);
 
-      // Busque todos os dados do paciente do banco usando estrutura global
       const patientRef = ref(db, `patientsGlobal/${selectedPatient}`);
       const snapshot = await get(patientRef);
       const patientData = snapshot.val();
@@ -202,7 +202,7 @@ const ReportsPage = () => {
       await push(reportsRef, reportData);
 
       setSuccess(true);
-      setTimeout(() => navigate('/patients?tab=relatorios'), 800);
+      setTimeout(() => navigate('/patients?tab=relatorios'), 1000);
     } catch (err) {
       setError('Erro ao salvar relatório.');
     } finally {
@@ -264,8 +264,8 @@ const ReportsPage = () => {
                     error={!!startDate && !isStartDateValid}
                     helperText={
                       !!startDate && !isStartDateValid
-                        ? `A data inicial deve ser entre ${patientCreatedAt || 'o cadastro'} e hoje.`
-                        : ''
+                        ? `A data inicial deve ser entre ${patientCreatedAt || '1900-01-01'} e ${today}.`
+                        : selectedPatient ? `Período permitido: ${patientCreatedAt || '1900-01-01'} até ${today}` : ''
                     }
                     disabled={!selectedPatient}
                   />
@@ -289,8 +289,8 @@ const ReportsPage = () => {
                     error={!!endDate && !isEndDateValid}
                     helperText={
                       !!endDate && !isEndDateValid
-                        ? `A data final deve ser entre ${patientCreatedAt || 'o cadastro'} e hoje.`
-                        : ''
+                        ? `A data final deve ser entre ${patientCreatedAt || '1900-01-01'} e ${today}.`
+                        : selectedPatient ? `Período permitido: ${patientCreatedAt || '1900-01-01'} até ${today}` : ''
                     }
                     disabled={!selectedPatient}
                   />

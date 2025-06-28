@@ -1,4 +1,4 @@
-// Exibe o grupo de cards das métricas de saúde
+// Componente de grade responsável pela exibição organizada das métricas de saúde do paciente
 
 import { Typography, Card, CardContent, Box } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';

@@ -1,4 +1,4 @@
-//Limites de textos
+// Constantes com limites de caracteres para campos de entrada do sistema
 
 export const INPUT_LIMITS = {
   NAME: 50,

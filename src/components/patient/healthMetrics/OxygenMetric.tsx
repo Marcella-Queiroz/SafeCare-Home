@@ -1,4 +1,4 @@
-//Exibe o histórico de Saturação
+// Componente para exibição do histórico de saturação de oxigênio do paciente
 
 import OpacityIcon from '@mui/icons-material/Opacity';
 import HealthMetricDisplay from './HealthMetricDisplay';

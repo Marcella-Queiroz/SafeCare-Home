@@ -1,4 +1,4 @@
-//Exibe registros de peso, altura e IMC
+// Componente para exibição dos registros de peso, altura e cálculo do IMC do paciente
 
 import {
   Typography,

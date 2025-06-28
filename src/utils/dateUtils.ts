@@ -1,3 +1,5 @@
+// Utilitários para manipulação e cálculos com datas
+
 export function calcularIdade(dataNascimento: string): number | '' {
   if (!dataNascimento) return '';
   const hoje = new Date();

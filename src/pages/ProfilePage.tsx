@@ -1,4 +1,5 @@
-// Pagina de Perfil do Usuário
+
+// Página de perfil do usuário com funcionalidades de visualização e edição de dados pessoais
 
 import { useEffect, useState } from 'react';
 import { getDatabase, ref, get, update } from "firebase/database";
@@ -48,7 +49,6 @@ const ProfilePage = () => {
   const { user, logout, updateUserData } = useAuth();
   const navigate = useNavigate();
 
-  // Estados do formulário
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -61,8 +61,6 @@ const ProfilePage = () => {
   const [newPassword, setNewPassword] = useState('');
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [showPasswordField, setShowPasswordField] = useState(false);
-
-  // Busca os dados do usuário do Firebase sempre que abrir a página ou após edição
   useEffect(() => {
     if (user?.uid) {
       const db = getDatabase();
@@ -87,8 +85,6 @@ const ProfilePage = () => {
     setEditing((prev) => !prev);
     setError('');
     setSuccess(false);
-
-    // Se for cancelar a edição, aqui recarrega os dados do banco
     if (editing) {
       const db = getDatabase();
       const userRef = ref(db, `users/${user.uid}`);
@@ -148,7 +144,6 @@ const ProfilePage = () => {
       const userRef = ref(db, `users/${user.uid}`);
       await update(userRef, { name, email, phone, role });
       
-      // Atualiza o contexto com os novos dados
       updateUserData({ name, email, role });
       
       setSuccess(true);
@@ -192,7 +187,7 @@ const ProfilePage = () => {
             await updatePassword(currentUser, newPassword);
             setSuccess(true);
             setNewPassword('');
-            setShowPasswordField(false); // <-- Esconde o campo após sucesso
+            setShowPasswordField(false);
           } catch (reauthErr: any) {
             setError('Falha na reautenticação: ' + (reauthErr.message || ''));
           }

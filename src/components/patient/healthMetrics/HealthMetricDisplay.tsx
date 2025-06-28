@@ -1,4 +1,4 @@
-//Layout para exibição de métricas de saúde
+// Componente de layout padronizado para exibição de métricas de saúde do paciente
 
 import { Tooltip, Typography } from "@mui/material";
 import { InfoIcon } from "lucide-react";
@@ -19,8 +19,6 @@ const HealthMetricDisplay = ({
 }: HealthMetricDisplayProps) => {
   return (
     <>
-        {/* Título com ícone e tooltip */}
-
         <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
           {icon}
           {title}

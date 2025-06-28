@@ -35,8 +35,6 @@ const EditHeartRateModal = ({ open, onClose, record, onSave, patientCreatedAt, u
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
-    // Validação usando função padronizada
     const validation = validateHeartRate(value, date, patientCreatedAt);
     if (!validation.valid) {
       setError(validation.error);

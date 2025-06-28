@@ -6,12 +6,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import NotesOutlinedIcon from '@mui/icons-material/NotesOutlined';
-
-export interface Observation {
-  id: string;
-  text: string;
-  createdAt: string;
-}
+import { Observation } from '../../types/patient';
 
 interface ObservationsSectionProps {
   observations: Observation[];
@@ -70,7 +65,14 @@ const ObservationsSection = ({ observations, onAdd, onEdit, onDelete }: Observat
             <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1.5 }}>
               <Box>
                 <Typography variant="body2">{obs.text}</Typography>
-                <Typography variant="caption" color="text.secondary">{new Date(obs.createdAt).toLocaleString()}</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {(() => {
+                    const dateToShow = obs.createdAt || (obs as any).date;
+                    return dateToShow && !isNaN(new Date(dateToShow).getTime()) 
+                      ? new Date(dateToShow).toLocaleString() 
+                      : 'Data não disponível';
+                  })()}
+                </Typography>
               </Box>
               <Box>
                 <IconButton onClick={() => handleOpen(obs)}><EditIcon fontSize="small" /></IconButton>

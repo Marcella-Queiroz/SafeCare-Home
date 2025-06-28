@@ -6,7 +6,6 @@ import {
 import { getDatabase, ref, update } from "firebase/database";
 import { INPUT_LIMITS } from '@/constants/inputLimits';
 
-//Modal para registrar peso e altura de um paciente
 
 interface AddWeightModalProps {
   open: boolean;
@@ -32,7 +31,6 @@ const AddWeightModal = ({ open, onClose, userId, patientId, onSave, userName }: 
       setLoading(false);
       return;
     }
-    // Calculo do IMC
     const weightNum = parseFloat(weight);
     const heightNum = parseFloat(height) / 100;
     const bmi = (weightNum > 0 && heightNum > 0)
@@ -40,14 +38,9 @@ const AddWeightModal = ({ open, onClose, userId, patientId, onSave, userName }: 
       : '';
 
     try {
-      await onSave({ weight, height, date, bmi, createdBy: userName }); // Salva o nome do usuário
-
-      // Atualiza o campo lastCheck do paciente
-      const db = getDatabase();
-      const patientRef = ref(db, `patients/${userId}/${patientId}`);
-      const now = new Date();
-      const lastCheck = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      await update(patientRef, { lastCheck });
+      await onSave({ weight, height, date, bmi, authorId: userId });
+      const { updateLastCheckSecure } = await import('../../../utils/securityUtils');
+      await updateLastCheckSecure(userId, patientId);
 
       setWeight('');
       setHeight('');

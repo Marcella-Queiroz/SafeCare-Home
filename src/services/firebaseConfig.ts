@@ -1,13 +1,9 @@
-//Configuração do Firebase
+// Configuração e inicialização do Firebase para o sistema SafeCare-Home
 
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getDatabase } from "firebase/database";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyDXmeNr6wCZR-6bXVcnb_rqWwZRQrEsQoo",
   authDomain: "safecare-home-1dce7.firebaseapp.com",
@@ -19,7 +15,6 @@ const firebaseConfig = {
   measurementId: "G-S2S8V76NM3"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const database = getDatabase(app);

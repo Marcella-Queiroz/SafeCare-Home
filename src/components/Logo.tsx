@@ -1,4 +1,3 @@
-//Logo do sistema
 
 import { Hospital } from "lucide-react";
 

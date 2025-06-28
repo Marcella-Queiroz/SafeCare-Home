@@ -4,8 +4,8 @@ import {
   TextField, Button, Alert, Typography, Box
 } from '@mui/material';
 
-import { validateCPF } from '@/utils/validations';
-import { findPatientByCPFSecure } from '@/utils/securityUtils';
+import { validateCPF, normalizeCPF } from '../../utils/validations';
+import { findPatientByCPFGlobal } from '@/utils/securityUtils';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface Props {
@@ -31,10 +31,15 @@ const CheckPatientByCPFModal = ({ open, onClose, onFound, onNotFound }: Props) =
       setLoading(false);
       return;
     }
+    const normalizedCPF = normalizeCPF(cpf);
+    if (!validateCPF(normalizedCPF)) {
+      setError('CPF inválido');
+      setLoading(false);
+      return;
+    }
 
     try {
-      // Busca paciente por CPF de forma segura
-      const patient = await findPatientByCPFSecure(user.uid, cpf);
+      const patient = await findPatientByCPFGlobal(normalizedCPF);
       
       setLoading(false);
 
@@ -42,7 +47,7 @@ const CheckPatientByCPFModal = ({ open, onClose, onFound, onNotFound }: Props) =
         setFoundPatient(patient);
       } else {
         setFoundPatient(null);
-        onNotFound(cpf);
+        onNotFound(normalizedCPF);
       }
     } catch (error) {
       console.error('Erro ao buscar paciente:', error);

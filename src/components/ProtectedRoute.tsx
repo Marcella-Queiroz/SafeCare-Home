@@ -8,13 +8,9 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { isAuthenticated, isLoading } = useAuth();
-
-  // Mostra carregamento enquanto verifica autenticação
   if (isLoading) {
     return <div>Carregando...</div>;
   }
-
-  // Redireciona para login se não estiver autenticado
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
   }

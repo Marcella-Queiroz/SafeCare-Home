@@ -15,7 +15,7 @@ import {
   Divider,
 } from "@mui/material";
 import { useState } from "react";
-import { Patient } from "../modals/add/AddPatientModal";
+import { Patient } from "../../types/patient";
 
 interface PatientQuickSearchModalProps {
   open: boolean;

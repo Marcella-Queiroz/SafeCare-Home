@@ -36,14 +36,9 @@ const AddBloodPressureModal = ({ open, onClose, userId, patientId, patientCreate
       return;
     }
     try {
-      await onSave({ systolic, diastolic, date, time, createdBy: userName }); // <-- Adicione createdBy
-
-      // Atualize o campo lastCheck do paciente
-      const db = getDatabase();
-      const patientRef = ref(db, `patients/${userId}/${patientId}`);
-      const now = new Date();
-      const lastCheck = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      await update(patientRef, { lastCheck });
+      await onSave({ systolic, diastolic, date, time, authorId: userId });
+      const { updateLastCheckSecure } = await import('../../../utils/securityUtils');
+      await updateLastCheckSecure(userId, patientId);
 
       setSystolic('');
       setDiastolic('');

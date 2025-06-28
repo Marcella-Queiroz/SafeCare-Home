@@ -1,4 +1,5 @@
-// Página de gerenciamento de pacientes e relatórios
+
+// Página principal de gerenciamento de pacientes com funcionalidades de listagem, criação, compartilhamento e geração de relatórios
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -41,38 +42,7 @@ import {
   grantPatientAccess, 
   revokePatientAccess 
 } from '@/utils/securityUtils';
-
-interface Metric {
-  id: string;
-  value: number | string;
-  date: string;
-}
-
-interface BloodPressure extends Metric {
-  value: string;
-  systolic: number;
-  diastolic: number;
-}
-
-interface Patient {
-  id: string;
-  name: string;
-  age: number;
-  cpf: string;
-  conditions: string[];
-  lastCheck?: string;
-  weight: Metric[];
-  glucose: Metric[];
-  bloodPressure: BloodPressure[];
-  temperature: Metric[];
-  oxygen: Metric[];
-  heartRate: Metric[];
-  medications?: any[];
-  appointments?: any[];
-  createdBy?: string;
-  editedBy?: string;
-  editedAt?: string;
-}
+import { Patient, Metric, BloodPressure, Observation } from "../types/patient";
 
 interface Report {
   observations: any[];
@@ -101,7 +71,6 @@ interface Report {
   [x: string]: any;
 }
 
-// Função para obter o status baseado na pressão arterial
 function getStatusByBloodPressure(
   bloodPressure: BloodPressure[]
 ): "Estável" | "Atenção" {
@@ -121,13 +90,11 @@ function getStatusByBloodPressure(
   }
   return "Atenção";
 }
-
-// Função para obter o último valor de pressão arterial como string
 function getLastBloodPressureString(bloodPressure: BloodPressure[]): string {
   if (Array.isArray(bloodPressure) && bloodPressure.length > 0) {
     const last = bloodPressure[bloodPressure.length - 1];
     if (last && last.value) {
-      return last.value;
+      return String(last.value);
     }
     if (last && last.systolic && last.diastolic) {
       return `${last.systolic}/${last.diastolic}`;
@@ -136,7 +103,6 @@ function getLastBloodPressureString(bloodPressure: BloodPressure[]): string {
   return "-";
 }
 
-// Função para obter o último valor de uma métrica
 function getLastMetricValue(metric: Metric[], suffix: string = ""): string {
   if (Array.isArray(metric) && metric.length > 0) {
     const last = metric[metric.length - 1];
@@ -147,7 +113,6 @@ function getLastMetricValue(metric: Metric[], suffix: string = ""): string {
   return "-";
 }
 
-// Função para converter os dados do paciente
 function convertPatientMetrics(patient: any): Patient {
   if (!patient) return patient;
   const converted = { ...patient };
@@ -159,13 +124,11 @@ function convertPatientMetrics(patient: any): Patient {
   converted.temperature = convertMetricsToArray<Metric>(patient.temperature);
   converted.oxygen = convertMetricsToArray<Metric>(patient.oxygen);
   converted.heartRate = convertMetricsToArray<Metric>(patient.heartRate);
-  // Garante que createdBy e editedBy sejam mantidos
   if (patient.createdBy) converted.createdBy = patient.createdBy;
   if (patient.editedBy) converted.editedBy = patient.editedBy;
+  if (patient.lastCheck) converted.lastCheck = patient.lastCheck;
   return converted;
 }
-
-// Função que gerencia lista de pacientes e relatórios
 const PatientsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -180,8 +143,6 @@ const PatientsPage = () => {
   const [quickSearchOpen, setQuickSearchOpen] = useState(false);
   const [checkCPFModalOpen, setCheckCPFModalOpen] = useState(false);
   const [pendingCPF, setPendingCPF] = useState<string | null>(null);
-
-  // Carrega pacientes do Firebase usando função segura
   useEffect(() => {
     const loadPatients = async () => {
       if (!user?.uid) {
@@ -204,8 +165,6 @@ const PatientsPage = () => {
     };
 
     loadPatients();
-
-    // Listener em tempo real para atualizações
     if (user?.uid) {
       const db = getDatabase();
       const userPatientsRef = ref(db, `userPatients/${user.uid}`);
@@ -230,8 +189,6 @@ const PatientsPage = () => {
       return () => unsubscribe();
     }
   }, [user?.uid]);
-
-  // Carrega relatórios do Firebase
   useEffect(() => {
     if (!user?.uid) return;
     const db = getDatabase(app);
@@ -264,30 +221,21 @@ const PatientsPage = () => {
 
     return () => unsubscribe();
   }, [user?.uid]);
-
-  // Filtra pacientes com base no termo de busca
   const filteredPatients = patients.filter((patient) => {
     const name = (patient.name || "").toLowerCase();
     const search = searchTerm.trim().toLowerCase();
     return name.includes(search);
   });
-
-  // Função para lidar com o clique no paciente
   const handlePatientClick = (patientId: string) => {
     navigate(`/patients/${user?.uid}/${patientId}`);
   };
-
-  // Função para lidar com a mudança de aba
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
-  // Função para abrir o modal de novo relatório
   const handleNewReportClick = () => {
     navigate("/reports");
   };
-
-  // Função para cadastrar paciente usando função segura
   const handleAddPatient = async (dadosPaciente: Omit<Patient, "id">) => {
     if (!user?.uid) return;
 
@@ -304,36 +252,26 @@ const PatientsPage = () => {
         console.error('Erro ao criar paciente');
         return;
       }
-
-      console.log('Paciente criado com sucesso:', patientId);
     } catch (error) {
       console.error('Erro ao adicionar paciente:', error);
     }
   };
-
-  // Compartilhar paciente com outro usuário usando função segura
   const handleSharePatient = async (patientId: string, otherUserId: string) => {
     try {
       await grantPatientAccess(otherUserId, patientId);
-      console.log('Acesso concedido com sucesso');
     } catch (error) {
       console.error('Erro ao compartilhar paciente:', error);
     }
   };
-
-  // Função para excluir paciente (remove só do usuário logado) usando função segura
   const handleDeletePatient = async (patientId: string) => {
     if (!user?.uid || !patientId) return;
 
     try {
       await revokePatientAccess(user.uid, patientId);
-      console.log('Acesso removido com sucesso');
     } catch (error) {
       console.error('Erro ao remover acesso ao paciente:', error);
     }
   };
-
-  //Função para exportar relatório
   const handleExportReport = (report: Report) => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -370,8 +308,6 @@ const PatientsPage = () => {
       : report.appointments
       ? Object.values(report.appointments)
       : [];
-
-    // Cabeçalho
     doc.setFont("helvetica", "normal");
     doc.setFontSize(15);
     doc.setTextColor(33, 33, 33);
@@ -400,8 +336,6 @@ const PatientsPage = () => {
       },
       tableWidth: usableWidth,
     };
-
-    // Dados do paciente
     autoTable(doc, {
       ...autoTableCommon,
       startY: margin.top + 19,
@@ -422,8 +356,6 @@ const PatientsPage = () => {
     });
 
     let y = (doc as any).lastAutoTable.finalY + 4;
-
-    // Condições clínicas
     autoTable(doc, {
       ...autoTableCommon,
       startY: y,
@@ -436,8 +368,6 @@ const PatientsPage = () => {
     });
 
     y = (doc as any).lastAutoTable.finalY + 4;
-
-    // Histórico de indicadores de saúde
     autoTable(doc, {
       ...autoTableCommon,
       startY: y,
@@ -449,8 +379,6 @@ const PatientsPage = () => {
     });
 
     y = (doc as any).lastAutoTable.finalY + 2;
-
-    // Peso corporal
     autoTable(doc, {
       ...autoTableCommon,
       startY: y,
@@ -465,8 +393,6 @@ const PatientsPage = () => {
     });
 
     y = (doc as any).lastAutoTable.finalY + 2;
-
-    // Pressão arterial (removida a coluna de frequência cardíaca)
     autoTable(doc, {
       ...autoTableCommon,
       startY: y,
@@ -482,8 +408,6 @@ const PatientsPage = () => {
     });
 
     y = (doc as any).lastAutoTable.finalY + 2;
-
-    // Frequência Cardíaca (mantida como tabela separada)
     autoTable(doc, {
       ...autoTableCommon,
       startY: y,
@@ -497,8 +421,6 @@ const PatientsPage = () => {
     });
 
     y = (doc as any).lastAutoTable.finalY + 4;
-
-    // Glicose
     autoTable(doc, {
       ...autoTableCommon,
       startY: y,
@@ -512,8 +434,6 @@ const PatientsPage = () => {
     });
 
     y = (doc as any).lastAutoTable.finalY + 2;
-
-    // Medicamentos
     autoTable(doc, {
       ...autoTableCommon,
       startY: y,
@@ -539,8 +459,6 @@ const PatientsPage = () => {
     });
 
     y = (doc as any).lastAutoTable.finalY + 4;
-
-    // Agendamentos
     autoTable(doc, {
       ...autoTableCommon,
       startY: y,
@@ -567,8 +485,6 @@ const PatientsPage = () => {
     });
 
     y = (doc as any).lastAutoTable.finalY + 4;
-
-    // Observações
     if (Array.isArray(report.observations) && report.observations.length > 0) {
       autoTable(doc, {
         ...autoTableCommon,
@@ -598,8 +514,6 @@ const PatientsPage = () => {
       });
       y = (doc as any).lastAutoTable.finalY + 4;
     }
-
-    // Rodapé
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
@@ -928,12 +842,10 @@ const PatientsPage = () => {
         patients={patients}
         onSelect={(patient) => {
           setQuickSearchOpen(false);
-          // Opcional: destaque o paciente na lista ou apenas feche o modal
         }}
         onCreateNew={(searchValue) => {
           setQuickSearchOpen(false);
           setAddPatientModalOpen(true);
-          // Você pode passar searchValue para pré-preencher o nome/email no modal de cadastro
         }}
       />
       <DeleteConfirmationModal
@@ -952,7 +864,5 @@ const PatientsPage = () => {
     </PageContainer>
   );
 };
-
-export type { Metric, BloodPressure };
 
 export default PatientsPage;

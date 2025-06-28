@@ -1,4 +1,5 @@
-//Pagina de login
+
+// Página de autenticação de usuários do sistema SafeCare-Home
 
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -15,10 +16,7 @@ const Index = ({ showToast }: IndexProps) => {
   const hasRedirected = useRef(false);
 
   useEffect(() => {
-    // Não redireciona se ainda está carregando
     if (isLoading) return;
-    
-    // Evita redirecionamentos múltiplos
     if (isAuthenticated && !hasRedirected.current) {
       hasRedirected.current = true;
       navigate("/patients", { replace: true });
@@ -26,8 +24,6 @@ const Index = ({ showToast }: IndexProps) => {
       hasRedirected.current = false;
     }
   }, [isAuthenticated, isLoading, navigate]);
-
-  // Mostra carregamento enquanto verifica autenticação
   if (isLoading) {
     return <div>Carregando...</div>;
   }

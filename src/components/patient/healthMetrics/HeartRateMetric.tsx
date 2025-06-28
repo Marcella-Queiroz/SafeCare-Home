@@ -1,4 +1,4 @@
-//Exibe o histórico de Frequência Cardíaca
+// Componente para exibição do histórico de frequência cardíaca do paciente
 
 import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
 import HealthMetricDisplay from './HealthMetricDisplay';

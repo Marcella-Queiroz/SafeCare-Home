@@ -35,8 +35,6 @@ const EditOxygenModal = ({ open, onClose, record, onSave, patientCreatedAt, user
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
-    // Validação usando função padronizada
     const validation = validateOxygen(value, date, patientCreatedAt);
     if (!validation.valid) {
       setError(validation.error);

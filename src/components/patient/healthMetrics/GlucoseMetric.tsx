@@ -1,4 +1,4 @@
-// Exibe o histórico de glicose
+// Componente para exibição do histórico de níveis de glicose do paciente
 
 import BloodtypeIcon from '@mui/icons-material/Bloodtype';
 import HealthMetricDisplay from './HealthMetricDisplay';

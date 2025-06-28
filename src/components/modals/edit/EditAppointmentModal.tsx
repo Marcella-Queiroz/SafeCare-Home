@@ -45,8 +45,6 @@ const EditAppointmentModal = ({ open, onClose, appointment, onSave, userName }: 
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validação usando função padronizada
     const validation = validateAppointment(title, date, time);
     if (!validation.valid) {
       setError(validation.errors.join(', '));
@@ -117,9 +115,9 @@ const EditAppointmentModal = ({ open, onClose, appointment, onSave, userName }: 
           </Alert>
         )}
         
-        <Box component="form" onSubmit={handleSubmit} noValidate>
+        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ pt: 1 }}>
           <Grid container spacing={2}>
-            <Grid size={{ xs:12, md:6 }}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 required
                 fullWidth
@@ -131,7 +129,7 @@ const EditAppointmentModal = ({ open, onClose, appointment, onSave, userName }: 
                 disabled={loading}
               />
             </Grid>
-            <Grid size={{ xs:12, md:6 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 required
                 fullWidth
@@ -147,7 +145,7 @@ const EditAppointmentModal = ({ open, onClose, appointment, onSave, userName }: 
                 }}
               />
             </Grid>
-            <Grid size={{ xs:12, md:6 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 required
                 fullWidth

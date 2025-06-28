@@ -1,5 +1,4 @@
 //modal de agendamento de consultas
-//permite que o usuário cadastre um compromisso
 
 import { useState } from "react";
 import {
@@ -13,6 +12,7 @@ import {
   IconButton,
   CircularProgress,
   Box,
+  Typography,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import CloseIcon from "@mui/icons-material/Close";
@@ -45,8 +45,6 @@ const AddAppointmentModal = ({
     e.preventDefault();
     setError("");
     setLoading(true);
-    
-    // Validação usando função padronizada
     const validation = validateAppointment(title, date, time);
     if (!validation.valid) {
       setError(validation.errors.join(', '));
@@ -64,7 +62,7 @@ const AddAppointmentModal = ({
         title,
         date,
         time,
-        createdBy: userName, // <-- Salva o nome do usuário
+        authorId: userId, // <-- Salva o ID do usuário
         createdAt: new Date().toISOString(),
       });
       setSuccess(true);
@@ -96,60 +94,69 @@ const AddAppointmentModal = ({
         sx: { borderRadius: 2 },
       }}
     >
-      <DialogTitle sx={{ m: 0, p: 2 }}>
-        <Grid container alignItems="center" justifyContent="space-between">
-          <Grid size={{ xs:12, md:6 }}>
-            <h2>Novo Agendamento</h2>
-          </Grid>
-          <Grid size={{ xs:12, md:6 }}>
-            <IconButton
-              aria-label="Fechar"
-              onClick={handleClose}
-              sx={{
-                color: (theme) => theme.palette.grey[500],
-              }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </Grid>
-        </Grid>
+      <DialogTitle sx={{ 
+        m: 0, 
+        p: 2,
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center'
+      }}>
+        <Typography variant="h6" component="div">
+          Novo Agendamento
+        </Typography>
+        <IconButton
+          aria-label="close"
+          onClick={handleClose}
+          sx={{
+            color: (theme) => theme.palette.grey[500],
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
       <DialogContent dividers>
-        <Box component="form" onSubmit={handleSubmit} noValidate>
-          <TextField
-            label="Título"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            fullWidth
-            required
-            sx={{ mb: 2 }}
-            disabled={loading}
-          />
-          <TextField
-            label="Data"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            fullWidth
-            required
-            sx={{ mb: 2 }}
-            InputLabelProps={{
-              shrink: true,
-            }}
-            disabled={loading}
-          />
-          <TextField
-            label="Hora"
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            fullWidth
-            required
-            InputLabelProps={{
-              shrink: true,
-            }}
-            disabled={loading}
-          />
+        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ pt: 2 }}>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                label="Título"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                fullWidth
+                required
+                disabled={loading}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField
+                label="Data"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                fullWidth
+                required
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                disabled={loading}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField
+                label="Hora"
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                fullWidth
+                required
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                disabled={loading}
+              />
+            </Grid>
+          </Grid>
+          
           {error && (
             <Alert severity="error" sx={{ mt: 2 }}>
               {error}
@@ -163,12 +170,13 @@ const AddAppointmentModal = ({
         </Box>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={handleClose} disabled={loading}>
+        <Button onClick={handleClose} color="inherit" disabled={loading}>
           Cancelar
         </Button>
         <Button
           onClick={handleSubmit}
           variant="contained"
+          color="primary"
           disabled={loading}
         >
           {loading ? <CircularProgress size={24} /> : "Salvar"}

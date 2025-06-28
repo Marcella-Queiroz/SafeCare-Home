@@ -22,7 +22,7 @@ import { calcularIdade } from '@/utils/dateUtils';
 import { validatePatientData } from '@/utils/validations';
 import { useAuth } from "@/contexts/AuthContext";
 import { updatePatientEverywhere } from "@/utils/patientSync";
-import type { Patient } from '@/components/patient/PatientDetailContent';
+import type { Patient } from '../../../types/patient';
 
 interface EditPatientModalProps {
   open: boolean;
@@ -63,7 +63,6 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
     setAge(birthDate ? calcularIdade(birthDate).toString() : '');
   }, [birthDate]);
 
-  // Limpa todos os campos quando o modal é fechado
   useEffect(() => {
     if (!open) {
       setName('');
@@ -84,8 +83,6 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
     e.preventDefault();
     setError('');
     setSuccess(false);
-
-    // Validação usando função padronizada
     const validation = validatePatientData({
       name,
       cpf,
@@ -102,8 +99,6 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
 
     try {
       setLoading(true);
-
-      // Atualize em todos os usuários
       await updatePatientEverywhere(patient.id, {
         name,
         cpf,

@@ -35,8 +35,6 @@ const EditTemperatureModal = ({ open, onClose, record, onSave, patientCreatedAt,
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
-    // Validação usando função padronizada
     const validation = validateTemperature(value, date, patientCreatedAt);
     if (!validation.valid) {
       setError(validation.error);

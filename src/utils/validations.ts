@@ -1,6 +1,5 @@
-//Validações de formulários
+// Funções de validação para formulários e dados de entrada do sistema SafeCare-Home
 
-//Validação de senha
 export const validatePassword = (password: string, confirmPassword: string): { valid: boolean; error: string } => {
     if (password.length < 6) {
       return { valid: false, error: "A senha deve ter pelo menos 6 caracteres" };
@@ -54,6 +53,10 @@ export function validateCPF(cpf: string): boolean {
   if (resto !== parseInt(cpf.charAt(10))) return false;
 
   return true;
+}
+
+export function normalizeCPF(cpf: string): string {
+  return cpf.replace(/[^\d]+/g, '');
 }
 
 // Validação de campos obrigatórios para paciente
@@ -327,16 +330,5 @@ export const validateAppointment = (title: string, date: string, time: string): 
   };
 };
 
-// Manter compatibilidade com código existente
-export const validateHealthMetric = (value: string, type: 'numeric' | 'bloodPressure', date: string, patientCreatedAt?: string): { valid: boolean; error: string } => {
-  if (type === 'numeric') {
-    return validateWeight(value, date, patientCreatedAt);
-  }
-  
-  if (type === 'bloodPressure') {
-    return validateBloodPressure(value, '80', date, patientCreatedAt);
-  }
 
-  return { valid: false, error: 'Tipo de métrica inválido' };
-};
 

@@ -1,4 +1,4 @@
-//Gerencia vários modais para manipulação de dados de pacientes
+// Container responsável pelo gerenciamento de múltiplos modais para manipulação de dados do paciente
 
 import { Modal, Box, IconButton } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
@@ -203,14 +203,11 @@ const PatientModalsContainer = ({
   const { user } = useAuth();
   const userName = user?.name || user?.email || user?.uid || "";
 
-  // Funções para abrir cada modal
   const handleAddBloodPressure = () => setAddBloodPressureModalOpen(true);
   const handleAddGlucose = () => setAddGlucoseModalOpen(true);
   const handleAddTemperature = () => setAddTemperatureModalOpen(true);
   const handleAddOxygen = () => setAddOxygenModalOpen(true);
   const handleAddHeartRate = () => setAddHeartRateModalOpen(true);
-
-  // Funções de exclusão para cada métrica
   const handleDeleteWeight = async (record, index) => {
     if (!userId || !patientId || !record.id) return;
     await remove(
@@ -272,8 +269,6 @@ const PatientModalsContainer = ({
   };
 
   const [editingMedication, setEditingMedication] = useState<any>(null);
-
-  // Função de edição de medicamento
   const onEditMedication = async (medicationEditado: any) => {
     if (!userId || !patientId) return;
     const db = getDatabase();
@@ -281,7 +276,6 @@ const PatientModalsContainer = ({
     const snapshot = await get(patientRef); // corrigido
     const patientData = snapshot.val() || {};
     const medications = patientData.medications || [];
-    // Busca pelo id único
     const index = medications.findIndex(
       (med: any) => med.id === medicationEditado.id
     );

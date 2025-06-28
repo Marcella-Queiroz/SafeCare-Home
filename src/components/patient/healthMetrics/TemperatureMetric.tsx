@@ -1,4 +1,4 @@
-// Exibe o histórico de Temperatura
+// Componente para exibição do histórico de temperatura corporal do paciente
 
 import DeviceThermostatIcon from '@mui/icons-material/DeviceThermostat';
 import HealthMetricDisplay from './HealthMetricDisplay';

@@ -1,4 +1,4 @@
-//Exibe o histórico de peso e IMC do paciente
+// Componente para exibição do histórico de peso e cálculo do IMC do paciente
 
 import { Weight } from 'lucide-react';
 import HealthMetricDisplay from './HealthMetricDisplay';

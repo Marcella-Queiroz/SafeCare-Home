@@ -32,8 +32,6 @@ const AddTemperatureModal = ({ open, onClose, userId, patientId, patientCreatedA
   const handleSave = async () => {
     setLoading(true);
     setError('');
-    
-    // Validação usando função padronizada
     const validation = validateTemperature(value, date, patientCreatedAt);
     if (!validation.valid) {
       setError(validation.error);
@@ -42,9 +40,7 @@ const AddTemperatureModal = ({ open, onClose, userId, patientId, patientCreatedA
     }
     
     try {
-      await onSave({ value, date, time, createdBy: userName });
-
-      // Atualiza o campo lastCheck do paciente usando função segura
+      await onSave({ value, date, time, authorId: userId });
       if (user?.uid && patientId) {
         const { updateLastCheckSecure } = await import('@/utils/securityUtils');
         await updateLastCheckSecure(user.uid, patientId);

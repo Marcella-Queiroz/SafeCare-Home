@@ -1,4 +1,4 @@
-//Cabecalho
+// Componente de cabeçalho principal da aplicação com navegação e menu do usuário
 
 import { useState } from 'react';
 import {

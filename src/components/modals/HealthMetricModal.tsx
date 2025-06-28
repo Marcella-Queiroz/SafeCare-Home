@@ -1,4 +1,4 @@
-//Modal que exibe informações sobre as métricas de saúde
+//Modal de informações de métricas de saúde
 
 import { Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';

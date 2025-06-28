@@ -1,4 +1,4 @@
-//Gerencia o login e o estado do usuário
+// Contexto de autenticação responsável pelo gerenciamento do estado global do usuário logado
 
 import {
   createContext,
@@ -55,7 +55,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Função auxiliar para buscar dados do usuário no banco
   const fetchUserData = async (firebaseUser: any): Promise<User> => {
     try {
       const db = getDatabase();
@@ -75,7 +74,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('Erro ao buscar dados do usuário:', error);
     }
     
-    // Fallback se não conseguir buscar do banco
     return {
       uid: firebaseUser.uid,
       name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || '',
@@ -84,7 +82,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   };
 
-  // Sincroniza com Firebase Auth
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -123,7 +120,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const auth = getAuth();
       await signOut(auth);
-      // Os estados serão atualizados automaticamente pelo onAuthStateChanged
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
     }
@@ -147,7 +143,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         role: role,
       };
 
-      // Salva os dados do usuário no banco de dados
       const db = getDatabase();
       const userRef = ref(db, `users/${firebaseUser.uid}`);
       await set(userRef, {

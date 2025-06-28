@@ -1,4 +1,4 @@
-//Exibe e gerencia agendamentos do paciente
+// Componente para exibição e gerenciamento dos agendamentos médicos do paciente
 
 import { useState } from 'react';
 import {

@@ -1,10 +1,9 @@
-//Exibe o histórico de pressão arterial
+// Componente para exibição do histórico de pressão arterial do paciente
 
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import HealthMetricDisplay from './HealthMetricDisplay';
 import BasicMetricRecord from './BasicMetricRecord';
 
-// Garante que cada registro tenha o campo value no formato "120/80"
 function formatRecords(records: any[]) {
   return (records || []).map((item) => ({
     ...item,

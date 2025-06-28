@@ -30,8 +30,6 @@ const AddGlucoseModal = ({ open, onClose, userId, patientId, patientCreatedAt, o
   const handleSave = async () => {
     setLoading(true);
     setError('');
-    
-    // Validação usando função padronizada
     const validation = validateGlucose(value, date, patientCreatedAt);
     if (!validation.valid) {
       setError(validation.error);
@@ -40,14 +38,9 @@ const AddGlucoseModal = ({ open, onClose, userId, patientId, patientCreatedAt, o
     }
     
     try {
-      await onSave({ value, date, time, createdBy: userName });
-
-      // Atualiza o campo lastCheck do paciente
-      const db = getDatabase();
-      const patientRef = ref(db, `patientsGlobal/${patientId}`);
-      const now = new Date();
-      const lastCheck = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      await update(patientRef, { lastCheck });
+      await onSave({ value, date, time, authorId: userId });
+      const { updateLastCheckSecure } = await import('../../../utils/securityUtils');
+      await updateLastCheckSecure(userId, patientId);
 
       setValue('');
       setDate('');

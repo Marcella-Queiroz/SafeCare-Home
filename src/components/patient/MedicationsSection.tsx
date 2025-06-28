@@ -1,4 +1,4 @@
-//Gerenciar os medicamentos
+// Componente para exibição e gerenciamento da lista de medicamentos do paciente
 
 import { useState } from 'react';
 import {
