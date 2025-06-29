@@ -479,7 +479,7 @@ function normalizePatient(data: any, patientId: string) {
     oxygen: data.oxygen ?? [],
     lastCheck: data.lastCheck ?? '',
     medications: data.medications ?? [],
-    appointments: data.appointments ?? [],
+    appointments: data.appointments ? Object.values(data.appointments) : [],
     observations: data.observations ? Object.values(data.observations) : [],
     createdBy: data.createdBy ?? '',
     editedBy: data.editedBy ?? '',

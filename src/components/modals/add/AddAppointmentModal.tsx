@@ -17,6 +17,7 @@ import {
 import Grid from "@mui/material/Grid";
 import CloseIcon from "@mui/icons-material/Close";
 import { getDatabase, ref, push } from "firebase/database";
+import { database } from "@/services/firebaseConfig";
 import { validateAppointment } from '@/utils/validations';
 
 interface AddAppointmentModalProps {
@@ -53,11 +54,8 @@ const AddAppointmentModal = ({
     }
     
     try {
-      const db = getDatabase();
-      const appointmentsRef = ref(
-        db,
-        `patientsGlobal/${patientId}/appointments`
-      );
+      const appointmentsRef = ref(database, `patientsGlobal/${patientId}/appointments`);
+
       await push(appointmentsRef, {
         title,
         date,
@@ -73,6 +71,9 @@ const AddAppointmentModal = ({
       setError("Erro ao salvar agendamento.");
     }
     setLoading(false);
+
+    console.log("patientId:", patientId);
+
   };
 
   const handleClose = () => {

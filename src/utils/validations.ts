@@ -311,7 +311,9 @@ export const validateAppointment = (title: string, date: string, time: string): 
   if (!date?.trim()) {
     errors.push('Data é obrigatória');
   } else {
-    const appointmentDate = new Date(date);
+    const [year, month, day] = date.split('-').map(Number);
+    const appointmentDate = new Date(year, month - 1, day); // cria data no fuso local sem deslocamento
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Remover horas para comparar apenas datas
     
