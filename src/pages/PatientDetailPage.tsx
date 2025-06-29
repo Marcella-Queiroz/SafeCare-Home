@@ -243,16 +243,28 @@ const PatientDetailPage = () => {
       if (!patientData) return;
 
       if (medicationToDelete !== null) {
-        const medications = patientData.medications || [];
+      const medications = patientData.medications || [];
+      if (medicationToDelete >= 0 && medicationToDelete < medications.length) {
         medications.splice(medicationToDelete, 1);
         await updatePatientSecure(user.uid, patientId, { medications });
         setMedicationToDelete(null);
-      } else if (appointmentToDelete !== null) {
-        const appointments = patientData.appointments || [];
-        appointments.splice(appointmentToDelete, 1);
-        await updatePatientSecure(user.uid, patientId, { appointments });
-        setAppointmentToDelete(null);
+        setCurrentPatient({ ...patientData, medications });
+      } else {
+        console.warn('Índice de exclusão de medicamento inválido:', medicationToDelete);
       }
+      } else if (appointmentToDelete !== null) {
+      const appointmentsObj = patientData.appointments || {};
+      const appointmentKeys = Object.keys(appointmentsObj);
+      if (appointmentToDelete >= 0 && appointmentToDelete < appointmentKeys.length) {
+        const appointmentIdToDelete = appointmentKeys[appointmentToDelete];
+        delete appointmentsObj[appointmentIdToDelete];
+        await updatePatientSecure(user.uid, patientId, { appointments: appointmentsObj });
+        setAppointmentToDelete(null);
+        setCurrentPatient({ ...patientData, appointments: Object.values(appointmentsObj) });
+      } else {
+        console.warn('Índice de exclusão de agendamento inválido:', appointmentToDelete);
+      }
+    }
       setDeleteModalOpen(false);
     } catch (error) {
       console.error('Erro ao deletar item:', error);
