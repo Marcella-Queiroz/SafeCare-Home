@@ -36,7 +36,7 @@ const AddBloodPressureModal = ({ open, onClose, userId, patientId, patientCreate
       return;
     }
     try {
-      await onSave({ systolic, diastolic, date, time, authorId: userId });
+      await onSave({ systolic, diastolic, date, time, authorId: userId, createdBy: userName });
       const { updateLastCheckSecure } = await import('../../../utils/securityUtils');
       await updateLastCheckSecure(userId, patientId);
 

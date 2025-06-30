@@ -17,6 +17,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import AssessmentIcon from '@mui/icons-material/Assessment';
+import { formatDateToBR } from '../../utils/dateUtils';
 
 interface Appointment {
   title: string;
@@ -87,7 +88,7 @@ const AppointmentsSection = ({
                     {appointment.title}
                   </Typography>
                   <Typography variant="body2" color="textSecondary" sx={{ mb: 0.5 }}>
-                    {appointment.date}
+                    {formatDateToBR(appointment.date)}
                   </Typography>
                   <Chip 
                     label={appointment.time} 

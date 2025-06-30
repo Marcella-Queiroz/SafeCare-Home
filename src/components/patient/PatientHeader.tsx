@@ -8,6 +8,7 @@ import { getDatabase, ref, update } from "firebase/database";
 import { ReactNode, useEffect, useState } from 'react';
 import type { Patient } from '../../types/patient';
 import { formatBirthDate } from '@/utils/dataUtils';
+import { formatDateTimeToBR } from '@/utils/dateUtils';
 import { getUserNameById, getPatientSharingInfo } from '@/utils/securityUtils';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -36,7 +37,7 @@ const PatientHeader = ({ patient, onClose, onEditPatient }: PatientHeaderProps) 
   const db = getDatabase();
   const patientId = "ID_DO_PACIENTE";
   const now = new Date();
-  const lastCheck = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const lastCheck = formatDateTimeToBR(now);
   const [cpf, setCpf] = useState<string>('');
   const [createdByName, setCreatedByName] = useState<string>('');
   const [originalOwnerName, setOriginalOwnerName] = useState<string>('');
@@ -66,6 +67,7 @@ const PatientHeader = ({ patient, onClose, onEditPatient }: PatientHeaderProps) 
         
         const sharing = await getPatientSharingInfo(user.uid, patient, patient.id);
         setSharingInfo(sharing);
+        
         if (patient.createdBy) {
           const name = await getUserNameById(patient.createdBy);
           
@@ -78,7 +80,10 @@ const PatientHeader = ({ patient, onClose, onEditPatient }: PatientHeaderProps) 
               setCreatedByName('Usuário não encontrado');
             }
           }
+        } else {
+          setCreatedByName('Não informado');
         }
+        
         if (sharing.shared && sharing.originalOwner) {
           const name = await getUserNameById(sharing.originalOwner);
           

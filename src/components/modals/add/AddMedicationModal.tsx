@@ -89,6 +89,7 @@ const AddMedicationModal = ({ open, onClose, userId, patientId, userName, medica
         frequency,
         time,
         authorId: userId,
+        createdBy: userName,
       };
       medications.push(newMedication);
       await update(patientRef, { medications });

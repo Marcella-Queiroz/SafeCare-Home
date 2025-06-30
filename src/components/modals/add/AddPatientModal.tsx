@@ -116,7 +116,7 @@ const AddPatientModal = ({ open, onClose, userId, onAdd, initialCPF }: AddPatien
           ? conditions.split(",").map((c) => c.trim())
           : [],
         createdAt: new Date().toISOString(),
-        createdBy: user?.name || user?.email || user?.uid,
+        createdBy: user?.uid, // Usar sempre o UID do usuário
         weight: [],
         glucose: [],
         temperature: [],

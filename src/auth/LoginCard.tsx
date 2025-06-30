@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Button, TextField, Typography, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { validateEmailFormat } from "@/utils/validations";
 import Logo from "@/components/Logo";
 
 interface LoginCardProps {
@@ -19,19 +20,15 @@ const LoginCard = ({ onForgotPassword, onRequestAccess, showToast }: LoginCardPr
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  function validateEmail(email: string): boolean {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-  }
-
   const handleUserLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setEmailError("");
     setPasswordError("");
 
-    if (!validateEmail(email)) {
-      setEmailError("Formato de email inválido.");
+    const emailValidation = validateEmailFormat(email);
+    if (!emailValidation.valid) {
+      setEmailError(emailValidation.error || "Formato de email inválido.");
       setIsLoading(false);
       return;
     }

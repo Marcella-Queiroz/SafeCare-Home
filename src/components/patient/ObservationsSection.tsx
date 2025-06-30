@@ -7,6 +7,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import NotesOutlinedIcon from '@mui/icons-material/NotesOutlined';
 import { Observation } from '../../types/patient';
+import { formatDateTimeToBR } from '../../utils/dateUtils';
 
 interface ObservationsSectionProps {
   observations: Observation[];
@@ -69,9 +70,11 @@ const ObservationsSection = ({ observations, onAdd, onEdit, onDelete }: Observat
                   {(() => {
                     const dateToShow = obs.createdAt || (obs as any).date;
                     return dateToShow && !isNaN(new Date(dateToShow).getTime()) 
-                      ? new Date(dateToShow).toLocaleString() 
+                      ? formatDateTimeToBR(dateToShow)
                       : 'Data não disponível';
                   })()}
+                  {obs.createdBy && ` | Cadastrado por: ${obs.createdBy}`}
+                  {obs.editedBy && ` | Editado por: ${obs.editedBy}`}
                 </Typography>
               </Box>
               <Box>

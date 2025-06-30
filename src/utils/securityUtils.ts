@@ -1,6 +1,7 @@
 // Utilitários de segurança para controle de acesso e gerenciamento de dados de pacientes no Firebase
 
 import { getDatabase, ref, get, set, update, push, remove } from "firebase/database";
+import { formatDateTimeToBR } from './dateUtils';
 
 /**
  * Verifica se o usuário atual tem acesso ao paciente especificado
@@ -478,7 +479,9 @@ export async function getPatientSharedWithUsers(patientId: string, ownerId: stri
  * @returns Promise<string | null> - nome do usuário ou null se não encontrado
  */
 export async function getUserNameById(userId: string): Promise<string | null> {
-  if (!userId) return null;
+  if (!userId) {
+    return null;
+  }
   
   // Se for um email, retorna o próprio email (pacientes antigos)
   if (userId.includes('@')) {
@@ -492,12 +495,13 @@ export async function getUserNameById(userId: string): Promise<string | null> {
     
     if (snapshot.exists()) {
       const userData = snapshot.val();
-      return userData.name || userData.email || null;
+      const name = userData.name || userData.email || null;
+      return name;
     }
     
     return null;
   } catch (error) {
-    console.error('Erro ao buscar nome do usuário:', error);
+    console.error('getUserNameById: Erro ao buscar nome do usuário:', error);
     return null;
   }
 }
@@ -540,7 +544,7 @@ export async function updateLastCheckSecure(userId: string, patientId: string): 
   
   try {
     const now = new Date();
-    const lastCheck = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const lastCheck = formatDateTimeToBR(now);
     
     await updatePatientSecure(userId, patientId, { lastCheck });
   } catch (error) {

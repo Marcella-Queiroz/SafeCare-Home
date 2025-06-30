@@ -18,7 +18,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import { getDatabase, ref, update } from "firebase/database";
 import { INPUT_LIMITS } from '@/constants/inputLimits';
-import { calcularIdade } from '@/utils/dateUtils';
+import { calcularIdade, formatDateTimeToBR } from '@/utils/dateUtils';
 import { validatePatientData } from '@/utils/validations';
 import { useAuth } from "@/contexts/AuthContext";
 import { updatePatientEverywhere } from "@/utils/patientSync";
@@ -155,9 +155,7 @@ const EditPatientModal = ({ open, onClose, patient, userId, onSave }: EditPatien
         </Typography>
         {patient.editedBy && patient.editedAt && (
           <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
-            <strong>Editado por:</strong> {patient.editedBy} em{" "}
-            {new Date(patient.editedAt).toLocaleDateString("pt-BR")} às{" "}
-            {new Date(patient.editedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+            <strong>Editado por:</strong> {patient.editedBy} em {formatDateTimeToBR(patient.editedAt)}
           </Typography>
         )}
         <IconButton

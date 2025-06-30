@@ -7,9 +7,12 @@ import PatientDetailPage from "./pages/PatientDetailPage";
 import ProfilePage from "./pages/ProfilePage";
 import ReportsPage from "./pages/ReportsPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { testFirebaseConnection } from "./utils/firebaseTest";
 
 const App = () => {
   const { showToast, ToastComponent } = useToast();
+
+  testFirebaseConnection();
 
   return (
     <AuthProvider>
@@ -17,37 +20,37 @@ const App = () => {
         {ToastComponent}
         <Routes>
           <Route path="/" element={<Index showToast={showToast} />} />
-          <Route 
-            path="/patients" 
+          <Route
+            path="/patients"
             element={
               <ProtectedRoute>
                 <PatientsPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/patients/:userId/:patientId" 
+          <Route
+            path="/patients/:userId/:patientId"
             element={
               <ProtectedRoute>
                 <PatientDetailPage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/profile" 
+          <Route
+            path="/profile"
             element={
               <ProtectedRoute>
                 <ProfilePage />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/reports" 
+          <Route
+            path="/reports"
             element={
               <ProtectedRoute>
                 <ReportsPage />
               </ProtectedRoute>
-            } 
+            }
           />
         </Routes>
       </Router>

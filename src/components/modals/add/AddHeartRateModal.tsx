@@ -37,7 +37,7 @@ const AddHeartRateModal = ({ open, onClose, userId, patientId, patientCreatedAt,
     }
     
     try {
-      await onSave({ value, date, time, authorId: userId });
+      await onSave({ value, date, time, authorId: userId, createdBy: userName });
       const { updateLastCheckSecure } = await import('../../../utils/securityUtils');
       await updateLastCheckSecure(userId, patientId);
 

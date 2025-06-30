@@ -82,6 +82,7 @@ const PatientDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [editingWeight, setEditingWeight] = useState<any>(null);
   const [observations, setObservations] = useState<Observation[]>([]);
+  const [currentUserName, setCurrentUserName] = useState<string>('');
 
   const [healthMetricModal, setHealthMetricModal] = useState<{
     open: boolean;
@@ -90,6 +91,23 @@ const PatientDetailPage = () => {
     open: false,
     type: null
   });
+
+  // Carregar nome do usuário atual
+  useEffect(() => {
+    const loadCurrentUserName = async () => {
+      if (user?.uid) {
+        try {
+          const userName = await getUserNameById(user.uid);
+          setCurrentUserName(userName || '');
+        } catch (error) {
+          console.error('Erro ao carregar nome do usuário:', error);
+          setCurrentUserName('');
+        }
+      }
+    };
+
+    loadCurrentUserName();
+  }, [user?.uid]);
 
   useEffect(() => {
     const loadPatientData = async () => {
@@ -350,7 +368,8 @@ const PatientDetailPage = () => {
       const newObservation = {
         text,
         createdAt: new Date().toISOString(),
-        authorId: user.uid
+        authorId: user.uid,
+        createdBy: currentUserName
       };
       
       await addHealthMetricSecure(user.uid, patientId, 'observations', newObservation);
@@ -362,7 +381,10 @@ const PatientDetailPage = () => {
     if (!user?.uid || !patientId) return;
     
     try {
-      await updateHealthMetricSecure(user.uid, patientId, 'observations', id, { text });
+      await updateHealthMetricSecure(user.uid, patientId, 'observations', id, { 
+        text, 
+        editedBy: currentUserName 
+      });
     } catch (error) {
       console.error('Erro ao editar observação:', error);
     }

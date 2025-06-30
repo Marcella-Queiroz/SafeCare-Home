@@ -7,6 +7,7 @@ import {
   IconButton,
 } from "@mui/material";
 import { DeleteIcon, EditIcon } from "lucide-react";
+import { formatDateToBR } from '../../../utils/dateUtils';
 
 interface BasicMetricRecordProps {
   records: Array<any>;
@@ -72,7 +73,7 @@ const BasicMetricRecord = ({
             </Box>
           </Box>
           <Typography variant="body2" color="textSecondary">
-            {item.date}
+            {formatDateToBR(item.date)}
             {item.height && ` - Altura: ${item.height}`}
             {item.editedBy
               ? ` | Editado por: ${item.editedBy}`

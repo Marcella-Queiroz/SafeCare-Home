@@ -14,7 +14,7 @@ const GlucoseMetric = ({ records, onEdit, onDelete }) => (
       records={records}
       onEdit={onEdit}
       onDelete={onDelete}
-      mainField="glucose"
+      mainField="value"
       unit="mg/dL"
     />
   </HealthMetricDisplay>

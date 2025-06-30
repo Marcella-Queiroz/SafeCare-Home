@@ -48,6 +48,8 @@ export interface Observation {
   authorId?: string;
   authorName?: string;
   createdAt?: string;
+  createdBy?: string;
+  editedBy?: string;
 }
 
 export interface Appointment {

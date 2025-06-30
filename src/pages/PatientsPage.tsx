@@ -1,5 +1,5 @@
 
-// Página principal de gerenciamento de pacientes com funcionalidades de listagem, criação, compartilhamento e geração de relatórios
+// Página principal de gerenciamento de pacientes
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -36,12 +36,14 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import PatientQuickSearchModal from "@/components/patient/PatientQuickSearch";
 import { convertMetricsToArray, formatBirthDate } from '@/utils/dataUtils';
+import { formatDateToBR, formatDateTimeToBR } from '@/utils/dateUtils';
 import { 
   getUserPatientsWithData, 
   createPatientSecure, 
   grantPatientAccess, 
   revokePatientAccess 
 } from '@/utils/securityUtils';
+import { useToast } from '@/components/hooks/use-toast';
 import { Patient, Metric, BloodPressure, Observation } from "../types/patient";
 
 interface Report {
@@ -132,6 +134,7 @@ function convertPatientMetrics(patient: any): Patient {
 const PatientsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showToast, ToastComponent } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [tabValue, setTabValue] = useState(0);
   const [addPatientModalOpen, setAddPatientModalOpen] = useState(false);
@@ -143,27 +146,37 @@ const PatientsPage = () => {
   const [quickSearchOpen, setQuickSearchOpen] = useState(false);
   const [checkCPFModalOpen, setCheckCPFModalOpen] = useState(false);
   const [pendingCPF, setPendingCPF] = useState<string | null>(null);
+
   useEffect(() => {
-    const loadPatients = async () => {
-      if (!user?.uid) {
-        setLoading(false);
-        return;
-      }
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam === 'relatorios') {
+      setTabValue(1);
+    }
+  }, []);
 
-      try {
-        const patientsData = await getUserPatientsWithData(user.uid);
-        const patientsWithMetrics = patientsData.map(patient => 
-          convertPatientMetrics(patient)
-        );
-        setPatients(patientsWithMetrics);
-      } catch (error) {
-        console.error('Erro ao carregar pacientes:', error);
-        setPatients([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Função para carregar pacientes
+  const loadPatients = async () => {
+    if (!user?.uid) {
+      setLoading(false);
+      return;
+    }
 
+    try {
+      const patientsData = await getUserPatientsWithData(user.uid);
+      const patientsWithMetrics = patientsData.map(patient => 
+        convertPatientMetrics(patient)
+      );
+      setPatients(patientsWithMetrics);
+    } catch (error) {
+      console.error('Erro ao carregar pacientes:', error);
+      setPatients([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadPatients();
     if (user?.uid) {
       const db = getDatabase();
@@ -317,7 +330,7 @@ const PatientsPage = () => {
 
     doc.setFontSize(10);
     doc.text(
-      `Data de Emissão: ${new Date().toLocaleDateString()}`,
+      `Data de Emissão: ${formatDateToBR(new Date())}`,
       margin.left,
       margin.top + 8
     );
@@ -491,9 +504,7 @@ const PatientsPage = () => {
         startY: y,
         head: [["OBSERVAÇÕES"]],
         body: report.observations.map((obs: any) => [
-          `${obs.text} (${new Date(obs.createdAt).toLocaleDateString(
-            "pt-BR"
-          )})`,
+          `${obs.text} (${formatDateToBR(obs.createdAt)})`,
         ]),
         theme: "grid",
         headStyles: { fillColor: [220, 220, 220], halign: "center" },
@@ -537,19 +548,22 @@ const PatientsPage = () => {
   const handleCPFCheckFound = async (patient: any) => {
     setCheckCPFModalOpen(false);
     if (!user?.uid) return;
-    const db = getDatabase(app);
-    const patientsRef = ref(db, `patients/${user.uid}`);
-    const newPatientRef = push(patientsRef);
-    const newId = newPatientRef.key;
-    await set(newPatientRef, {
-      ...patient,
-      id: newId,
-      shared: true,
-      originalOwner: patient.ownerUserId,
-      cpf: patient.cpf || '',
-      createdBy: patient.createdBy || patient.ownerUserId || '',
-      editedBy: patient.editedBy || '',
-    });
+    
+    try {
+      // Usar a função grantPatientAccess para dar acesso ao paciente existente
+      const success = await grantPatientAccess(user.uid, patient.id);
+      
+      if (success) {
+        // Recarregar a lista de pacientes para mostrar o novo paciente compartilhado
+        loadPatients();
+        showToast(`Paciente ${patient.name} adicionado ao seu dashboard!`, 'success');
+      } else {
+        showToast('Erro ao adicionar paciente ao dashboard', 'error');
+      }
+    } catch (error) {
+      console.error('Erro ao adicionar paciente:', error);
+      showToast('Erro ao adicionar paciente ao dashboard', 'error');
+    }
   };
 
   const handleCPFCheckNotFound = (cpf: string) => {
@@ -806,7 +820,7 @@ const PatientsPage = () => {
                     display="block"
                     sx={{ mb: 2 }}
                   >
-                    Criado em: {new Date(report.createdAt).toLocaleString()}
+                    Criado em: {formatDateTimeToBR(report.createdAt)}
                   </Typography>
                   <Button
                     variant="outlined"
@@ -861,6 +875,7 @@ const PatientsPage = () => {
         title="Excluir Paciente"
         message="Tem certeza que deseja excluir este paciente? Esta ação não pode ser desfeita."
       />
+      {ToastComponent}
     </PageContainer>
   );
 };

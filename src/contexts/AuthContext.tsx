@@ -8,7 +8,6 @@ import {
   ReactNode,
 } from 'react';
 import {
-  getAuth,
   signInWithEmailAndPassword,
   onAuthStateChanged,
   signOut,
@@ -16,6 +15,7 @@ import {
   sendPasswordResetEmail,
 } from 'firebase/auth';
 import { getDatabase, ref, get, set } from 'firebase/database';
+import { auth } from '@/services/firebaseConfig';
 
 interface User {
   uid: string;
@@ -83,7 +83,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const userData = await fetchUserData(firebaseUser);
@@ -101,7 +100,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const auth = getAuth();
       const result = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = result.user;
 
@@ -118,7 +116,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      const auth = getAuth();
       await signOut(auth);
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
@@ -132,9 +129,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     role: string
   ): Promise<boolean> => {
     try {
-      const auth = getAuth();
+      console.log('Tentando criar usuário:', { email, role });
       const result = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUser = result.user;
+      console.log('Usuário criado com sucesso:', firebaseUser.uid);
 
       const userData: User = {
         uid: firebaseUser.uid,
@@ -151,20 +149,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         role: role,
         createdAt: new Date().toISOString()
       });
+      console.log('Dados do usuário salvos no banco de dados');
 
       setUser(userData);
       setIsAuthenticated(true);
 
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao registrar no Firebase:', error);
+      console.error('Código do erro:', error.code);
+      console.error('Mensagem do erro:', error.message);
       return false;
     }
   };
 
   const resetPassword = async (email: string): Promise<boolean> => {
     try {
-      const auth = getAuth();
       await sendPasswordResetEmail(auth, email);
       return true;
     } catch (error) {

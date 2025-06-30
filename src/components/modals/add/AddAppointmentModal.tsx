@@ -1,6 +1,6 @@
 //modal de agendamento de consultas
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -42,10 +42,25 @@ const AddAppointmentModal = ({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
+  // Resetar estado quando o modal abrir
+  useEffect(() => {
+    if (open) {
+      console.log('Modal de agendamento aberto - resetando estado');
+      setTitle("");
+      setDate("");
+      setTime("");
+      setError("");
+      setSuccess(false);
+      setLoading(false);
+    }
+  }, [open]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+    setSuccess(false);
+    
     const validation = validateAppointment(title, date, time);
     if (!validation.valid) {
       setError(validation.errors.join(', '));
@@ -60,28 +75,41 @@ const AddAppointmentModal = ({
         title,
         date,
         time,
-        authorId: userId, // <-- Salva o ID do usuário
+        authorId: userId,
+        authorName: userName,
+        createdBy: userName,
         createdAt: new Date().toISOString(),
       });
+      
+      console.log('Agendamento salvo com sucesso');
       setSuccess(true);
+      
+      // Limpar campos
       setTitle("");
       setDate("");
       setTime("");
+      
+      // Fechar modal automaticamente após sucesso
+      setTimeout(() => {
+        console.log('Fechando modal de agendamento');
+        handleClose();
+      }, 1500);
+      
     } catch (err: any) {
-      setError("Erro ao salvar agendamento.");
+      console.error('Erro ao salvar agendamento:', err);
+      setError("Erro ao salvar agendamento: " + (err.message || 'Erro desconhecido'));
     }
     setLoading(false);
-
-    console.log("patientId:", patientId);
-
   };
 
   const handleClose = () => {
+    console.log('Executando handleClose do modal de agendamento');
     setTitle("");
     setDate("");
     setTime("");
     setError("");
     setSuccess(false);
+    setLoading(false);
     onClose();
   };
 

@@ -3,7 +3,6 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Button, Alert, Grid
 } from '@mui/material';
-import { getDatabase, ref, update } from "firebase/database";
 import { INPUT_LIMITS } from '@/constants/inputLimits';
 
 
@@ -38,7 +37,7 @@ const AddWeightModal = ({ open, onClose, userId, patientId, onSave, userName }: 
       : '';
 
     try {
-      await onSave({ weight, height, date, bmi, authorId: userId });
+      await onSave({ weight, height, date, bmi, authorId: userId, createdBy: userName });
       const { updateLastCheckSecure } = await import('../../../utils/securityUtils');
       await updateLastCheckSecure(userId, patientId);
 

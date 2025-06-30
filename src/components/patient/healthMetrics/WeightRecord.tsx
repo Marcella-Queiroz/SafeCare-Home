@@ -9,6 +9,7 @@ import {
   IconButton,
 } from "@mui/material";
 import { DeleteIcon, EditIcon } from "lucide-react";
+import { formatDateToBR } from '../../../utils/dateUtils';
 
 interface WeightRecordProps {
   records: Array<{
@@ -67,7 +68,7 @@ const WeightRecord = ({ records, onEdit, onDelete }: WeightRecordProps) => (
             </Box>
           </Box>
           <Typography variant="body2" color="textSecondary">
-            {item.date} - Altura: {item.height}
+            {formatDateToBR(item.date)} - Altura: {item.height}
           </Typography>
         </CardContent>
       </Card>

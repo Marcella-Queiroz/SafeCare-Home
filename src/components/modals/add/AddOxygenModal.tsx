@@ -40,7 +40,7 @@ const AddOxygenModal = ({ open, onClose, userId, patientId, patientCreatedAt, us
     }
     
     try {
-      await onSave({ value, date, time, authorId: userId });
+      await onSave({ value, date, time, authorId: userId, createdBy: userName });
       const { updateLastCheckSecure } = await import('../../../utils/securityUtils');
       await updateLastCheckSecure(userId, patientId);
 

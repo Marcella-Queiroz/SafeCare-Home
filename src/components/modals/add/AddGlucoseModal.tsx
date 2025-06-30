@@ -4,7 +4,6 @@ import {
   TextField, Button, Alert
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
-import { getDatabase, ref, update } from "firebase/database";
 import { INPUT_LIMITS } from '@/constants/inputLimits';
 import { validateGlucose } from '@/utils/validations';
 
@@ -38,7 +37,7 @@ const AddGlucoseModal = ({ open, onClose, userId, patientId, patientCreatedAt, o
     }
     
     try {
-      await onSave({ value, date, time, authorId: userId });
+      await onSave({ value, date, time, authorId: userId, createdBy: userName });
       const { updateLastCheckSecure } = await import('../../../utils/securityUtils');
       await updateLastCheckSecure(userId, patientId);
 

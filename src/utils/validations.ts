@@ -16,6 +16,124 @@ export const isValidEmail = (email: string): boolean => {
   return regex.test(email);
 };
 
+//Validação de email com verificação de domínio
+export const isValidEmailWithDomain = async (email: string): Promise<{ valid: boolean; error?: string }> => {
+  // Primeiro, validação básica de formato
+  if (!isValidEmail(email)) {
+    return { valid: false, error: "Formato de e-mail inválido" };
+  }
+
+  // Extrair o domínio do e-mail
+  const domain = email.split('@')[1].toLowerCase();
+  
+  // Lista de domínios comuns que sabemos que existem
+  const commonDomains = [
+    'gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com',
+    'live.com', 'msn.com', 'uol.com.br', 'bol.com.br', 'ig.com.br',
+    'terra.com.br', 'globo.com', 'r7.com', 'oi.com.br', 'vivo.com.br',
+    'tim.com.br', 'claro.com.br', 'protonmail.com', 'tutanota.com',
+    'zoho.com', 'yandex.com', 'mail.com', 'gmx.com', 'fastmail.com'
+  ];
+
+  // Domínios que definitivamente são inválidos
+  const invalidDomains = [
+    'example.com', 'test.com', 'localhost', 'invalid.com', 
+    'fake.com', 'dummy.com', 'sample.com', 'tempmail.org',
+    '10minutemail.com', 'guerrillamail.com'
+  ];
+
+  // Se é um domínio inválido conhecido, rejeitar
+  if (invalidDomains.includes(domain)) {
+    return { valid: false, error: "Domínio de e-mail não permitido" };
+  }
+
+  // Se é um domínio comum, aceitar imediatamente
+  if (commonDomains.includes(domain)) {
+    return { valid: true };
+  }
+
+  // Para domínios corporativos ou menos comuns, fazer verificações adicionais
+  try {
+    // Verificar se o domínio tem pelo menos a estrutura correta
+    const domainParts = domain.split('.');
+    if (domainParts.length < 2) {
+      return { valid: false, error: "Domínio deve conter pelo menos um ponto" };
+    }
+
+    // Verificar se a extensão do domínio é válida
+    const tld = domainParts[domainParts.length - 1];
+    const validTlds = [
+      'com', 'org', 'net', 'edu', 'gov', 'mil', 'int', 'co', 'io', 'me',
+      'br', 'uk', 'de', 'fr', 'it', 'es', 'ru', 'cn', 'jp', 'au', 'ca',
+      'info', 'biz', 'name', 'pro', 'travel', 'museum', 'coop', 'aero'
+    ];
+
+    if (tld.length < 2 || (tld.length === 2 && !validTlds.includes(tld)) || 
+        (tld.length > 2 && !validTlds.includes(tld))) {
+      // Para TLDs não reconhecidos, ainda aceitar (pode ser novo)
+      console.warn(`TLD não reconhecido: ${tld}, mas aceitando e-mail`);
+    }
+
+    // Tentar uma verificação simples via fetch para ver se o domínio responde
+    // Isso é um fallback e pode falhar devido a CORS, mas vamos tentar
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 segundos timeout
+
+      const response = await fetch(`https://${domain}`, {
+        method: 'HEAD',
+        mode: 'no-cors',
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      // Se chegou até aqui, o domínio provavelmente existe
+      return { valid: true };
+    } catch (fetchError) {
+      // Erro no fetch não significa necessariamente que o domínio é inválido
+      // Pode ser devido a CORS ou outras restrições
+      console.info(`Não foi possível verificar ${domain} diretamente, mas aceitando`);
+      return { valid: true };
+    }
+  } catch (error) {
+    // Em caso de erro na verificação, aceitar o e-mail (fallback)
+    console.warn('Erro ao verificar domínio:', error);
+    return { valid: true };
+  }
+};
+
+//Validação de email síncrona (para uso imediato)
+export const validateEmailFormat = (email: string): { valid: boolean; error?: string } => {
+  if (!email) {
+    return { valid: false, error: "E-mail é obrigatório" };
+  }
+
+  if (!isValidEmail(email)) {
+    return { valid: false, error: "Formato de e-mail inválido" };
+  }
+
+  // Verificações adicionais
+  const domain = email.split('@')[1];
+  
+  // Verificar se não é um domínio obviamente inválido
+  const invalidDomains = ['example.com', 'test.com', 'localhost'];
+  if (invalidDomains.includes(domain.toLowerCase())) {
+    return { valid: false, error: "Domínio de e-mail inválido" };
+  }
+
+  // Verificar se o domínio tem pelo menos um ponto
+  if (!domain.includes('.')) {
+    return { valid: false, error: "Domínio deve conter pelo menos um ponto" };
+  }
+
+  // Verificar se não termina com ponto
+  if (domain.endsWith('.')) {
+    return { valid: false, error: "Domínio não pode terminar com ponto" };
+  }
+
+  return { valid: true };
+};
+
 //Validação de telefone
 export const isValidPhone = (phone: string): boolean => {
   // Remove caracteres não numéricos

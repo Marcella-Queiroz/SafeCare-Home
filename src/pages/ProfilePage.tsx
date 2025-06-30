@@ -3,7 +3,8 @@
 
 import { useEffect, useState } from 'react';
 import { getDatabase, ref, get, update } from "firebase/database";
-import { getAuth, updatePassword, EmailAuthProvider, reauthenticateWithCredential, updateEmail } from "firebase/auth";
+import { updatePassword, EmailAuthProvider, reauthenticateWithCredential, updateEmail } from "firebase/auth";
+import { auth } from '@/services/firebaseConfig';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -104,7 +105,6 @@ const ProfilePage = () => {
     try {
       setLoading(true);
       setError('');
-      const auth = getAuth();
       const currentUser = auth.currentUser;
       if (currentUser && currentUser.email !== email) {
         try {
@@ -161,7 +161,6 @@ const ProfilePage = () => {
     setPasswordLoading(true);
     setError('');
     try {
-      const auth = getAuth();
       const currentUser = auth.currentUser;
       if (!currentUser) {
         setError('Usuário não autenticado.');
